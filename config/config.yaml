@@ -1,0 +1,38 @@
+# ======= 留空使用default值  ======= #
+# ==== 日志相关 ==== #
+log:
+  console-level: debug        # default info
+  file-level: debug           # default no log file
+  file-path:                  # default log/run.log
+
+# ==== 网页相关 ==== #
+web:
+  domain: example.com:12580   # or example.com:9443 for reserve proxy server
+  port:                       # default 12580
+
+# ==== 代理源配置文件 ==== #
+source-files:
+  # use local file
+  - source.yaml
+  # use web file
+  # - https://example.com/config/source.yaml
+
+# ==== Postgresql database info ==== #
+database-url: ""
+
+# ==== TG api info ==== #
+TG-api-url: ""              # default "https://rsshub.v2fy.com/telegram/channel/"
+
+# ==== 爬取设置 ==== #
+crawl-interval:             # default 60 (minutes)
+healthcheck:
+  url:                      # default http://www.gstatic.com/generate_204
+  timeout:                  # default 5 (seconds)
+  max-conn:                 # default 500. The number of health check connections simultaneously
+
+# ==== 测速 ==== #
+speedtest: 
+  is_used: true             # default false. Warning: this will consume large network resources.
+  interval:                 # default 720 (min)
+  timeout:                  # default 10 (seconds).
+  max-conn:                 # default 5. The number of speed test connections simultaneously

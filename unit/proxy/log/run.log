@@ -1,0 +1,37 @@
+[2023-07-30 20:48:58.146]	[INFO]	[proxy/proxy_test.go:15]	Info {@SSRTOOL_tw1-jqxh.ddns.net ssr tw1-jqxh.ddns.net 32361 hYqOQeP chacha20 auth_aes128_md5 4:2lEk7q http_simple download.windowsupdate.com false}
+[2023-07-30 20:49:50.220]	[ERROR]	[proxy/proxy_test.go:14]	err: 无法识别代理连接, ssre://dHcxLWpxeGguZGRucy5uZXQ6MzIzNjE6YXV0aF9hZXMxMjhfbWQ1OmNoYWNoYTIwOmh0dHBfc2ltcGxlOmFGbHhUMUZsVUEvP29iZnNwYXJhbT1aRzkzYm14dllXUXVkMmx1Wkc5M2MzVndaR0YwWlM1amIyMCZwcm90b3BhcmFtPU5Eb3liRVZyTjNFJnJlbWFya3M9UUZOVFVsUlBUMHhmZEhjeExXcHhlR2d1WkdSdWN5NXVaWFEmZ3JvdXA9VTFOU1ZFOVBUQzVEVDAwZzVvNm82WUNC
+[2023-07-30 20:49:50.234]	[INFO]	[proxy/proxy_test.go:16]	Info <nil>
+[2023-07-30 20:50:10.834]	[ERROR]	[proxy/proxy_test.go:14]	err: ssr连接参数不足6个
+[2023-07-30 20:50:10.848]	[INFO]	[proxy/proxy_test.go:16]	Info {   <nil>       false}
+[2023-07-30 21:31:41.503]	[ERROR]	[proxy/proxy_test.go:16]	err: 无法识别代理连接, https://free.dsdog.tk/ss/sub
+[2023-07-30 21:31:41.518]	[INFO]	[proxy/proxy_test.go:18]	Info <nil>
+[2023-07-30 21:32:59.525]	[ERROR]	[proxy/proxy_test.go:16]	err: 无法识别代理连接, https://free.dsdog.tk/ss/sub
+[2023-07-30 21:32:59.539]	[INFO]	[proxy/proxy_test.go:18]	Info <nil>
+[2023-07-30 21:35:09.369]	[ERROR]	[proxy/proxy_test.go:16]	err: 无法识别代理连接, https://free.dsdog.tk/ss/sub
+[2023-07-30 21:35:09.385]	[INFO]	[proxy/proxy_test.go:18]	Info <nil>
+[2023-07-30 21:35:20.170]	[ERROR]	[proxy/proxy_test.go:16]	err: 无法识别代理连接, https://free.dsdog.tk/ss/sub
+[2023-07-30 21:35:20.187]	[INFO]	[proxy/proxy_test.go:18]	Info <nil>
+[2023-07-30 21:35:24.764]	[ERROR]	[proxy/proxy_test.go:16]	err: 无法识别代理连接, https://free.dsdog.tk/ss/sub
+[2023-07-30 21:35:24.780]	[INFO]	[proxy/proxy_test.go:18]	Info <nil>
+[2023-07-30 21:36:48.304]	[ERROR]	[proxy/proxy_test.go:16]	err: 无法识别代理连接, https://free.dsdog.tk/ss/sub
+[2023-07-30 21:36:48.322]	[INFO]	[proxy/proxy_test.go:18]	Info <nil>
+[2023-08-01 00:03:05.412]	[ERROR]	[proxy/proxy_test.go:14]	err: 无法识别代理连接, https://free.dsdog.tk/ss/sub
+[2023-08-01 00:03:05.431]	[INFO]	[proxy/proxy_test.go:16]	Info <nil>
+[2023-08-01 00:03:05.431]	[INFO]	[proxy/proxy_test.go:24]	Info {  linke 127.0.0.1 443   auto  <nil>     f123456 1 ws none true linke.wxz /video    false false false false <nil> }
+[2023-08-01 00:03:47.531]	[INFO]	[proxy/proxy_test.go:16]	Info {@SSRTOOL_tw1-jqxh.ddns.net ssr tw1-jqxh.ddns.net 32361 hYqOQeP chacha20 auth_aes128_md5 4:2lEk7q http_simple download.windowsupdate.com false}
+[2023-08-01 00:03:47.547]	[INFO]	[proxy/proxy_test.go:24]	Info {  linke 127.0.0.1 443   auto  <nil>     f123456 1 ws none true linke.wxz /video    false false false false <nil> }
+[2023-08-01 00:04:17.390]	[INFO]	[proxy/proxy_test.go:16]	Info {Name:@SSRTOOL_tw1-jqxh.ddns.net Type:ssr Server:tw1-jqxh.ddns.net Port:32361 Password:hYqOQeP Cipher:chacha20 Protocol:auth_aes128_md5 ProtocolParam:4:2lEk7q OBFS:http_simple OBFSParam:download.windowsupdate.com UDP:false}
+[2023-08-01 00:04:17.403]	[INFO]	[proxy/proxy_test.go:24]	Info {Type: Group: Name:linke Server:127.0.0.1 Port:443 Username: Password: EncryptMethod:auto Plugin: PluginOption:<nil> Protocol: ProtocolParam: OBFS: OBFSParam: UUID:f123456 AlterID:1 TransferProtocol:ws FakeType:none TLSSecure:true Host:linke.wxz Path:/video Edge: QUICSecure: QUICSecret: UDP:false TCPFastOpen:false SkipCertVerify:false TLS13:false SnellVersion:<nil> ServerName:}
+[2023-08-01 00:10:56.189]	[INFO]	[proxy/proxy_test.go:16]	Info {Name:@SSRTOOL_tw1-jqxh.ddns.net Type:ssr Server:tw1-jqxh.ddns.net Port:32361 Password:hYqOQeP Cipher:chacha20 Protocol:auth_aes128_md5 ProtocolParam:4:2lEk7q OBFS:http_simple OBFSParam:download.windowsupdate.com UDP:false}
+[2023-08-01 00:10:56.206]	[INFO]	[proxy/proxy_test.go:24]	Info {Type: Group: Name:github.com/raw Server:103.89.10.11 Port:443 Username: Password: EncryptMethod:auto Plugin: PluginOption:<nil> Protocol: ProtocolParam: OBFS: OBFSParam: UUID:d0e26641-bd61-420c-b8cd-98ce382e81be AlterID:123 TransferProtocol:ws FakeType:none TLSSecure:true Host:github.com Path:/raw Edge: QUICSecure: QUICSecret: UDP:false TCPFastOpen:false SkipCertVerify:false TLS13:false SnellVersion:<nil> ServerName:}
+[2023-08-07 23:23:41.017]	[INFO]	[proxy/proxy_test.go:16]	Info {Name:@SSRTOOL_tw1-jqxh.ddns.net Type:ssr Server:tw1-jqxh.ddns.net Port:32361 Password:hYqOQeP Cipher:chacha20 Protocol:auth_aes128_md5 ProtocolParam:4:2lEk7q OBFS:http_simple OBFSParam:download.windowsupdate.com UDP:false}
+[2023-08-07 23:23:41.034]	[INFO]	[proxy/proxy_test.go:24]	Info {Type: Group: Name: Server: Port:0 Username: Password: EncryptMethod: Plugin: PluginOption:<nil> Protocol: ProtocolParam: OBFS: OBFSParam: UUID: AlterID:0 TransferProtocol: FakeType: TLSSecure:false Host: Path: Edge: QUICSecure: QUICSecret: UDP:false TCPFastOpen:false SkipCertVerify:false TLS13:false SnellVersion:<nil> ServerName:}
+[2023-08-07 23:24:58.222]	[INFO]	[proxy/proxy_test.go:16]	Info {Name:@SSRTOOL_tw1-jqxh.ddns.net Type:ssr Server:tw1-jqxh.ddns.net Port:32361 Password:hYqOQeP Cipher:chacha20 Protocol:auth_aes128_md5 ProtocolParam:4:2lEk7q OBFS:http_simple OBFSParam:download.windowsupdate.com UDP:false}
+[2023-08-07 23:24:58.235]	[INFO]	[proxy/vmess.go:82]	{Add:103.89.10.11 Aid:123 Host:github.com ID:d0e26641-bd61-420c-b8cd-98ce382e81be Net:ws Path:/raw Port:443 PS:github.com/raw TLS:tls Type:none Sni: V:2}
+[2023-08-07 23:24:58.235]	[INFO]	[proxy/proxy_test.go:24]	Info {Type: Group: Name: Server: Port:0 Username: Password: EncryptMethod: Plugin: PluginOption:<nil> Protocol: ProtocolParam: OBFS: OBFSParam: UUID: AlterID:0 TransferProtocol: FakeType: TLSSecure:false Host: Path: Edge: QUICSecure: QUICSecret: UDP:false TCPFastOpen:false SkipCertVerify:false TLS13:false SnellVersion:<nil> ServerName:}
+[2023-08-07 23:27:46.197]	[INFO]	[proxy/proxy_test.go:16]	Info {Name:@SSRTOOL_tw1-jqxh.ddns.net Type:ssr Server:tw1-jqxh.ddns.net Port:32361 Password:hYqOQeP Cipher:chacha20 Protocol:auth_aes128_md5 ProtocolParam:4:2lEk7q OBFS:http_simple OBFSParam:download.windowsupdate.com UDP:false}
+[2023-08-07 23:27:46.211]	[INFO]	[proxy/vmess.go:83]	{Add:103.89.10.11 Aid:123 Host:github.com ID:d0e26641-bd61-420c-b8cd-98ce382e81be Net:ws Path:/raw Port:443 PS:github.com/raw TLS:tls Type:none Sni: V:2}
+[2023-08-07 23:27:46.211]	[INFO]	[proxy/proxy_test.go:24]	Info {Type: Group: Name: Server: Port:0 Username: Password: EncryptMethod: Plugin: PluginOption:<nil> Protocol: ProtocolParam: OBFS: OBFSParam: UUID: AlterID:0 TransferProtocol: FakeType: TLSSecure:false Host: Path: Edge: QUICSecure: QUICSecret: UDP:false TCPFastOpen:false SkipCertVerify:false TLS13:false SnellVersion:<nil> ServerName:}
+[2023-08-07 23:37:09.780]	[INFO]	[proxy/proxy_test.go:16]	Info {Name:@SSRTOOL_tw1-jqxh.ddns.net Type:ssr Server:tw1-jqxh.ddns.net Port:32361 Password:hYqOQeP Cipher:chacha20 Protocol:auth_aes128_md5 ProtocolParam:4:2lEk7q OBFS:http_simple OBFSParam:download.windowsupdate.com UDP:false}
+[2023-08-07 23:37:09.798]	[INFO]	[proxy/vmess.go:83]	{Add:103.89.10.11 Aid:123 Host:github.com ID:d0e26641-bd61-420c-b8cd-98ce382e81be Net:ws Path:/raw Port:443 PS:github.com/raw TLS:tls Type:none Sni: V:2}
+[2023-08-07 23:37:09.798]	[INFO]	[proxy/proxy_test.go:24]	Info {Type:vmess Group:vmess_group Name:github.com/raw Server:103.89.10.11 Port:443 Username: Password: EncryptMethod:auto Plugin: PluginOption:<nil> Protocol: ProtocolParam: OBFS: OBFSParam: UUID:d0e26641-bd61-420c-b8cd-98ce382e81be AlterID:123 TransferProtocol:ws FakeType:none TLSSecure:true Host:github.com Path:/raw Edge: QUICSecure: QUICSecret: UDP:false TCPFastOpen:false SkipCertVerify:false TLS13:false SnellVersion:<nil> ServerName:}
