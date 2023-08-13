@@ -8,6 +8,77 @@ import (
 	"github.com/Tidra/EasyGetProxy/unit/tool"
 )
 
+func (proxy *Proxy) ssConstruct(group, remarks, server, port, password, method, plugin string,
+	pluginopts *PluginOpts, udp, tfo, scv, tls13 *bool) {
+	proxy.commonConstruct("ss", group, remarks, server, port, udp, tfo, scv, tls13)
+	proxy.Password = password
+	proxy.EncryptMethod = method
+	proxy.Plugin = plugin
+	proxy.PluginOption = pluginopts
+}
+
+func explodeSS(ss string) (Proxy, error) {
+	var password, method, server, port, plugin, group string
+	u, err := url.Parse(ss)
+	if err != nil {
+		return Proxy{}, err
+	}
+
+	// 分解主配置和附加参数
+	ps := u.Fragment
+	if u.User.String() == "" {
+		// base64的情况
+		infos, err := tool.Base64DecodeString(u.Hostname())
+		if err != nil {
+			return Proxy{}, err
+		}
+		u, err = url.Parse("ss://" + infos)
+		if err != nil {
+			return Proxy{}, err
+		}
+		method = u.User.Username()
+		password, _ = u.User.Password()
+	} else {
+		cipherInfoString, err := tool.Base64DecodeString(u.User.Username())
+		if err != nil {
+			return Proxy{}, err
+		}
+		cipherInfo := strings.SplitN(cipherInfoString, ":", 2)
+		if len(cipherInfo) < 2 {
+			return Proxy{}, err
+		}
+		method = strings.ToLower(cipherInfo[0])
+		password = cipherInfo[1]
+	}
+	server = u.Hostname()
+	port = u.Port()
+	addition := u.RawQuery
+
+	pluginOpts := new(PluginOpts)
+	pluginString := strings.ReplaceAll(tool.GetUrlArg(addition, "plugin"), ";", "&")
+	switch {
+	case strings.Contains(pluginString, "obfs"):
+		plugin = "obfs"
+		pluginOpts.Mode = tool.GetUrlArg(pluginString, "obfs")
+		pluginOpts.Host = tool.GetUrlArg(pluginString, "obfs-host")
+	case strings.Contains(pluginString, "v2ray"):
+		plugin = "v2ray-plugin"
+		pluginOpts.Mode = tool.GetUrlArg(pluginString, "mode")
+		pluginOpts.Host = tool.GetUrlArg(pluginString, "host")
+		pluginOpts.Path = tool.GetUrlArg(pluginString, "path")
+		pluginOpts.Mux = strings.Contains(pluginString, "mux")
+		pluginOpts.Tls = strings.Contains(pluginString, "tls")
+		pluginOpts.SkipCertVerify = true
+	}
+	group = tool.GetUrlArg(addition, "group")
+
+	// 构造节点
+	proxy := Proxy{}
+	proxy.ssConstruct(group, ps, server, port, password, method, plugin, pluginOpts,
+		nil, nil, nil, nil)
+	return proxy, nil
+}
+
 func ssConf(s string) (ClashSS, error) {
 	s, err := url.PathUnescape(s)
 	if err != nil {
@@ -19,7 +90,7 @@ func ssConf(s string) (ClashSS, error) {
 		return ClashSS{}, errors.New("ss 参数少于4个")
 	}
 
-	rawSSRConfig, err := tool.Base64DecodeStripped(findStr[1])
+	rawSSRConfig, err := tool.Base64DecodeByte(findStr[1])
 	if err != nil {
 		return ClashSS{}, err
 	}

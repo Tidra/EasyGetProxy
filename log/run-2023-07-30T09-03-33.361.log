@@ -1,2 +1,0 @@
-[2023-07-30 17:00:34.767]	[INFO]	[log/log.go:111]	{Log:{ConsoleLevel: FileLevel: FilePath:} Web:{Domain: Port:} SourceFiles:[] DatabaseUrl: TGApiUrl: CrawlInterval:0 HealthCheck:{Url: Timeout:0 MaxConnection:0} SpeedTest:{IsUsed:false Interval:0 Timeout:0 MaxConnection:0}}
-[2023-07-30 17:02:21.011]	[INFO]	[log/log.go:111]	{Log:{ConsoleLevel: FileLevel: FilePath:} Web:{Domain: Port:} SourceFiles:[] DatabaseUrl: TGApiUrl: CrawlInterval:0 HealthCheck:{Url: Timeout:0 MaxConnection:0} SpeedTest:{IsUsed:false Interval:0 Timeout:0 MaxConnection:0}}

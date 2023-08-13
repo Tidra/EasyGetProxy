@@ -5,6 +5,20 @@ import (
 	"net/url"
 )
 
+func (proxy *Proxy) trojanConstruct(group, remarks, server, port, password, network, host,
+	path string, tlssecure bool, udp, tfo, scv, tls13 *bool) {
+	proxy.commonConstruct("trojan", group, remarks, server, port, udp, tfo, scv, tls13)
+	proxy.Password = password
+	proxy.Host = host
+	proxy.TLSSecure = tlssecure
+	if network == "" {
+		proxy.TransferProtocol = "tcp"
+	} else {
+		proxy.TransferProtocol = network
+	}
+	proxy.Path = path
+}
+
 func trojanConf(s string) (ClashTrojan, error) {
 	s, err := url.PathUnescape(s)
 	if err != nil {

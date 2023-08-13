@@ -46,8 +46,8 @@ func parseProxy(proxy string) (any, error) {
 	return nil, fmt.Errorf("无法识别代理连接, %s", proxy)
 }
 
-func (proxy *Proxy) commonConstruct(proxyType string, group string, name string, server string,
-	port any, udp *bool, tfo *bool, scv *bool, tls13 *bool) {
+func (proxy *Proxy) commonConstruct(proxyType, group, name, server string, port any,
+	udp, tfo, scv, tls13 *bool) {
 	proxy.Type = proxyType
 	proxy.Group = group
 	proxy.Name = name
