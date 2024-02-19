@@ -1,13 +1,11 @@
 package proxy
 
 import (
-	"encoding/json"
 	"errors"
 	"net/url"
 	"regexp"
 	"strings"
 
-	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"github.com/spf13/cast"
 )
@@ -64,42 +62,42 @@ func (proxy *Proxy) vmessConstruct(group, ps, add string, port any, fakeType, id
 	proxy.TLSSecure = strings.EqualFold(tls, "tls")
 }
 
-func v2rConf(s string) (Proxy, error) {
-	vmconfig, err := tool.Base64DecodeByte(s)
-	if err != nil {
-		return Proxy{}, err
-	}
-	vmess := Vmess{}
-	err = json.Unmarshal(vmconfig, &vmess)
-	if err != nil {
-		log.LogError("v2ray config json unmarshal failed, err: %v", err)
-		return Proxy{}, err
-	}
+// func v2rConf(s string) (Proxy, error) {
+// 	vmconfig, err := tool.Base64DecodeByte(s)
+// 	if err != nil {
+// 		return Proxy{}, err
+// 	}
+// 	vmess := Vmess{}
+// 	err = json.Unmarshal(vmconfig, &vmess)
+// 	if err != nil {
+// 		log.LogError("v2ray config json unmarshal failed, err: %v", err)
+// 		return Proxy{}, err
+// 	}
 
-	if cast.ToInt(vmess.Port) == 0 {
-		return Proxy{}, errors.New("v2ray config port is 0")
-	}
+// 	if cast.ToInt(vmess.Port) == 0 {
+// 		return Proxy{}, errors.New("v2ray config port is 0")
+// 	}
 
-	host := vmess.Host
-	path := ""
-	switch cast.ToInt(vmess.V) {
-	case 2:
-		path = vmess.Path
-	default: //包括1
-		if host != "" {
-			vArray := strings.Split(host, ";")
-			if len(vArray) == 2 {
-				host, path = vArray[0], vArray[1]
-			}
-		}
-	}
+// 	host := vmess.Host
+// 	path := ""
+// 	switch cast.ToInt(vmess.V) {
+// 	case 2:
+// 		path = vmess.Path
+// 	default: //包括1
+// 		if host != "" {
+// 			vArray := strings.Split(host, ";")
+// 			if len(vArray) == 2 {
+// 				host, path = vArray[0], vArray[1]
+// 			}
+// 		}
+// 	}
 
-	proxy := Proxy{}
-	proxy.vmessConstruct("vmess_group", vmess.PS, vmess.Add, vmess.Port, vmess.Type, vmess.ID,
-		vmess.Aid, vmess.Net, "auto", path, host, "", vmess.TLS, vmess.Sni, nil, nil, nil, nil)
-	return proxy, nil
+// 	proxy := Proxy{}
+// 	proxy.vmessConstruct("vmess_group", vmess.PS, vmess.Add, vmess.Port, vmess.Type, vmess.ID,
+// 		vmess.Aid, vmess.Net, "auto", path, host, "", vmess.TLS, vmess.Sni, nil, nil, nil, nil)
+// 	return proxy, nil
 
-}
+// }
 
 func explodeShadowrocket(rocket string) (Proxy, error) {
 	var add, port, fakeType, id, aid, net, path, host, tls, cipher, remarks string

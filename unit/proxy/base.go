@@ -29,21 +29,25 @@ func subProtocolBody(proxy string, prefix string) string {
 	return strings.TrimSpace(proxy[len(prefix):])
 }
 
-func parseProxy(proxy string) (any, error) {
+func parseProxy(proxy string) (Proxy, error) {
 	switch {
 	case strings.HasPrefix(proxy, ssrHeader):
-		return ssrConf(subProtocolBody(proxy, ssrHeader))
+		// return ssrConf(subProtocolBody(proxy, ssrHeader))
+		return explodeSSR(proxy)
 	case strings.HasPrefix(proxy, vmessHeader):
-		return v2rConf(subProtocolBody(proxy, vmessHeader))
+		// return v2rConf(subProtocolBody(proxy, vmessHeader))
+		return parseProxy(proxy)
 	case strings.HasPrefix(proxy, ssHeader):
-		return ssConf(subProtocolBody(proxy, ssHeader))
+		// return ssConf(subProtocolBody(proxy, ssHeader))
+		return explodeSS(proxy)
 	case strings.HasPrefix(proxy, trojanHeader):
-		return trojanConf(subProtocolBody(proxy, trojanHeader))
-	case strings.HasPrefix(proxy, hysteriaHeader):
-		return hysteriaConf(proxy)
+		// return trojanConf(subProtocolBody(proxy, trojanHeader))
+		return Proxy{}, nil
+		// case strings.HasPrefix(proxy, hysteriaHeader):
+		// 	return hysteriaConf(proxy)
 	}
 
-	return nil, fmt.Errorf("无法识别代理连接, %s", proxy)
+	return Proxy{}, fmt.Errorf("无法识别代理连接, %s", proxy)
 }
 
 func (proxy *Proxy) commonConstruct(proxyType, group, name, server string, port any,

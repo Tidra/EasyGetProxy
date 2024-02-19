@@ -17,7 +17,7 @@ func Test(t *testing.T) {
 
 	// lnk := "trojan-go://f@uck.me/?sni=microsoft.com&type=ws&path=%2Fgo&encryption=ss%3Baes-256-gcm%3Afuckgfw"
 	vmess := "vmess://eyJ2IjoyLCJwcyI6ImdpdGh1Yi5jb20vcmF3IiwiYWRkIjoiMTAzLjg5LjEwLjExIiwicG9ydCI6NDQzLCJpZCI6ImQwZTI2NjQxLWJkNjEtNDIwYy1iOGNkLTk4Y2UzODJlODFiZSIsImFpZCI6MTIzLCJuZXQiOiJ3cyIsInR5cGUiOiJub25lIiwiaG9zdCI6ImdpdGh1Yi5jb20iLCJwYXRoIjoiL3JhdyIsInRscyI6InRscyJ9"
-	b, err := parseProxy(vmess)
+	b, err := explodeShadowrocket(vmess)
 	if err != nil {
 		log.LogError("err: %v", err)
 	}
@@ -44,4 +44,17 @@ func Test(t *testing.T) {
 		log.LogError("err: %v", err)
 	}
 	log.LogInfo("Info %+v", d)
+
+	trojan := "trojan://mypassword@myserver.com:443?type=ws&security=tls&path=%2Fmypath&sni=myserver.com#MyServer"
+	d, err = explodeTrojan(trojan)
+	if err != nil {
+		log.LogError("err: %v", err)
+	}
+	log.LogInfo("Info %+v", d)
+
+	clash := "proxies:\n- {\"name\":\"R[vmess]🇨🇳CN-🇺🇸US_12\",\"server\":\"101.89.154.94\",\"type\":\"vmess\",\"country\":\"🇨🇳CN\",\"port\":19979,\"uuid\":\"941f470e-34e8-3bb0-9b1e-b2c0b4fdb212\",\"alterId\":0,\"cipher\":\"auto\",\"network\":\"ws\",\"servername\":\"cache-hk-2.cn-db.top\",\"http-opts\":{},\"h2-opts\":{},\"skip-cert-verify\":true,\"ws-opts\":{\"path\":\"/db00\",\"headers\":{\"HOST\":\"cache-hk-2.cn-db.top\"}}}"
+	err = explodeClash(clash)
+	if err != nil {
+		log.LogError("err: %v", err)
+	}
 }

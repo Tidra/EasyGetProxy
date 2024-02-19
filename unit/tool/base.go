@@ -19,3 +19,21 @@ func GetUrlArg(args string, key string) string {
 	values, _ := url.ParseQuery(args)
 	return values.Get(key)
 }
+
+func safeAsString(m map[string]interface{}, key string) string {
+	if val, ok := m[key]; ok {
+		if strVal, ok := val.(string); ok {
+			return strVal
+		}
+	}
+	return ""
+}
+
+func safeAsBool(m map[string]interface{}, key string) bool {
+	if val, ok := m[key]; ok {
+		if boolVal, ok := val.(bool); ok {
+			return boolVal
+		}
+	}
+	return false
+}
