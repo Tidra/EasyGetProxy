@@ -3,6 +3,7 @@ module github.com/Tidra/EasyGetProxy
 go 1.20
 
 require (
+	github.com/ghodss/yaml v1.0.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/spf13/cast v1.5.1
 	go.uber.org/atomic v1.7.0 // indirect

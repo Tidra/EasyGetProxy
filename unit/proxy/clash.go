@@ -1,18 +1,21 @@
 package proxy
 
 import (
+	"encoding/json"
 	"regexp"
 
 	"github.com/Tidra/EasyGetProxy/unit/log"
-	"gopkg.in/yaml.v2"
+	"github.com/Tidra/EasyGetProxy/unit/tool"
+	"github.com/ghodss/yaml"
 )
 
 func explodeClash(clash string) error {
-	r := regexp.MustCompile("^(?:Proxy|proxies):$\\s(?:(?:^ +?.*$| *?-.*$|)\\s?)+")
-	clash = r.FindStringSubmatch(clash)[1]
+	re := regexp.MustCompile(`((?m)^(?:Proxy|proxies):$\s(?:(?:^ +?.*$| *?-.*$|)\s?)+)`)
+	clash = re.FindStringSubmatch(clash)[1]
 
-	var yamlnode map[string]interface{}
-	err := yaml.Unmarshal([]byte(clash), &yamlnode)
+	yamlnode := make(map[string]interface{})
+	jsond, err := yaml.YAMLToJSON([]byte(clash))
+	json.Unmarshal(jsond, &yamlnode)
 	if err != nil {
 		return err
 	}
@@ -33,48 +36,56 @@ func explodeClash(clash string) error {
 
 	for _, v := range yamlnode[section].([]interface{}) {
 
+		log.LogInfo("Info %+v", v)
 		singleproxy = v.(map[string]interface{})
-		log.LogInfo("Info %+v", singleproxy)
-		proxytype = tool.safeAsString(singleproxy, "type")
-		ps = tool.safeAsString(singleproxy, "name")
-		server = tool.safeAsString(singleproxy, "server")
-		port = tool.safeAsString(singleproxy, "port")
+		// log.LogInfo("Info %+v", singleproxy)
+		tool.Base64DecodeByte(clash)
+		proxytype = tool.SafeAsString(singleproxy, "type")
+		ps = tool.SafeAsString(singleproxy, "name")
+		server = tool.SafeAsString(singleproxy, "server")
+		port = tool.SafeAsString(singleproxy, "port")
 		if port == "" || port == "0" {
 			continue
 		}
-		udp = tool.safeAsBool(singleproxy, "udp")
-		scv = tool.safeAsBool(singleproxy, "skip-cert-verify")
+		udp = tool.SafeAsBool(singleproxy, "udp")
+		scv = tool.SafeAsBool(singleproxy, "skip-cert-verify")
 		switch proxytype {
 		case "vmess":
 			group = "V2RAY_DEFAULT_GROUP"
-			id = tool.safeAsString(singleproxy, "uuid")
-			aid = tool.safeAsString(singleproxy, "alterId")
-			cipher = tool.safeAsString(singleproxy, "cipher")
-			net = tool.safeAsString(singleproxy, "network")
+			id = tool.SafeAsString(singleproxy, "uuid")
+			aid = tool.SafeAsString(singleproxy, "alterId")
+			cipher = tool.SafeAsString(singleproxy, "cipher")
+			net = tool.SafeAsString(singleproxy, "network")
 			if net == "" {
 				net = "tcp"
 			}
-			sni = tool.safeAsString(singleproxy, "servername")
+			sni = tool.SafeAsString(singleproxy, "servername")
 			switch net {
 			case "http":
-				path = tool.safeAsString(singleproxy["http-opts"].(map[string]interface{})["path"].(map[string]interface{}), "0")
-				host = tool.safeAsString(singleproxy["http-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Host")
+				path = tool.SafeAsString(singleproxy["http-opts"].(map[string]interface{})["path"].(map[string]interface{}), "0")
+				host = tool.SafeAsString(singleproxy["http-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Host")
 				edge = ""
 				break
 			case "ws":
 				if singleproxy["ws-opts"] != nil {
-					path = tool.safeAsString(singleproxy["ws-opts"].(map[string]interface{}), "path")
+					path = tool.SafeAsString(singleproxy["ws-opts"].(map[string]interface{}), "path")
 					if path == "" {
 						path = "/"
 					}
-					host = tool.safeAsString(singleproxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Host")
-					edge = tool.safeAsString(singleproxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Edge")
+					host = tool.SafeAsString(singleproxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Host")
+					edge = tool.SafeAsString(singleproxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Edge")
 				} else {
-					path = tool.safeAsString(singleproxy, "ws-path")
-					host = tool.safeAsString(singleproxy["ws-headers"].(map[string]interface{}), "Host")
-					edge = tool.safeAsString(singleproxy["ws-headers"].(map[string]interface{}), "Edge")
+					path = tool.SafeAsString(singleproxy, "ws-path")
+					host = tool.SafeAsString(singleproxy["ws-headers"].(map[string]interface{}), "Host")
+					edge = tool.SafeAsString(singleproxy["ws-headers"].(map[string]interface{}), "Edge")
 				}
+				break
+			case "h2":
+				path = tool.SafeAsString(singleproxy, "h2-opts")
+				host = tool.SafeAsString(singleproxy["h2-opts"].(map[string]interface{}), "Host")
+
 			}
 		}
 	}
+	return nil
 }
