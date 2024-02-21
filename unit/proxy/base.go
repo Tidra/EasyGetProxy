@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -66,4 +67,8 @@ func (proxy *Proxy) commonConstruct(proxyType, group, name, server string, port 
 	if tls13 != nil {
 		proxy.TLS13 = *tls13
 	}
+}
+
+func (proxy Proxy) IsEmpty() bool {
+	return reflect.DeepEqual(proxy, Proxy{})
 }

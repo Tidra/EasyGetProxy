@@ -9,6 +9,8 @@ const (
 	SSRSuffix
 )
 
+type ProxyList []Proxy
+
 type Proxy struct {
 	Type   string `json:"type,omitempty"`
 	Group  string `json:"group,omitempty"`  // vmess,ssr,ss,socks5,http,trojan,snell

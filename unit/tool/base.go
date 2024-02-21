@@ -1,6 +1,7 @@
 package tool
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -22,8 +23,13 @@ func GetUrlArg(args string, key string) string {
 
 func SafeAsString(m map[string]interface{}, key string) string {
 	if val, ok := m[key]; ok {
-		if strVal, ok := val.(string); ok {
-			return strVal
+		switch s := val.(type) {
+		case string:
+			return s
+		case float64:
+			return fmt.Sprintf("%.0f", s)
+		case int:
+			return fmt.Sprintf("%d", s)
 		}
 	}
 	return ""

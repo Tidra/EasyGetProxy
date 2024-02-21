@@ -17,7 +17,7 @@ func (proxy *Proxy) ssConstruct(group, remarks, server, port, password, method, 
 }
 
 func explodeSS(ss string) (Proxy, error) {
-	var password, method, server, port, plugin, group string
+	var password, method, server, port, plugin string
 	u, err := url.Parse(ss)
 	if err != nil {
 		return Proxy{}, err
@@ -69,11 +69,11 @@ func explodeSS(ss string) (Proxy, error) {
 		pluginOpts.Tls = strings.Contains(pluginString, "tls")
 		pluginOpts.SkipCertVerify = true
 	}
-	group = tool.GetUrlArg(addition, "group")
+	// group = tool.GetUrlArg(addition, "group")
 
 	// 构造节点
 	proxy := Proxy{}
-	proxy.ssConstruct(group, remarks, server, port, password, method, plugin, pluginOpts,
+	proxy.ssConstruct("ss_group", remarks, server, port, password, method, plugin, pluginOpts,
 		nil, nil, nil, nil)
 	return proxy, nil
 }
