@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tidra/EasyGetProxy/unit/config"
 	"github.com/Tidra/EasyGetProxy/unit/log"
+	"github.com/Tidra/EasyGetProxy/unit/web"
 )
 
 func main() {
@@ -18,6 +19,6 @@ func main() {
 
 	log.LogInfo("%+v", config.Config)
 
-	config.ReadFile("sadad")
+	web.StarWeb()
 
 }

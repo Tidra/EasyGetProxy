@@ -63,9 +63,10 @@ func Test(t *testing.T) {
 - {"name":"R[trojan]🇩🇪DE-🇩🇪DE_20 | 0.27Mb","server":"5.104.108.120","type":"trojan","country":"🇩🇪DE","port":443,"password":"45a8d20d-9a78-4be4-a74a-ab3b9e84e34e","sni":"20-24-33-134.nhost.00cdn.com","skip-cert-verify":true,"udp":true}
 - {"name":"R[vmess]🏁 ZZ-🇬🇧GB_58 | 7.34Mb","server":"104.18.202.250","type":"vmess","country":"🏁 ZZ","port":2082,"uuid":"03fcc618-b93d-6796-6aed-8a38c975d581","alterId":0,"cipher":"auto","network":"ws","servername":"erfannewfreenodes.vdmmswyzmzigonvnjk443.workers.dev","http-opts":{},"h2-opts":{},"skip-cert-verify":true,"ws-opts":{"path":"/nina.bond/linkvws","headers":{"HOST":"erfannewfreenodes.vdmmswyzmzigonvnjk443.workers.dev"}}}
 `
-	e, err := explodeClash(clash)
+	e, err := ExplodeClash(clash)
 	if err != nil {
 		log.LogError("err: %v", err)
 	}
 	log.LogInfo("Info %+v", e)
+	ProxiesToClash(e)
 }

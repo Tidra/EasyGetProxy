@@ -1,0 +1,501 @@
+# 所有节点均从公开互联网上抓取，使用clash自动检查可用性即可
+# 抓取程序已开源： https://github.com/zu1k/proxypool
+
+# port of HTTP
+port: 7890
+
+# port of SOCKS5
+socks-port: 7891
+
+# (HTTP and SOCKS5 in one port)
+# mixed-port: 7890
+
+# redir port for Linux and macOS
+# redir-port: 7892
+
+allow-lan: false
+mode: rule
+log-level: info
+external-controller: 127.0.0.1:9090
+
+proxies:
+
+proxy-groups:
+  - name: 全局选择
+    type: select
+    proxies:
+      - 延迟最低
+      - 选择国家
+      - 选择节点
+      - 失败切换
+      - 负载均衡
+  - name: 选择国家
+    type: select
+    proxies:
+      - 🇨🇳 中国
+      - 🇯🇵 日本
+      - 🇸🇬 新加坡
+      - 🇺🇸 美国
+      - 🇨🇦 加拿大
+      - 🇷🇺 俄罗斯
+      - 🇦🇺 澳大利亚
+      - 🇨🇭 瑞士
+      - 🇩🇪 德国
+      - 🇫🇷 法国
+      - 🇬🇧 英国
+      - 🇳🇱 荷兰
+      - 其他国家
+ 
+  # 规则外的
+  - name: 漏网之鱼
+    type: select
+    proxies:
+      - DIRECT
+      - 全局选择
+      - 延迟最低
+      - 选择国家
+      - 选择节点
+      - 失败切换
+      - 负载均衡
+ 
+  # 游戏
+  - name: 游戏
+    type: select
+    proxies:
+      - DIRECT
+      - 全局选择
+      - 延迟最低
+      - 选择国家
+      - 选择节点
+      - 失败切换
+      - 负载均衡
+ 
+  # 代理域名
+  - name: 代理域名
+    type: select
+    proxies:
+      - DIRECT
+      - 全局选择
+      - 延迟最低
+      - 选择国家
+      - 选择节点
+      - 失败切换
+      - 负载均衡
+ 
+  # 广告
+  - name: 广告
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+
+  - name: 选择节点
+    type: select
+    use:
+      - all
+  - name: 🇨🇳 中国
+    type: select
+    proxies:
+      - 🇨🇳 中国-失败切换
+      - 🇨🇳 中国-自选
+      - 🇨🇳 中国-延迟
+  - name: 🇨🇳 中国-自选
+    type: select
+    use:
+      - cn
+  - name: 🇨🇳 中国-延迟
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    filter: 'HK|TW'
+    use:
+      - cn
+  - name: 🇨🇳 中国-失败切换
+    type: fallback
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    filter: 'HK|TW'
+    use:
+      - cn
+  - name: 🇯🇵 日本
+    type: select
+    proxies:
+      - 🇯🇵 日本-失败切换
+      - 🇯🇵 日本-自选
+      - 🇯🇵 日本-延迟
+  - name: 🇯🇵 日本-自选
+    type: select
+    use:
+      - jp
+  - name: 🇯🇵 日本-延迟
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - jp
+  - name: 🇯🇵 日本-失败切换
+    type: fallback
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - jp
+  - name: 🇸🇬 新加坡
+    type: select
+    proxies:
+      - 🇸🇬 新加坡-失败切换
+      - 🇸🇬 新加坡-自选
+      - 🇸🇬 新加坡-延迟
+  - name: 🇸🇬 新加坡-自选
+    type: select
+    use:
+      - sg
+  - name: 🇸🇬 新加坡-延迟
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - sg
+  - name: 🇸🇬 新加坡-失败切换
+    type: fallback
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - sg
+  - name: 🇺🇸 美国
+    type: select
+    proxies:
+      - 🇺🇸 美国-失败切换
+      - 🇺🇸 美国-自选
+      - 🇺🇸 美国-延迟
+  - name: 🇺🇸 美国-自选
+    type: select
+    use:
+      - us
+  - name: 🇺🇸 美国-延迟
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    filter: '\|'
+    use:
+      - us
+  - name: 🇺🇸 美国-失败切换
+    type: fallback
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    filter: '\|'
+    use:
+      - us
+  - name: 🇨🇦 加拿大
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - ca
+  - name: 🇷🇺 俄罗斯
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - ru
+  - name: 🇦🇺 澳大利亚
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - au
+  - name: 🇨🇭 瑞士
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - ch
+  - name: 🇩🇪 德国
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - de
+  - name: 🇫🇷 法国
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - fr
+  - name: 🇬🇧 英国
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - gb
+  - name: 🇳🇱 荷兰
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - nl
+  - name: 其他国家
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - others
+  - name: 延迟最低
+    type: url-test
+    use:
+      - all
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+  - name: 负载均衡
+    type: load-balance
+    use:
+      - all
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+  - name: 失败切换
+    type: fallback
+    use:
+      - all
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+
+proxy-providers:
+  au:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=AU"
+    path: localproviders/provider-au.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  cn:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=CN,HK,TW"
+    path: localproviders/provider-cn.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  us:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=US"
+    path: localproviders/provider-us.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  ca:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=CA"
+    path: localproviders/provider-ca.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  jp:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=JP"
+    path: localproviders/provider-jp.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  sg:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=SG"
+    path: localproviders/provider-sg.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  ru:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=RU"
+    path: localproviders/provider-ru.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  ch:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=CH"
+    path: localproviders/provider-ch.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  de:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=DE"
+    path: localproviders/provider-de.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  fr:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=FR"
+    path: localproviders/provider-fr.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  gb:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=GB"
+    path: localproviders/provider-gb.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  nl:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?c=NL"
+    path: localproviders/provider-nl.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  others:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies?nc=CN,HK,TW,US,CA,JP,SG,AU,CH,DE,GB,NL,FR,RU"
+    path: localproviders/provider-others.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  all:
+    type: http
+    url: "http://127.0.0.1:{{ .port }}/clash/proxies"
+    path: localproviders/provider.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+
+rules:
+  - RULE-SET,applications,DIRECT
+  - DOMAIN,clash.razord.top,DIRECT
+  - DOMAIN,yacd.haishan.me,DIRECT
+  - RULE-SET,private,DIRECT
+  - RULE-SET,reject,广告
+  - RULE-SET,icloud,DIRECT #
+  - RULE-SET,apple,DIRECT # 这三个为国内可直连地址，如果希望走代理改为全局选择
+  - RULE-SET,google,DIRECT # 
+  - RULE-SET,tld-not-cn,全局选择
+  - RULE-SET,gfw,全局选择
+  - RULE-SET,greatfire,全局选择
+  - RULE-SET,telegramcidr,全局选择
+  - RULE-SET,lancidr,DIRECT
+  - RULE-SET,cncidr,DIRECT
+  - RULE-SET,china,DIRECT
+  - GEOIP,LAN,DIRECT
+  - GEOIP,CN,DIRECT
+  - RULE-SET,direct,DIRECT
+  - RULE-SET,proxy,代理域名
+  - MATCH,漏网之鱼 # 规则之外的
+
+rule-providers:
+  reject: # 广告域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
+    path: ./ruleset/reject.yaml
+    interval: 86400
+    
+  icloud: # iCloud 域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt"
+    path: ./ruleset/icloud.yaml
+    interval: 86400
+    
+  apple: # Apple 在中国大陆可直连的域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt"
+    path: ./ruleset/apple.yaml
+    interval: 86400
+    
+  google: # Google 在中国大陆可直连的域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt"
+    path: ./ruleset/google.yaml
+    interval: 86400
+    
+  proxy: # 代理域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt"
+    path: ./ruleset/proxy.yaml
+    interval: 86400
+    
+  direct: # 直连域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt"
+    path: ./ruleset/direct.yaml
+    interval: 86400
+    
+  private: # 私有网络专用域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt"
+    path: ./ruleset/private.yaml
+    interval: 86400
+    
+  gfw: # GFWList 域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt"
+    path: ./ruleset/gfw.yaml
+    interval: 86400
+    
+  greatfire: # GreatFire 域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/greatfire.txt"
+    path: ./ruleset/greatfire.yaml
+    interval: 86400
+    
+  tld-not-cn: # 非中国大陆使用的顶级域名列表
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt"
+    path: ./ruleset/tld-not-cn.yaml
+    interval: 86400
+    
+  telegramcidr: # Telegram 使用的 IP 地址列表
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt"
+    path: ./ruleset/telegramcidr.yaml
+    interval: 86400
+    
+  cncidr: # 中国大陆 IP 地址列表
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt"
+    path: ./ruleset/cncidr.yaml
+    interval: 86400
+  
+  china:
+    type: http
+    behavior: classical
+    url: https://raw.staticdn.net/DivineEngine/Profiles/master/Clash/RuleSet/China.yaml
+    path: ./ruleset/china.yaml
+    interval: 86400
+    
+  lancidr: # 局域网 IP 及保留 IP 地址列表
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt"
+    path: ./ruleset/lancidr.yaml
+    interval: 86400
+    
+  applications: # 需要直连的常见软件列表
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt"
+    path: ./ruleset/applications.yaml
+    interval: 86400

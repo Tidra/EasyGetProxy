@@ -50,7 +50,7 @@ var Config ConfigOptions
 
 func (config ConfigOptions) HostUrl() string {
 	if config.Web.Domain == "" {
-		return "127.0.0.1:" + config.Web.Domain
+		return "127.0.0.1:" + config.Web.Port
 	} else {
 		return config.Web.Domain
 	}

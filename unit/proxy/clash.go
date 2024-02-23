@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-func explodeClash(clash string) (ProxyList, error) {
+func ExplodeClash(clash string) (ProxyList, error) {
 	proxyList := make(ProxyList, 0)
 	re := regexp.MustCompile(`((?m)^(?:Proxy|proxies):$\s(?:(?:^ +?.*$| *?-.*$|)\s?)+)`)
 	clash = re.FindStringSubmatch(clash)[1]
@@ -67,10 +68,10 @@ func explodeClash(clash string) (ProxyList, error) {
 			case "ws":
 				if singleProxy["ws-opts"] != nil {
 					path = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{}), "path")
-					if path == "" {
-						path = "/"
-					}
 					host = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Host")
+					if host == "" {
+						host = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "HOST")
+					}
 					edge = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Edge")
 				} else {
 					path = tool.SafeAsString(singleProxy, "ws-path")
@@ -173,7 +174,6 @@ func explodeClash(clash string) (ProxyList, error) {
 			default:
 				net = "tcp"
 			}
-
 			proxy.trojanConstruct("trojan_group", remark, server, port, password, net, host, path, true, &udp, &tfo, &scv, nil)
 		}
 		if !proxy.IsEmpty() {
@@ -181,4 +181,125 @@ func explodeClash(clash string) (ProxyList, error) {
 		}
 	}
 	return proxyList, nil
+}
+
+func ProxiesToClash(proxyList ProxyList) string {
+	var clashStrings strings.Builder
+	clashStrings.WriteString("proxies:\n")
+
+	for _, node := range proxyList {
+		clashNode := make(map[string]interface{})
+		clashNode["name"] = node.Name
+		clashNode["server"] = node.Server
+		clashNode["port"] = node.Port
+		clashNode["type"] = node.Type
+
+		// TODO: 判断空值是否输出
+		// https://github.com/tindy2013/subconverter/blob/master/src/generator/config/subexport.cpp#L227
+		switch node.Type {
+		case "ss":
+			// TODO: 判断协议是否符合
+			clashNode["cipher"] = node.EncryptMethod
+			clashNode["password"] = node.Password
+			clashNode["plugin"] = node.Plugin
+			clashNode["plugin-opts"] = node.PluginOption
+		case "vmess":
+			clashNode["uuid"] = node.UUID
+			clashNode["alterId"] = node.AlterID
+			clashNode["cipher"] = node.EncryptMethod
+			clashNode["tls"] = node.TLSSecure
+			clashNode["udp"] = node.UDP
+			clashNode["skip-cert-verify"] = node.SkipCertVerify
+			clashNode["servername"] = node.ServerName
+			switch node.TransferProtocol {
+			case "ws":
+				clashNode["network"] = node.TransferProtocol
+				clashNode["ws-opts"] = map[string]interface{}{
+					"path": node.Path,
+					"headers": map[string]interface{}{
+						"Host": node.Host,
+						"Edge": node.Edge,
+					},
+				}
+				// TODO: 不同的clash的ws写法
+				// clashNode["ws-path"] = node.Path
+				// if node.Host != "" && node.Edge != "" {
+				// 	clashNode["ws-headers"] = map[string]interface{}{"Host": node.Host, "Edge": node.Edge}
+				// }
+			case "http":
+				clashNode["network"] = node.TransferProtocol
+				clashNode["http-opts"] = map[string]interface{}{
+					"method": "GET",
+					"path":   node.Path,
+					"Host":   node.Host,
+					"Edge":   node.Edge,
+				}
+			case "h2":
+				clashNode["network"] = node.TransferProtocol
+				clashNode["h2-opts"] = map[string]interface{}{
+					"path": node.Path,
+					"host": node.Host,
+				}
+			case "grpc":
+				clashNode["network"] = node.TransferProtocol
+				clashNode["servername"] = node.Host
+				clashNode["grpc-opts"] = map[string]interface{}{"grpc-service-name": node.Path}
+			}
+		case "ssr":
+			// TODO: 判断协议是否符合
+			if node.EncryptMethod == "none" {
+				clashNode["cipher"] = "dummy"
+			} else {
+				clashNode["cipher"] = node.EncryptMethod
+			}
+			clashNode["password"] = node.Password
+			clashNode["protocol"] = node.Protocol
+			clashNode["obfs"] = node.OBFS
+			clashNode["protocol-param"] = node.ProtocolParam
+			clashNode["obfs-param"] = node.OBFSParam
+			// TODO: clashR支持
+			// clashNode["protocolparam"] = node.ProtocolParam
+			// clashNode["obfsparam"] = node.OBFSParam
+		case "socks5":
+			clashNode["username"] = node.Username
+			clashNode["password"] = node.Password
+			clashNode["skip-cert-verify"] = node.SkipCertVerify
+		case "http", "https":
+			clashNode["username"] = node.Username
+			clashNode["password"] = node.Password
+			clashNode["tls"] = node.TLSSecure
+			clashNode["skip-cert-verify"] = node.SkipCertVerify
+		case "trojan":
+			clashNode["password"] = node.Password
+			clashNode["sni"] = node.Host
+			clashNode["udp"] = node.UDP
+			clashNode["skip-cert-verify"] = node.SkipCertVerify
+			switch node.TransferProtocol {
+			case "grpc":
+				clashNode["network"] = node.TransferProtocol
+				clashNode["grpc-opts"] = map[string]interface{}{"grpc-service-name": node.Path}
+			case "ws":
+				clashNode["network"] = node.TransferProtocol
+				clashNode["ws-opts"] = map[string]interface{}{
+					"path": node.Path,
+					"headers": map[string]interface{}{
+						"Host": node.Host,
+					},
+				}
+			}
+		}
+
+		jsonData, err := json.Marshal(clashNode)
+		if err != nil {
+			fmt.Println("JSON marshal error:", err)
+		}
+
+		// 追加到输出字符串中
+		clashStrings.WriteString("- " + string(jsonData) + "\n")
+	}
+
+	if clashStrings.Len() == 9 { //如果没有proxy，添加无效的NULL节点，防止Clash对空节点的Provider报错
+		clashStrings.WriteString("- {\"name\":\"NULL\",\"server\":\"NULL\",\"port\":11708,\"type\":\"ssr\",\"country\":\"NULL\",\"password\":\"sEscPBiAD9K$\\u0026@79\",\"cipher\":\"aes-256-cfb\",\"protocol\":\"origin\",\"protocol_param\":\"NULL\",\"obfs\":\"http_simple\"}")
+	}
+	return clashStrings.String()
 }
