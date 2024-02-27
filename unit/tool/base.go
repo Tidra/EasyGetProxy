@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func GetFileFullPath(path string) string {
@@ -25,7 +26,7 @@ func SafeAsString(m map[string]interface{}, key string) string {
 	if val, ok := m[key]; ok {
 		switch s := val.(type) {
 		case string:
-			return s
+			return strings.TrimSpace(s)
 		case float64:
 			return fmt.Sprintf("%.0f", s)
 		case int:

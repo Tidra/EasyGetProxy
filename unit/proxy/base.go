@@ -30,14 +30,14 @@ func subProtocolBody(proxy string, prefix string) string {
 	return strings.TrimSpace(proxy[len(prefix):])
 }
 
-func parseProxy(proxy string) (Proxy, error) {
+func ParseProxy(proxy string) (Proxy, error) {
 	switch {
 	case strings.HasPrefix(proxy, ssrHeader):
 		// return ssrConf(subProtocolBody(proxy, ssrHeader))
 		return explodeSSR(proxy)
 	case strings.HasPrefix(proxy, vmessHeader):
 		// return v2rConf(subProtocolBody(proxy, vmessHeader))
-		return parseProxy(proxy)
+		return explodeVmess(proxy)
 	case strings.HasPrefix(proxy, ssHeader):
 		// return ssConf(subProtocolBody(proxy, ssHeader))
 		return explodeSS(proxy)
@@ -71,4 +71,18 @@ func (proxy *Proxy) commonConstruct(proxyType, group, name, server string, port 
 
 func (proxy Proxy) IsEmpty() bool {
 	return reflect.DeepEqual(proxy, Proxy{})
+}
+
+func (proxyList *ProxyList) UniqAppendProxy(newProxy Proxy) ProxyList {
+	if len(*proxyList) == 0 {
+		*proxyList = append(*proxyList, newProxy)
+		return *proxyList
+	}
+	for i := range *proxyList {
+		if reflect.DeepEqual((*proxyList)[i], newProxy) {
+			return *proxyList
+		}
+	}
+	*proxyList = append(*proxyList, newProxy)
+	return *proxyList
 }

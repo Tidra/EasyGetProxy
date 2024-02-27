@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"regexp"
@@ -99,10 +100,10 @@ func (proxy *Proxy) vmessConstruct(group, ps, add string, port any, fakeType, id
 
 // }
 
-func explodeShadowrocket(rocket string) (Proxy, error) {
+func explodeShadowrocket(vmess string) (Proxy, error) {
 	var add, port, fakeType, id, aid, net, path, host, tls, cipher, remarks string
 
-	u, err := url.Parse(rocket)
+	u, err := url.Parse(vmess)
 	if err != nil {
 		return Proxy{}, err
 	}
@@ -160,12 +161,12 @@ func explodeShadowrocket(rocket string) (Proxy, error) {
 	return proxy, nil
 }
 
-func explodeKitsunebi(kit string) (Proxy, error) {
+func explodeKitsunebi(vmess string) (Proxy, error) {
 	var add, port, fakeType, id, path, host, tls, remarks string
 	// 其他变量定义
 	aid, net, cipher := "0", "tcp", "auto"
 
-	u, err := url.Parse(kit)
+	u, err := url.Parse(vmess)
 	if err != nil {
 		return Proxy{}, err
 	}
@@ -213,6 +214,75 @@ func explodeKitsunebi(kit string) (Proxy, error) {
 		path, host, "", tls, "", nil, nil, &scv, nil)
 	return proxy, nil
 
+}
+
+func explodeVmess(vmess string) (Proxy, error) {
+	shadowrocketPattern := regexp.MustCompile(`vmess://([A-Za-z0-9-_]+)\?(.*)`)
+	// stdVMessPattern := regexp.MustCompile(`vmess://(.*?)@(.*)`)
+	kitsunebiPattern := regexp.MustCompile(`vmess1://(.*?)\?(.*)`)
+
+	if shadowrocketPattern.MatchString(vmess) {
+		return explodeShadowrocket(vmess)
+		// } else if stdVMessPattern.MatchString(vmess) {
+		// 	return		explodeStdVMess(vmess)
+	} else if kitsunebiPattern.MatchString(vmess) {
+		return explodeKitsunebi(vmess)
+	}
+
+	// 定义正则表达式
+	re := regexp.MustCompile("(vmess|vmess1)://")
+	// 使用正则表达式替换并解码
+	vmess, err := tool.Base64DecodeString(re.ReplaceAllString(vmess, ""))
+	if err != nil {
+		return Proxy{}, errors.New("base64解码失败")
+	}
+	// log.LogInfo(vmess)
+
+	var version, ps, add, port, fakeType, id, aid, net, path, host, tls, sni string
+	var jsondata map[string]interface{}
+	err = json.Unmarshal([]byte(vmess), &jsondata)
+	// 判断是否解析出错或者解析结果不是一个对象
+	if err != nil || jsondata == nil {
+		return Proxy{}, errors.New("JSON解析出错或者不是一个对象")
+	}
+
+	// 获取version
+	version = tool.SafeAsString(jsondata, "v")
+	if version == "" {
+		version = "1"
+	}
+	ps = tool.SafeAsString(jsondata, "ps")
+	add = tool.SafeAsString(jsondata, "add")
+	port = tool.SafeAsString(jsondata, "port")
+	if port == "0" || port == "" {
+		return Proxy{}, errors.New("端口不能为0或置空")
+	}
+	fakeType = tool.SafeAsString(jsondata, "type")
+	id = tool.SafeAsString(jsondata, "id")
+	aid = tool.SafeAsString(jsondata, "aid")
+	net = tool.SafeAsString(jsondata, "net")
+	tls = tool.SafeAsString(jsondata, "tls")
+
+	host = tool.SafeAsString(jsondata, "host")
+	sni = tool.SafeAsString(jsondata, "sni")
+	switch version {
+	case "1":
+		if host != "" {
+			vArray := strings.Split(host, ";")
+			if len(vArray) == 2 {
+				host = vArray[0]
+				path = vArray[1]
+			}
+		}
+	case "2":
+		path = tool.SafeAsString(jsondata, "path")
+	}
+
+	// 构造节点
+	proxy := Proxy{}
+	proxy.vmessConstruct("vmess_group", ps, add, port, fakeType, id, aid, net, "auto",
+		path, host, "", tls, sni, nil, nil, nil, nil)
+	return proxy, nil
 }
 
 // func v2rConf(s string) (ClashVmess, error) {

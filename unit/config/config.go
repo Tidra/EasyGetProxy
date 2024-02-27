@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/Tidra/EasyGetProxy/unit/log"
@@ -149,7 +150,14 @@ func ReadFile(path string) ([]byte, error) {
 		}
 		defer resp.Body.Close()
 		return io.ReadAll(resp.Body)
+	} else if filepath.IsAbs(path) {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			return nil, err
+		}
+		return os.ReadFile(path)
 	} else {
+		configDir := filepath.Dir(configFilePath)
+		path = filepath.Join(configDir, path)
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			return nil, err
 		}

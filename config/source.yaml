@@ -1,0 +1,7 @@
+# - type: clash
+#   options:
+#     url: https://nodefree.org/dy/2024/02/20240227.yaml
+
+- type: sub
+  options:
+    url: https://nodefree.org/dy/2024/02/20240227.txt
