@@ -56,8 +56,9 @@ func Test_main(t *testing.T) {
 
 	// for 用于阻塞goroutine
 	for p := range proxysChannel {
-		proxies = proxies.UniqAppendProxy(p)
+		proxies.UniqAppendProxy(p)
 	}
+	log.LogDebug("count=%d", len(proxies))
 	web.SetProxies("all", proxies)
 
 	web.StarWeb()

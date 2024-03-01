@@ -2,7 +2,7 @@ package proxy
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"regexp"
 	"strings"
 
@@ -14,6 +14,10 @@ import (
 func ExplodeClash(clash string) (ProxyList, error) {
 	proxyList := make(ProxyList, 0)
 	re := regexp.MustCompile(`((?m)^(?:Proxy|proxies):$\s(?:(?:^ +?.*$| *?-.*$|)\s?)+)`)
+	reResult := re.FindStringSubmatch(clash)
+	if len(reResult) < 1 {
+		return nil, errors.New("未找到有效的节点信息")
+	}
 	clash = re.FindStringSubmatch(clash)[1]
 
 	yamlnode := make(map[string]interface{})
@@ -37,9 +41,9 @@ func ExplodeClash(clash string) (ProxyList, error) {
 
 	for _, v := range yamlnode[section].([]interface{}) {
 		proxy := Proxy{}
-		log.LogInfo("Info %+v", v)
+		// log.LogInfo("Info %+v", v)
 		singleProxy = v.(map[string]interface{})
-		// log.LogInfo("Info %+v", singleproxy)
+		// log.LogInfo("Info %+v", singleProxy)
 		tool.Base64DecodeByte(clash)
 		proxyType = tool.SafeAsString(singleProxy, "type")
 		remark = tool.SafeAsString(singleProxy, "name")
@@ -62,27 +66,27 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			sni = tool.SafeAsString(singleProxy, "servername")
 			switch net {
 			case "http":
-				path = tool.SafeAsString(singleProxy["http-opts"].(map[string]interface{})["path"].(map[string]interface{}), "0")
-				host = tool.SafeAsString(singleProxy["http-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Host")
+				path = tool.SafeAsString(singleProxy, "http-opts", "path", "0")
+				host = tool.SafeAsString(singleProxy, "http-opts", "headers", "Host")
 				edge = ""
 			case "ws":
 				if singleProxy["ws-opts"] != nil {
-					path = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{}), "path")
-					host = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Host")
+					path = tool.SafeAsString(singleProxy, "ws-opts", "path")
+					host = tool.SafeAsString(singleProxy, "ws-opts", "headers", "Host")
 					if host == "" {
-						host = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "HOST")
+						host = tool.SafeAsString(singleProxy, "ws-opts", "headers", "HOST")
 					}
-					edge = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{})["headers"].(map[string]interface{}), "Edge")
+					edge = tool.SafeAsString(singleProxy, "ws-opts", "headers", "Edge")
 				} else {
 					path = tool.SafeAsString(singleProxy, "ws-path")
-					host = tool.SafeAsString(singleProxy["ws-headers"].(map[string]interface{}), "Host")
-					edge = tool.SafeAsString(singleProxy["ws-headers"].(map[string]interface{}), "Edge")
+					host = tool.SafeAsString(singleProxy, "ws-headers", "Host")
+					edge = tool.SafeAsString(singleProxy, "ws-headers", "Edge")
 				}
 			case "h2":
-				path = tool.SafeAsString(singleProxy["h2-opts"].(map[string]interface{}), "path")
-				host = tool.SafeAsString(singleProxy["h2-opts"].(map[string]interface{}), "host")
+				path = tool.SafeAsString(singleProxy, "h2-opts", "path")
+				host = tool.SafeAsString(singleProxy, "h2-opts", "host")
 			case "grpc":
-				path = tool.SafeAsString(singleProxy["grpc-opts"].(map[string]interface{}), "grpc-service-name")
+				path = tool.SafeAsString(singleProxy, "grpc-opts", "grpc-service-name")
 				host = tool.SafeAsString(singleProxy, "servername")
 			}
 
@@ -104,17 +108,17 @@ func ExplodeClash(clash string) (ProxyList, error) {
 				case "obfs":
 					plugin = "obfs-local"
 					if singleProxy["plugin-opts"] != nil {
-						pluginOpts.Mode = tool.SafeAsString(singleProxy["plugin-opts"].(map[string]interface{}), "mode")
-						pluginOpts.Host = tool.SafeAsString(singleProxy["plugin-opts"].(map[string]interface{}), "host")
+						pluginOpts.Mode = tool.SafeAsString(singleProxy, "plugin-opts", "mode")
+						pluginOpts.Host = tool.SafeAsString(singleProxy, "plugin-opts", "host")
 					}
 				case "v2ray-plugin":
 					plugin = "v2ray-plugin"
 					if singleProxy["plugin-opts"] != nil {
-						pluginOpts.Mode = tool.SafeAsString(singleProxy["plugin-opts"].(map[string]interface{}), "mode")
-						pluginOpts.Host = tool.SafeAsString(singleProxy["plugin-opts"].(map[string]interface{}), "host")
-						pluginOpts.Tls = tool.SafeAsBool(singleProxy["plugin-opts"].(map[string]interface{}), "host")
-						pluginOpts.Path = tool.SafeAsString(singleProxy["plugin-opts"].(map[string]interface{}), "path")
-						pluginOpts.Mux = tool.SafeAsBool(singleProxy["plugin-opts"].(map[string]interface{}), "mux")
+						pluginOpts.Mode = tool.SafeAsString(singleProxy, "plugin-opts", "mode")
+						pluginOpts.Host = tool.SafeAsString(singleProxy, "plugin-opts", "host")
+						pluginOpts.Tls = tool.SafeAsBool(singleProxy, "plugin-opts", "host")
+						pluginOpts.Path = tool.SafeAsString(singleProxy, "plugin-opts", "path")
+						pluginOpts.Mux = tool.SafeAsBool(singleProxy, "plugin-opts", "mux")
 					}
 				}
 			} else if singleProxy["obfs"] != nil {
@@ -168,9 +172,9 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			net = tool.SafeAsString(singleProxy, "network")
 			switch net {
 			case "grpc":
-				path = tool.SafeAsString(singleProxy["grpc-opts"].(map[string]interface{}), "grpc-service-name")
+				path = tool.SafeAsString(singleProxy, "grpc-opts", "grpc-service-name")
 			case "ws":
-				path = tool.SafeAsString(singleProxy["ws-opts"].(map[string]interface{}), "path")
+				path = tool.SafeAsString(singleProxy, "ws-opts", "path")
 			default:
 				net = "tcp"
 			}
@@ -291,7 +295,7 @@ func ProxiesToClash(proxyList ProxyList) string {
 
 		jsonData, err := json.Marshal(clashNode)
 		if err != nil {
-			fmt.Println("JSON marshal error:", err)
+			log.LogError("JSON marshal error:", err)
 		}
 
 		// 追加到输出字符串中

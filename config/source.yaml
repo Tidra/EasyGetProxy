@@ -2,6 +2,27 @@
 #   options:
 #     url: https://nodefree.org/dy/2024/02/20240227.yaml
 
-- type: sub
+# - type: subscribe
+#   options:
+#     url: https://nodefree.org/dy/2024/02/20240227.txt
+
+# - type: crawl
+#   options:
+#     url: https://nodefree.org
+#     subs: 
+#       - type: url
+#         xpath: //div/main/section/div/ul/li[1]/div[2]/h2/a
+#         subs:
+#           - type: subscribe
+#             xpath: //div[1]/div[2]/div[1]/div/div/p[1]
+#           - type: subscribe
+#             xpath: //div[1]/div[2]/div[1]/div/div/p[1]
+#           - type: clash
+#             xpath: //div[1]/div[2]/div[1]/div/div/p[2]
+            
+- type: crawl
   options:
-    url: https://nodefree.org/dy/2024/02/20240227.txt
+    url: https://github.com/aiboboxx/v2rayfree
+    subs: 
+      - type: fuzzy
+        xpath: //*[@id="repo-content-pjax-container"]/div/div/div[2]/div[1]/react-partial/div/div/div[3]/div[2]/div/div[2]/article/div[8]/pre/code/text()

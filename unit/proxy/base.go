@@ -3,7 +3,6 @@ package proxy
 import (
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/spf13/cast"
@@ -17,20 +16,17 @@ const (
 	hysteriaHeader = "hysteria://"
 )
 
-var (
-	//ssReg      = regexp.MustCompile(`(?m)ss://(\w+)@([^:]+):(\d+)\?plugin=([^;]+);\w+=(\w+)(?:;obfs-host=)?([^#]+)?#(.+)`)
-	ssReg2 = regexp.MustCompile(`(?m)([\-0-9a-z]+):(.+)@(.+):(\d+)(.+)?#(.+)`)
-	ssReg  = regexp.MustCompile(`(?m)([^@]+)(@.+)?#?(.+)?`)
+// var (
+// 	ssReg  = regexp.MustCompile(`(?m)ss://(\w+)@([^:]+):(\d+)\?plugin=([^;]+);\w+=(\w+)(?:;obfs-host=)?([^#]+)?#(.+)`)
+// 	ssReg2 = regexp.MustCompile(`(?m)([\-0-9a-z]+):(.+)@(.+):(\d+)(.+)?#(.+)`)
+// 	ssReg  = regexp.MustCompile(`(?m)([^@]+)(@.+)?#?(.+)?`)
 
-	trojanReg  = regexp.MustCompile(`(?m)^trojan://(.+)@(.+):(\d+)\?allowInsecure=\d&peer=(.+)#(.+)`)
-	trojanReg2 = regexp.MustCompile(`(?m)^trojan://(.+)@(.+):(\d+)#(.+)$`)
-)
-
-func subProtocolBody(proxy string, prefix string) string {
-	return strings.TrimSpace(proxy[len(prefix):])
-}
+// 	trojanReg  = regexp.MustCompile(`(?m)^trojan://(.+)@(.+):(\d+)\?allowInsecure=\d&peer=(.+)#(.+)`)
+// 	trojanReg2 = regexp.MustCompile(`(?m)^trojan://(.+)@(.+):(\d+)#(.+)$`)
+// )
 
 func ParseProxy(proxy string) (Proxy, error) {
+	// log.LogDebug(proxy)
 	switch {
 	case strings.HasPrefix(proxy, ssrHeader):
 		// return ssrConf(subProtocolBody(proxy, ssrHeader))
@@ -43,7 +39,7 @@ func ParseProxy(proxy string) (Proxy, error) {
 		return explodeSS(proxy)
 	case strings.HasPrefix(proxy, trojanHeader):
 		// return trojanConf(subProtocolBody(proxy, trojanHeader))
-		return Proxy{}, nil
+		return explodeTrojan(proxy)
 		// case strings.HasPrefix(proxy, hysteriaHeader):
 		// 	return hysteriaConf(proxy)
 	}
@@ -73,16 +69,70 @@ func (proxy Proxy) IsEmpty() bool {
 	return reflect.DeepEqual(proxy, Proxy{})
 }
 
-func (proxyList *ProxyList) UniqAppendProxy(newProxy Proxy) ProxyList {
-	if len(*proxyList) == 0 {
-		*proxyList = append(*proxyList, newProxy)
-		return *proxyList
+func (pl *ProxyList) UniqAppendProxy(newProxy Proxy) {
+	if len(*pl) == 0 {
+		*pl = append(*pl, newProxy)
 	}
-	for i := range *proxyList {
-		if reflect.DeepEqual((*proxyList)[i], newProxy) {
-			return *proxyList
+	for _, p := range *pl {
+		if reflect.DeepEqual(p, newProxy) {
+			// 如果代理已经存在，抛弃新的代理
+			return
 		}
 	}
-	*proxyList = append(*proxyList, newProxy)
-	return *proxyList
+	*pl = append(*pl, newProxy)
+}
+
+func (pl *ProxyList) UniqAppendProxys(newProxyList ProxyList) {
+	for _, newProxy := range newProxyList {
+		exists := false
+		for _, p := range *pl {
+			if reflect.DeepEqual(p, newProxy) {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			*pl = append(*pl, newProxy)
+		}
+	}
+}
+
+func (pl ProxyList) Filter(proxyTypes string, proxyCountry string, proxyNotCountry string) ProxyList {
+	newProxyList := make(ProxyList, 0)
+
+	if proxyTypes == "all" {
+		proxyTypes = ""
+	}
+	types := strings.Split(proxyTypes, ",")
+	countries := strings.Split(proxyCountry, ",")
+	notCountries := strings.Split(proxyNotCountry, ",")
+
+	findKey := func(arr []string, key string) bool {
+		for _, i := range arr {
+			if i == key {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, p := range pl {
+		if proxyTypes != "" {
+			if !findKey(types, p.Type) {
+				continue
+			}
+		}
+		if proxyCountry != "" {
+			if !findKey(countries, p.Country) {
+				continue
+			}
+		}
+		if proxyNotCountry != "" {
+			if findKey(notCountries, p.Country) {
+				continue
+			}
+		}
+		newProxyList = append(newProxyList, p)
+	}
+	return newProxyList
 }

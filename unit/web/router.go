@@ -67,9 +67,54 @@ func setupRouter() {
 		})
 	})
 
+	router.GET("/clash", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "assets/html/clash.html", gin.H{
+			"domain": config.Config.Web.Domain,
+			"port":   config.Config.Web.Port,
+		})
+	})
+
+	router.GET("/shadowrocket", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "assets/html/shadowrocket.html", gin.H{
+			"domain": config.Config.Web.Domain,
+		})
+	})
+
+	router.GET("/clash/config", func(c *gin.Context) {
+		domainUrl := strings.Split(config.Config.Web.Domain, ":")[0]
+		c.HTML(http.StatusOK, "assets/html/clash-config.yaml", gin.H{
+			"domain":         config.Config.Web.Domain,
+			"domain_url":     domainUrl,
+			"delaydheck_url": config.Config.HealthCheck.Url,
+		})
+	})
+	router.GET("/clash/localconfig", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "assets/html/clash-config-local.yaml", gin.H{
+			"domain":         config.Config.Web.Domain,
+			"delaydheck_url": config.Config.HealthCheck.Url,
+			"port":           config.Config.Web.Port,
+		})
+	})
+
 	router.GET("/clash/proxies", func(web *gin.Context) {
-		allProxies := GetProxies("all")
-		web.String(200, proxy.ProxiesToClash(allProxies))
+		proxyTypes := web.DefaultQuery("type", "")
+		proxyCountry := web.DefaultQuery("c", "")
+		proxyNotCountry := web.DefaultQuery("nc", "")
+		text := ""
+		if (proxyTypes == "" || proxyTypes == "all") && proxyCountry == "" && proxyNotCountry == "" {
+			text = GetString("all-clash")
+			if text == "" {
+				allProxies := GetProxies("all")
+				text = proxy.ProxiesToClash(allProxies)
+				SetString("all-clash", text)
+			}
+		} else {
+			allProxies := GetProxies("all")
+			filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+			text = proxy.ProxiesToClash(filterProxies)
+		}
+
+		web.String(200, text)
 	})
 }
 

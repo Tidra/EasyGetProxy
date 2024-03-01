@@ -11,15 +11,15 @@ import (
 )
 
 func init() {
-	Register("sub", initSubGetter)
+	Register("subscribe", initSubscribeGetter)
 }
 
-type Sub struct {
+type Subscribe struct {
 	Url string
 }
 
 // Get implements Getter.
-func (s *Sub) Get() proxy.ProxyList {
+func (s *Subscribe) Get() proxy.ProxyList {
 	resp, err := tool.GetHttpClient().Get(s.Url)
 	if err != nil {
 		return nil
@@ -41,18 +41,18 @@ func (s *Sub) Get() proxy.ProxyList {
 }
 
 // SyncGet implements Getter.
-func (v *Sub) SyncGet(pc chan proxy.Proxy, wg *sync.WaitGroup) {
+func (v *Subscribe) SyncGet(pc chan proxy.Proxy, wg *sync.WaitGroup) {
 	defer wg.Done()
 	nodes := v.Get()
-	log.LogInfo("STATISTIC: Sub\tcount=%d\turl=%s", len(nodes), v.Url)
+	log.LogInfo("STATISTIC: Subscribe\tcount=%d\turl=%s", len(nodes), v.Url)
 	for _, node := range nodes {
 		pc <- node
 	}
 }
 
-func initSubGetter(options map[string]interface{}) (getter Getter, err error) {
+func initSubscribeGetter(options map[string]interface{}) (getter Getter, err error) {
 	if url := tool.SafeAsString(options, "url"); url != "" {
-		return &Sub{
+		return &Subscribe{
 			Url: url,
 		}, nil
 	}
