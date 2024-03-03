@@ -13,7 +13,7 @@ web:
 # ==== 代理源配置文件 ==== #
 source-files:
   # use local file
-  - source.yaml
+  - config/source.yaml
   # use web file
   # - https://example.com/config/source.yaml
 

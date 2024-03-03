@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"os"
-	"path/filepath"
-	"slices"
 	"strings"
 	"time"
 
+	"github.com/Tidra/EasyGetProxy/app"
 	"github.com/Tidra/EasyGetProxy/unit/config"
 	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/proxy"
+	"github.com/Tidra/EasyGetProxy/unit/tool"
 
 	"github.com/gin-contrib/cache"
 	"github.com/gin-contrib/cache/persistence"
@@ -54,15 +53,15 @@ func setupRouter() {
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "assets/html/index.html", gin.H{
 			"domain":               config.Config.Web.Domain,
-			"getters_count":        "appcache.GettersCount",
-			"all_proxies_count":    "appcache.AllProxiesCount",
-			"ss_proxies_count":     "appcache.SSProxiesCount",
-			"ssr_proxies_count":    "appcache.SSRProxiesCount",
-			"vmess_proxies_count":  "appcache.VmessProxiesCount",
-			"trojan_proxies_count": "appcache.TrojanProxiesCount",
-			"useful_proxies_count": "appcache.UsefullProxiesCount",
-			"last_crawl_time":      "appcache.LastCrawlTime",
-			"is_speed_test":        "appcache.IsSpeedTest",
+			"getters_count":        app.GettersCount,
+			"all_proxies_count":    app.AllProxiesCount,
+			"ss_proxies_count":     app.SSProxiesCount,
+			"ssr_proxies_count":    app.SSRProxiesCount,
+			"vmess_proxies_count":  app.VmessProxiesCount,
+			"trojan_proxies_count": app.TrojanProxiesCount,
+			"useful_proxies_count": app.UsefullProxiesCount,
+			"last_crawl_time":      app.LastCrawlTime,
+			"is_speed_test":        app.IsSpeedTest,
 			"version":              version,
 		})
 	})
@@ -102,16 +101,16 @@ func setupRouter() {
 		proxyNotCountry := web.DefaultQuery("nc", "")
 		text := ""
 		if (proxyTypes == "" || proxyTypes == "all") && proxyCountry == "" && proxyNotCountry == "" {
-			text = GetString("all-clash")
+			text = app.GetString("all-clash")
 			if text == "" {
-				allProxies := GetProxies("all")
-				text = proxy.ProxiesToClash(allProxies)
-				SetString("all-clash", text)
+				allProxies := app.GetProxies("all")
+				text = proxy.ClashToString(allProxies)
+				app.SetString("all-clash", text)
 			}
 		} else {
-			allProxies := GetProxies("all")
+			allProxies := app.GetProxies("all")
 			filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
-			text = proxy.ProxiesToClash(filterProxies)
+			text = proxy.ClashToString(filterProxies)
 		}
 
 		web.String(200, text)
@@ -160,10 +159,8 @@ func MustAsset(name string) []byte {
 func Asset(name string) ([]byte, error) {
 	var _bindata = AssetNames()
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
-	if slices.Contains(_bindata, cannonicalName) {
-		parentPath := "D:\\great\\Documents\\EasyGetProxy"
-		fullFilePath := filepath.Join(parentPath, cannonicalName)
-		contents, err := os.ReadFile(fullFilePath)
+	if tool.Contains(_bindata, cannonicalName) {
+		contents, err := tool.ReadFile(name)
 		if err != nil {
 			return nil, fmt.Errorf("Asset %s can't read by error: %v", name, err)
 		}

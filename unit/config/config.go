@@ -1,12 +1,7 @@
 package config
 
 import (
-	"encoding/json"
-	"errors"
-	"io"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/tool"
@@ -58,7 +53,7 @@ func (config ConfigOptions) HostUrl() string {
 }
 
 func SetFilePath(path string) {
-	if IsLocalFile(path) {
+	if tool.IsLocalFile(path) {
 		path = tool.GetFileFullPath(path)
 	}
 	configFilePath = path
@@ -66,7 +61,7 @@ func SetFilePath(path string) {
 
 // Parse 解析配置文件，支持本地文件系统和网络链接
 func Parse() error {
-	fileData, err := ReadFile(configFilePath)
+	fileData, err := tool.ReadFile(configFilePath)
 	if err != nil {
 		return err
 	}
@@ -128,39 +123,5 @@ func Parse() error {
 		Config.Web.Domain = domain
 	}
 
-	s, _ := json.Marshal(Config)
-	log.LogDebug("Config options: %s", string(s))
-
 	return nil
-}
-
-func IsLocalFile(path string) bool {
-	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
-		return false
-	}
-	return true
-}
-
-// 从本地文件或者http链接读取配置文件内容
-func ReadFile(path string) ([]byte, error) {
-	if !IsLocalFile(path) {
-		resp, err := tool.GetHttpClient().Get(path)
-		if err != nil {
-			return nil, errors.New("config file http get fail")
-		}
-		defer resp.Body.Close()
-		return io.ReadAll(resp.Body)
-	} else if filepath.IsAbs(path) {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return nil, err
-		}
-		return os.ReadFile(path)
-	} else {
-		configDir := filepath.Dir(configFilePath)
-		path = filepath.Join(configDir, path)
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return nil, err
-		}
-		return os.ReadFile(path)
-	}
 }

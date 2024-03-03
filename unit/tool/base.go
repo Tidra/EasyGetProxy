@@ -1,7 +1,9 @@
 package tool
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -55,4 +57,46 @@ func SafeAsBool(m map[string]interface{}, keys ...string) bool {
 	}
 
 	return false
+}
+
+func Contains(arr []string, key string) bool {
+	for _, i := range arr {
+		if i == key {
+			return true
+		}
+	}
+	return false
+}
+
+func IsLocalFile(path string) bool {
+	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+		return false
+	}
+	return true
+}
+
+// 从本地文件或者http链接读取配置文件内容
+func ReadFile(path string) ([]byte, error) {
+	if !IsLocalFile(path) {
+		resp, err := GetHttpClient().Get(path)
+		if err != nil {
+			return nil, errors.New("config file http get fail")
+		}
+		defer resp.Body.Close()
+		return io.ReadAll(resp.Body)
+	} else if filepath.IsAbs(path) {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			return nil, err
+		}
+		return os.ReadFile(path)
+	} else {
+		path, err := filepath.Abs(path)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			return nil, err
+		}
+		return os.ReadFile(path)
+	}
 }

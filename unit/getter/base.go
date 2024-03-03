@@ -7,6 +7,7 @@ import (
 	"github.com/Tidra/EasyGetProxy/unit/config"
 	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/proxy"
+	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"gopkg.in/yaml.v2"
 )
 
@@ -33,7 +34,7 @@ func InitGetter() error {
 		return errors.New("未配置信息源")
 	} else {
 		for _, path := range s {
-			data, err := config.ReadFile(path)
+			data, err := tool.ReadFile(path)
 			if err != nil {
 				log.LogError("初始化信息源配置文件失败: %s\n", err.Error())
 				continue

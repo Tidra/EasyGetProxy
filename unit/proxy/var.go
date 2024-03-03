@@ -12,8 +12,9 @@ const (
 type ProxyList []Proxy
 
 type Proxy struct {
-	Country string `json:"country,omitempty"` // 自定义
-	Speed   string `json:"speed,omitempty"`   // 自定义
+	Country string `json:"country,omitempty"`  // 自定义
+	Speed   string `json:"speed,omitempty"`    // 自定义
+	IsAlive bool   `json:"is-alive,omitempty"` // 自定义
 
 	Type   string `json:"type,omitempty"`
 	Group  string `json:"group,omitempty"`  // vmess,ssr,ss,socks5,http,trojan,snell
@@ -31,7 +32,7 @@ type Proxy struct {
 	OBFS             string      `json:"obfs,omitempty"`           // *ssr,snell: proxy["obfs-opts"]["mode"]
 	OBFSParam        string      `json:"obfs-param,omitempty"`     // *ssr
 	UUID             string      `json:"uuid,omitempty"`           // *vmess[id]
-	AlterID          uint16      `json:"alterId,omitempty"`        // *vmess
+	AlterID          int         `json:"alterId,omitempty"`        // *vmess
 	TransferProtocol string      `json:"network,omitempty"`        // *vmess[net=tcp:置空],*trojan[net=tcp:置空]
 	FakeType         string      `json:"fake-type,omitempty"`      // vmess[type]
 	TLSSecure        bool        `json:"tls,omitempty"`            // *vmess[tls],*http,trojan

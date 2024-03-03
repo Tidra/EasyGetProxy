@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"github.com/spf13/cast"
 )
 
@@ -69,12 +70,16 @@ func (proxy Proxy) IsEmpty() bool {
 	return reflect.DeepEqual(proxy, Proxy{})
 }
 
+func (proxy Proxy) Identifier() string {
+	return fmt.Sprintf("%s%s%d%s%s%s%s", proxy.Type, proxy.Server, proxy.Port, proxy.Username, proxy.Password, proxy.EncryptMethod, proxy.UUID)
+}
+
 func (pl *ProxyList) UniqAppendProxy(newProxy Proxy) {
 	if len(*pl) == 0 {
 		*pl = append(*pl, newProxy)
 	}
 	for _, p := range *pl {
-		if reflect.DeepEqual(p, newProxy) {
+		if p.Identifier() == newProxy.Identifier() {
 			// 如果代理已经存在，抛弃新的代理
 			return
 		}
@@ -86,7 +91,7 @@ func (pl *ProxyList) UniqAppendProxys(newProxyList ProxyList) {
 	for _, newProxy := range newProxyList {
 		exists := false
 		for _, p := range *pl {
-			if reflect.DeepEqual(p, newProxy) {
+			if p.Identifier() == newProxy.Identifier() {
 				exists = true
 				break
 			}
@@ -107,32 +112,62 @@ func (pl ProxyList) Filter(proxyTypes string, proxyCountry string, proxyNotCount
 	countries := strings.Split(proxyCountry, ",")
 	notCountries := strings.Split(proxyNotCountry, ",")
 
-	findKey := func(arr []string, key string) bool {
-		for _, i := range arr {
-			if i == key {
-				return true
-			}
-		}
-		return false
-	}
-
 	for _, p := range pl {
+		if !p.IsAlive {
+			continue
+		}
 		if proxyTypes != "" {
-			if !findKey(types, p.Type) {
+			if !tool.Contains(types, p.Type) {
 				continue
 			}
 		}
 		if proxyCountry != "" {
-			if !findKey(countries, p.Country) {
+			if !tool.Contains(countries, p.Country) {
 				continue
 			}
 		}
 		if proxyNotCountry != "" {
-			if findKey(notCountries, p.Country) {
+			if tool.Contains(notCountries, p.Country) {
 				continue
 			}
 		}
 		newProxyList = append(newProxyList, p)
 	}
 	return newProxyList
+}
+
+func (pl ProxyList) RenameAll() ProxyList {
+	for i, p := range pl {
+		newName := fmt.Sprintf("[%s]%s_%+02v", p.Type, p.Country, i+1)
+		pl[i].Name = newName
+	}
+	return pl
+}
+
+func (pl ProxyList) Count() (int, int, int, int, int, int) {
+	allProxiesCount := 0
+	usefullProxiesCount := 0
+	ssrProxiesCount := 0
+	ssProxiesCount := 0
+	vmessProxiesCount := 0
+	trojanProxiesCount := 0
+	for _, p := range pl {
+		allProxiesCount++
+		if !p.IsAlive {
+			continue
+		}
+
+		usefullProxiesCount++
+		switch p.Type {
+		case "ssr":
+			ssrProxiesCount++
+		case "ss":
+			ssProxiesCount++
+		case "vmess":
+			vmessProxiesCount++
+		case "trojan":
+			trojanProxiesCount++
+		}
+	}
+	return allProxiesCount, usefullProxiesCount, ssrProxiesCount, ssProxiesCount, vmessProxiesCount, trojanProxiesCount
 }

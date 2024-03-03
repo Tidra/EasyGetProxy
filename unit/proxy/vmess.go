@@ -34,7 +34,7 @@ func (proxy *Proxy) vmessConstruct(group, ps, add string, port any, fakeType, id
 	} else {
 		proxy.UUID = id
 	}
-	proxy.AlterID = cast.ToUint16(aid)
+	proxy.AlterID = cast.ToInt(aid)
 	proxy.EncryptMethod = cipher
 	if net == "" {
 		proxy.TransferProtocol = "tcp"

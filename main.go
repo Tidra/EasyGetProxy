@@ -5,7 +5,7 @@ import (
 
 	"github.com/Tidra/EasyGetProxy/unit/config"
 	"github.com/Tidra/EasyGetProxy/unit/log"
-	"github.com/Tidra/EasyGetProxy/unit/web"
+	"github.com/Tidra/EasyGetProxy/web"
 )
 
 func main() {
