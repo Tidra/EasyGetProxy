@@ -52,7 +52,7 @@ func (config ConfigOptions) HostUrl() string {
 	}
 }
 
-func SetFilePath(path string) {
+func SetConfigFilePath(path string) {
 	if tool.IsLocalFile(path) {
 		path = tool.GetFileFullPath(path)
 	}

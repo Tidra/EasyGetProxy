@@ -1,19 +1,24 @@
-FROM golang:alpine as builder
+FROM golang:alpine AS builder
 
-RUN apk add --no-cache make git
-WORKDIR /easy-get-proxy
-COPY . /easy-get-proxy
-RUN go mod download && \
-    go mod tidy && \
-    make docker && \
-    mv ./bin/proxypool-docker /proxypool
+WORKDIR /build
+RUN adduser -u 10001 -D app-runner
 
-FROM alpine:latest
+ENV GOPROXY https://goproxy.cn
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -a -o easy-get-proxy .
+
+FROM alpine:latest AS final
 
 RUN apk add --no-cache ca-certificates tzdata
 ENV TZ Asia/Shanghai
-WORKDIR /easy-get-proxy
-COPY ./assets /proxypool-src/assets
-COPY ./config /proxypool-src/config
-COPY --from=builder /proxypool /proxypool-src/
-ENTRYPOINT ["/proxypool-src/proxypool"]
+WORKDIR /app
+COPY --from=builder /build/easy-get-proxy /app/
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+USER app-runner
+ENTRYPOINT ["/app/easy-get-proxy"]

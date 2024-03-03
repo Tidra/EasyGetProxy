@@ -1,24 +1,27 @@
 package main
 
 import (
+	"flag"
 	"os"
 
+	"github.com/Tidra/EasyGetProxy/app"
 	"github.com/Tidra/EasyGetProxy/unit/config"
-	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/web"
 )
 
 func main() {
-	// 设置配置文件并初始化
+	// 定义配置文件
 	var configFilePath = os.Getenv("CONFIG_FILE")
+
+	flag.StringVar(&configFilePath, "c", "", "path to config file: config.yaml")
+	flag.Parse()
 	if configFilePath == "" {
 		configFilePath = "config/config.yaml"
 	}
-	config.SetFilePath(configFilePath)
-	config.Parse()
+	config.SetConfigFilePath(configFilePath)
 
-	log.LogInfo("%+v", config.Config)
-
+	go app.CrawlTask() // 首次初始化所有信息
+	go app.Cron()      // 定时运行
 	web.StarWeb()
 
 }
