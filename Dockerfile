@@ -22,6 +22,6 @@ COPY --from=builder /build/config /app/config
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-RUN mkdir /app/log && chown app-runner /app
+RUN mkdir /app/log && chown -R app-runner /app
 USER app-runner
 ENTRYPOINT ["/app/easy-get-proxy"]
