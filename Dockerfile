@@ -17,6 +17,8 @@ RUN apk add --no-cache ca-certificates tzdata
 ENV TZ Asia/Shanghai
 WORKDIR /app
 COPY --from=builder /build/easy-get-proxy /app/
+COPY --from=builder /build/assets /app/assets
+COPY --from=builder /build/config /app/config
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
