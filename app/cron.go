@@ -19,7 +19,7 @@ var cacheFile = "assets/all-clash.dat"
 
 func Cron() {
 	_ = gocron.Every(config.Config.CrawlInterval).Minutes().Do(CrawlTask)
-	_ = gocron.Every(config.Config.SpeedTest.Interval).Minutes().Do(speedCheckTask)
+	_ = gocron.Every(config.Config.SpeedTest.Interval).Minutes().Do(SpeedCheckTask)
 	_ = gocron.Every(1).Days().Do(SaveCacheToFileTask)
 	<-gocron.Start()
 }
@@ -71,8 +71,14 @@ func CrawlTask() {
 	SetString("all-clash", proxy.ClashToString(proxies))
 }
 
-func speedCheckTask() {
-
+func SpeedCheckTask() {
+	proxies := GetProxies("all")
+	if config.Config.SpeedTest.IsUsed {
+		check.SpeedCheckAll(proxies)
+		proxies = proxies.RenameAll()
+		SetProxies("all", proxies)
+		SetString("all-clash", proxy.ClashToString(proxies))
+	}
 }
 
 func SaveCacheToFileTask() {

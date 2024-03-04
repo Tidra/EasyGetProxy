@@ -20,8 +20,14 @@ func main() {
 	}
 	config.SetConfigFilePath(configFilePath)
 
-	go app.CrawlTask() // 首次初始化所有信息
-	go app.Cron()      // 定时运行
+	go mainInit()
+	go app.Cron() // 定时运行
 	web.StarWeb()
 
+}
+
+func mainInit() {
+	// 首次初始化所有信息
+	app.CrawlTask()
+	app.SpeedCheckTask()
 }

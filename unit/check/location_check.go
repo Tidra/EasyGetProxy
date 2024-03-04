@@ -62,7 +62,7 @@ func LocationCheckAll(proxies proxy.ProxyList) {
 				progress := float64(doneCount * 100 / len(proxies))
 				if progress_num < int(progress/10) {
 					progress_num = int(progress / 10)
-					log.LogInfo("归属地检查速度[ %s%s | %5.1f%% ]", strings.Repeat("==", progress_num), strings.Repeat("  ", 10-progress_num), progress)
+					log.LogInfo("归属地检查进度[ %s%s | %5.1f%% ]", strings.Repeat("==", progress_num), strings.Repeat("  ", 10-progress_num), progress)
 				}
 				dcm.Unlock()
 			}
@@ -90,7 +90,7 @@ func ProxyLocationCheck(p proxy.Proxy) (country string, err error) {
 
 		if err == nil {
 			break
-		} else if r == maxRetryGet-1 {
+		} else if r == maxRetryGet {
 			return "", err
 		} else if err == io.EOF || strings.Contains(err.Error(), "timeout") {
 			timeout = timeout + time.Second*10

@@ -97,12 +97,79 @@ func HttpGetViaProxy(clashProxy C.Proxy, url string, t time.Duration) ([]byte, e
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%d %s to %s", resp.StatusCode, resp.Status, url)
+	}
+
 	// read speedtest config file
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 	return body, nil
+}
+
+func HttpSpeedViaProxy(clashProxy C.Proxy, url string, t time.Duration) (int64, float64, string, error) {
+	start := time.Now() //开始时间
+	ctx, cancel := context.WithTimeout(context.Background(), t)
+	defer cancel()
+
+	addr, err := urlToMetadata(url)
+	if err != nil {
+		return -1, -1, "", err
+	}
+	conn, err := clashProxy.DialContext(ctx, &addr) // 建立到proxy server的connection，对Proxy的类别做了自适应相当于泛型
+	if err != nil {
+		return -1, -1, "", err
+	}
+	defer conn.Close()
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return -1, -1, "", err
+	}
+	req = req.WithContext(ctx)
+
+	transport := &http.Transport{
+		// Note: Dial specifies the dial function for creating unencrypted TCP connections.
+		// When httpClient sets this transport, it will use the tcp/udp connection returned from
+		// function Dial instead of default tcp/udp connection. It's the key to set custom proxy for http transport
+		Dial: func(string, string) (net.Conn, error) {
+			return conn, nil
+		},
+		// from http.DefaultTransport
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	client := http.Client{
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return -1, -1, "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return -1, -1, "", fmt.Errorf("%d %s to %s", resp.StatusCode, resp.Status, url)
+	}
+
+	ttfb := time.Since(start) // 延迟
+	writeSize, _ := io.Copy(io.Discard, resp.Body)
+	if writeSize == 0 {
+		return -1, -1, "", fmt.Errorf("get %s is none", url)
+	}
+
+	downloadTime := time.Since(start) - ttfb
+	bandwidth := float64(writeSize) / 1024 / 1024 / downloadTime.Seconds() // mb/s
+
+	return writeSize, bandwidth, ttfb.String(), nil
 }
 
 func urlToMetadata(rawURL string) (addr C.Metadata, err error) {

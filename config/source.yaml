@@ -6,19 +6,19 @@
 #   options:
 #     url: https://nodefree.org/dy/2024/02/20240227.txt
 
-# - type: crawl
-#   options:
-#     url: https://nodefree.org
-#     subs: 
-#       - type: url
-#         xpath: //div/main/section/div/ul/li[1]/div[2]/h2/a
-#         subs:
-#           - type: subscribe
-#             xpath: //div[1]/div[2]/div[1]/div/div/p[1]
-#           - type: subscribe
-#             xpath: //div[1]/div[2]/div[1]/div/div/p[1]
-#           - type: clash
-#             xpath: //div[1]/div[2]/div[1]/div/div/p[2]
+- type: crawl
+  options:
+    url: https://nodefree.org
+    subs: 
+      - type: url
+        xpath: //div/main/section/div/ul/li[1]/div[2]/h2/a
+        subs:
+          - type: subscribe
+            xpath: //div[1]/div[2]/div[1]/div/div/p[1]
+          # - type: subscribe
+          #   xpath: //div[1]/div[2]/div[1]/div/div/p[1]
+          # - type: clash
+          #   xpath: //div[1]/div[2]/div[1]/div/div/p[2]
             
 - type: crawl
   options:

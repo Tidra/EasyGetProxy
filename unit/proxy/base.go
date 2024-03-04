@@ -139,6 +139,9 @@ func (pl ProxyList) Filter(proxyTypes string, proxyCountry string, proxyNotCount
 func (pl ProxyList) RenameAll() ProxyList {
 	for i, p := range pl {
 		newName := fmt.Sprintf("[%s]%s_%+02v", p.Type, p.Country, i+1)
+		if p.Speed > 0 {
+			newName = fmt.Sprintf("%s_%.1fmb/s", newName, p.Speed)
+		}
 		pl[i].Name = newName
 	}
 	return pl

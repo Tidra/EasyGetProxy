@@ -7,7 +7,8 @@ import (
 )
 
 func Test_main(t *testing.T) {
-	go app.CrawlTask()
-	go app.Cron() // 定时运行
+	// go app.Cron() // 定时运行
+	app.CrawlTask()
+	app.SpeedCheckTask()
 	// web.StarWeb()
 }
