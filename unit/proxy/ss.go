@@ -55,9 +55,12 @@ func explodeSS(ss string) (Proxy, error) {
 	port = u.Port()
 	plugins := tool.GetUrlArg(u.RawQuery, "plugin")
 
-	var pluginpos = strings.Index(plugins, ";")
-	plugin = plugins[:pluginpos]
-	pluginOpts = plugins[pluginpos+1:]
+	if pluginpos := strings.Index(plugins, ";"); pluginpos > 0 {
+		plugin = plugins[:pluginpos]
+		pluginOpts = plugins[pluginpos+1:]
+	} else {
+		plugin = plugins
+	}
 	// pluginOpts := new(PluginOpts)
 	// pluginString := strings.ReplaceAll(tool.GetUrlArg(addition, "plugin"), ";", "&")
 	// switch {
