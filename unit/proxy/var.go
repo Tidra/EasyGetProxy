@@ -22,20 +22,20 @@ type Proxy struct {
 	Server string `json:"server,omitempty"` // vmess[add],ssr,ss,socks5,http,trojan,snell
 	Port   int    `json:"prot,omitempty"`   // vmess,ssr,ss,socks5,http,trojan,snell
 
-	Username         string      `json:"user-name,omitempty"`      // *socks5,*http
-	Password         string      `json:"password,omitempty"`       // *vmess,*ssr,*ss,*socks5,*http,*trojan,*snell: proxy["psk"]
-	EncryptMethod    string      `json:"cipher,omitempty"`         // *vmess[默认auto],*ssr[默认dummy],*ss
-	Plugin           string      `json:"plugin,omitempty"`         // *ss
-	PluginOption     *PluginOpts `json:"plugin-opts,omitempty"`    // *ss
-	Protocol         string      `json:"protocol,omitempty"`       // *ssr
-	ProtocolParam    string      `json:"protocol-param,omitempty"` // *ssr
-	OBFS             string      `json:"obfs,omitempty"`           // *ssr,snell: proxy["obfs-opts"]["mode"]
-	OBFSParam        string      `json:"obfs-param,omitempty"`     // *ssr
-	UUID             string      `json:"uuid,omitempty"`           // *vmess[id]
-	AlterID          int         `json:"alterId,omitempty"`        // *vmess
-	TransferProtocol string      `json:"network,omitempty"`        // *vmess[net=tcp:置空],*trojan[net=tcp:置空]
-	FakeType         string      `json:"fake-type,omitempty"`      // vmess[type]
-	TLSSecure        bool        `json:"tls,omitempty"`            // *vmess[tls],*http,trojan
+	Username         string `json:"user-name,omitempty"`      // *socks5,*http
+	Password         string `json:"password,omitempty"`       // *vmess,*ssr,*ss,*socks5,*http,*trojan,*snell: proxy["psk"]
+	EncryptMethod    string `json:"cipher,omitempty"`         // *vmess[默认auto],*ssr[默认dummy],*ss
+	Plugin           string `json:"plugin,omitempty"`         // *ss
+	PluginOption     string `json:"plugin-opts,omitempty"`    // *ss
+	Protocol         string `json:"protocol,omitempty"`       // *ssr
+	ProtocolParam    string `json:"protocol-param,omitempty"` // *ssr
+	OBFS             string `json:"obfs,omitempty"`           // *ssr,snell: proxy["obfs-opts"]["mode"]
+	OBFSParam        string `json:"obfs-param,omitempty"`     // *ssr
+	UUID             string `json:"uuid,omitempty"`           // *vmess[id]
+	AlterID          int    `json:"alterId,omitempty"`        // *vmess
+	TransferProtocol string `json:"network,omitempty"`        // *vmess[net=tcp:置空],*trojan[net=tcp:置空]
+	FakeType         string `json:"fake-type,omitempty"`      // vmess[type]
+	TLSSecure        bool   `json:"tls,omitempty"`            // *vmess[tls],*http,trojan
 
 	// *snell: proxy["obfs-opts"]["host"]
 	// *trojan: proxy["sni"]
@@ -69,11 +69,16 @@ type Proxy struct {
 }
 
 // ss的plugin-opts部分
-type PluginOpts struct {
-	Mode           string `json:"mode"`
-	Host           string `json:"host,omitempty"`
-	Tls            bool   `json:"tls,omitempty"`
-	Path           string `json:"path,omitempty"`
-	Mux            bool   `json:"mux,omitempty"`
-	SkipCertVerify bool   `json:"skip-cert-verify,omitempty"`
-}
+// type PluginOpts struct {
+// 	Mode           string `json:"mode"`
+// 	Host           string `json:"host,omitempty"`
+// 	Tls            bool   `json:"tls,omitempty"`
+// 	Path           string `json:"path,omitempty"`
+// 	Mux            bool   `json:"mux,omitempty"`
+// 	SkipCertVerify bool   `json:"skip-cert-verify,omitempty"`
+// }
+
+var (
+	SsCiphers  = []string{"rc4-md5", "aes-128-gcm", "aes-192-gcm", "aes-256-gcm", "aes-128-cfb", "aes-192-cfb", "aes-256-cfb", "aes-128-ctr", "aes-192-ctr", "aes-256-ctr", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb", "bf-cfb", "chacha20-ietf-poly1305", "xchacha20-ietf-poly1305", "salsa20", "chacha20", "chacha20-ietf", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305", "2022-blake3-chacha12-poly1305", "2022-blake3-chacha8-poly1305"}
+	SsrCiphers = []string{"none", "table", "rc4", "rc4-md5", "aes-128-cfb", "aes-192-cfb", "aes-256-cfb", "aes-128-ctr", "aes-192-ctr", "aes-256-ctr", "bf-cfb", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb", "cast5-cfb", "des-cfb", "idea-cfb", "rc2-cfb", "seed-cfb", "salsa20", "chacha20", "chacha20-ietf"}
+)

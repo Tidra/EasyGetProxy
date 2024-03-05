@@ -1,7 +1,6 @@
 package getter
 
 import (
-	"io"
 	"sync"
 
 	"github.com/Tidra/EasyGetProxy/unit/log"
@@ -19,12 +18,8 @@ type Clash struct {
 
 // Get implements Getter.
 func (c *Clash) Get() proxy.ProxyList {
-	resp, err := tool.GetHttpClient().Get(c.Url)
-	if err != nil {
-		return nil
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	// 支持链接以及本地文件
+	body, err := tool.ReadFile(c.Url)
 	if err != nil {
 		return nil
 	}

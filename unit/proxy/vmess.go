@@ -63,43 +63,6 @@ func (proxy *Proxy) vmessConstruct(group, ps, add string, port any, fakeType, id
 	proxy.TLSSecure = strings.EqualFold(tls, "tls")
 }
 
-// func v2rConf(s string) (Proxy, error) {
-// 	vmconfig, err := tool.Base64DecodeByte(s)
-// 	if err != nil {
-// 		return Proxy{}, err
-// 	}
-// 	vmess := Vmess{}
-// 	err = json.Unmarshal(vmconfig, &vmess)
-// 	if err != nil {
-// 		log.LogError("v2ray config json unmarshal failed, err: %v", err)
-// 		return Proxy{}, err
-// 	}
-
-// 	if cast.ToInt(vmess.Port) == 0 {
-// 		return Proxy{}, errors.New("v2ray config port is 0")
-// 	}
-
-// 	host := vmess.Host
-// 	path := ""
-// 	switch cast.ToInt(vmess.V) {
-// 	case 2:
-// 		path = vmess.Path
-// 	default: //包括1
-// 		if host != "" {
-// 			vArray := strings.Split(host, ";")
-// 			if len(vArray) == 2 {
-// 				host, path = vArray[0], vArray[1]
-// 			}
-// 		}
-// 	}
-
-// 	proxy := Proxy{}
-// 	proxy.vmessConstruct("vmess_group", vmess.PS, vmess.Add, vmess.Port, vmess.Type, vmess.ID,
-// 		vmess.Aid, vmess.Net, "auto", path, host, "", vmess.TLS, vmess.Sni, nil, nil, nil, nil)
-// 	return proxy, nil
-
-// }
-
 func explodeShadowrocket(vmess string) (Proxy, error) {
 	var add, port, fakeType, id, aid, net, path, host, tls, cipher, remarks string
 
@@ -285,45 +248,56 @@ func explodeVmess(vmess string) (Proxy, error) {
 	return proxy, nil
 }
 
-// func v2rConf(s string) (ClashVmess, error) {
-// 	vmconfig, err := tool.Base64DecodeStripped(s)
-// 	if err != nil {
-// 		return ClashVmess{}, err
-// 	}
-// 	vmess := Vmess{}
-// 	err = json.Unmarshal(vmconfig, &vmess)
-// 	if err != nil {
-// 		log.LogError("v2ray config json unmarshal failed, err: %v", err)
-// 		return ClashVmess{}, err
-// 	}
-// 	clashVmess := ClashVmess{}
-// 	clashVmess.Name = vmess.PS
+func ProxieToVmess(node Proxy) string {
+	if node.Type != "vmess" {
+		return ""
+	}
 
-// 	clashVmess.Type = "vmess"
-// 	clashVmess.UDP = false // 需网络测试是否支持udp
-// 	clashVmess.Server = vmess.Add
-// 	switch vmess.Port.(type) {
-// 	case string:
-// 		clashVmess.Port, _ = vmess.Port.(string)
-// 	case int:
-// 		clashVmess.Port, _ = vmess.Port.(int)
-// 	case float64:
-// 		clashVmess.Port, _ = vmess.Port.(float64)
-// 	default:
+	vmessNode := map[string]interface{}{
+		"v":    "2",
+		"ps":   node.Name,
+		"add":  node.Server,
+		"port": node.Port,
+		"type": func() string {
+			if node.FakeType == "" {
+				return "none"
+			}
+			return node.FakeType
+		}(),
+		"id":  node.UUID,
+		"aid": node.AlterID,
+		"net": func() string {
+			if node.TransferProtocol == "" {
+				return "tcp"
+			}
+			return node.TransferProtocol
+		}(),
+		"path": node.Path,
+		"host": node.Host,
+		"tls": func() string {
+			if node.TLSSecure {
+				return "tls"
+			}
+			return ""
+		}(),
+	}
 
-// 	}
-// 	clashVmess.UUID = vmess.ID
-// 	clashVmess.AlterID = vmess.Aid
-// 	clashVmess.Cipher = vmess.Type
-// 	if strings.EqualFold(vmess.TLS, "tls") {
-// 		clashVmess.TLS = true
-// 	} else {
-// 		clashVmess.TLS = false
-// 	}
-// 	if vmess.Net == "ws" {
-// 		clashVmess.Network = vmess.Net
-// 		clashVmess.WSOpts.Path = vmess.Path
-// 	}
+	jsonData, err := json.Marshal(vmessNode)
+	if err != nil {
+		return ""
+	}
 
-// 	return clashVmess, nil
-// }
+	proxyStr := "vmess://" + tool.Base64EncodeString(string(jsonData))
+	return proxyStr
+}
+
+func VmessToString(proxyList ProxyList) string {
+	var vmessStrings strings.Builder
+	for _, node := range proxyList {
+		if nodeStr := ProxieToVmess(node); nodeStr != "" {
+			vmessStrings.WriteString(nodeStr + "\n")
+		}
+	}
+
+	return tool.Base64EncodeString(vmessStrings.String())
+}

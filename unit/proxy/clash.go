@@ -101,30 +101,52 @@ func ExplodeClash(clash string) (ProxyList, error) {
 		case "ss":
 			cipher = tool.SafeAsString(singleProxy, "cipher")
 			password = tool.SafeAsString(singleProxy, "password")
-			pluginOpts := new(PluginOpts)
+			// pluginOpts := new(PluginOpts)
+			pluginOpts := ""
 
 			if singleProxy["plugin"] != nil {
 				switch tool.SafeAsString(singleProxy, "plugin") {
 				case "obfs":
 					plugin = "obfs-local"
 					if singleProxy["plugin-opts"] != nil {
-						pluginOpts.Mode = tool.SafeAsString(singleProxy, "plugin-opts", "mode")
-						pluginOpts.Host = tool.SafeAsString(singleProxy, "plugin-opts", "host")
+						pluginOpts = "obfs=" + tool.SafeAsString(singleProxy, "plugin-opts", "mode")
+						if host := tool.SafeAsString(singleProxy, "plugin-opts", "host"); host != "" {
+							pluginOpts += ";obfs-host=" + host
+						}
+						// pluginOpts.Mode = tool.SafeAsString(singleProxy, "plugin-opts", "mode")
+						// pluginOpts.Host = tool.SafeAsString(singleProxy, "plugin-opts", "host")
 					}
 				case "v2ray-plugin":
 					plugin = "v2ray-plugin"
 					if singleProxy["plugin-opts"] != nil {
-						pluginOpts.Mode = tool.SafeAsString(singleProxy, "plugin-opts", "mode")
-						pluginOpts.Host = tool.SafeAsString(singleProxy, "plugin-opts", "host")
-						pluginOpts.Tls = tool.SafeAsBool(singleProxy, "plugin-opts", "host")
-						pluginOpts.Path = tool.SafeAsString(singleProxy, "plugin-opts", "path")
-						pluginOpts.Mux = tool.SafeAsBool(singleProxy, "plugin-opts", "mux")
+						pluginOpts = "obfs=" + tool.SafeAsString(singleProxy, "plugin-opts", "mode")
+						if tool.SafeAsBool(singleProxy, "plugin-opts", "tls") {
+							pluginOpts += ";tls"
+						}
+						if host := tool.SafeAsString(singleProxy, "plugin-opts", "host"); host != "" {
+							pluginOpts += ";host=" + host
+						}
+						if path := tool.SafeAsString(singleProxy, "plugin-opts", "path"); path != "" {
+							pluginOpts += ";path=" + path
+						}
+						if tool.SafeAsBool(singleProxy, "plugin-opts", "mux") {
+							pluginOpts += ";mux=4"
+						}
+						// pluginOpts.Mode = tool.SafeAsString(singleProxy, "plugin-opts", "mode")
+						// pluginOpts.Host = tool.SafeAsString(singleProxy, "plugin-opts", "host")
+						// pluginOpts.Tls = tool.SafeAsBool(singleProxy, "plugin-opts", "tls")
+						// pluginOpts.Path = tool.SafeAsString(singleProxy, "plugin-opts", "path")
+						// pluginOpts.Mux = tool.SafeAsBool(singleProxy, "plugin-opts", "mux")
 					}
 				}
 			} else if singleProxy["obfs"] != nil {
 				plugin = "obfs-local"
-				pluginOpts.Mode = tool.SafeAsString(singleProxy, "obfs")
-				pluginOpts.Host = tool.SafeAsString(singleProxy, "obfs-host")
+				pluginOpts = "obfs=" + tool.SafeAsString(singleProxy, "plugin-opts", "mode")
+				if host := tool.SafeAsString(singleProxy, "plugin-opts", "host"); host != "" {
+					pluginOpts += ";obfs-host=" + host
+				}
+				// pluginOpts.Mode = tool.SafeAsString(singleProxy, "obfs")
+				// pluginOpts.Host = tool.SafeAsString(singleProxy, "obfs-host")
 			}
 
 			//support for go-shadowsocks2
@@ -201,22 +223,42 @@ func ProxieToClash(node Proxy) map[string]any {
 		// TODO: 判断协议是否符合
 		clashNode["cipher"] = node.EncryptMethod
 		clashNode["password"] = node.Password
-		clashNode["plugin"] = node.Plugin
-		if node.PluginOption.Path != "" || node.PluginOption.Tls || node.PluginOption.SkipCertVerify || node.PluginOption.Mux {
-			clashNode["plugin-opts"] = map[string]interface{}{
-				"mode":             node.PluginOption.Mode,
-				"host":             node.PluginOption.Host,
-				"tls":              node.PluginOption.Tls,
-				"path":             node.PluginOption.Path,
-				"skip-cert-verify": node.PluginOption.SkipCertVerify,
-				"mux":              node.PluginOption.Mux,
+		pluginString := strings.ReplaceAll(node.PluginOption, ";", "&")
+		switch node.Plugin {
+		case "simple-obfs", "obfs-local":
+			clashNode["plugin"] = "obfs"
+			pluginOpts := make(map[string]interface{})
+			pluginOpts["mode"] = tool.GetUrlArg(pluginString, "obfs")
+			pluginOpts["host"] = tool.GetUrlArg(pluginString, "obfs-host")
+			clashNode["plugin-opts"] = pluginOpts
+		case "v2ray-plugin":
+			clashNode["plugin"] = "v2ray-plugin"
+			pluginOpts := make(map[string]interface{})
+			pluginOpts["mode"] = tool.GetUrlArg(pluginString, "mode")
+			pluginOpts["host"] = tool.GetUrlArg(pluginString, "host")
+			pluginOpts["path"] = tool.GetUrlArg(pluginString, "path")
+			pluginOpts["tls"] = strings.Contains(pluginString, "tls")
+			pluginOpts["mux"] = strings.Contains(pluginString, "mux")
+			if node.SkipCertVerify {
+				pluginOpts["skip-cert-verify"] = node.SkipCertVerify
 			}
-		} else {
-			clashNode["plugin-opts"] = map[string]interface{}{
-				"mode": node.PluginOption.Mode,
-				"host": node.PluginOption.Host,
-			}
+			clashNode["plugin-opts"] = pluginOpts
 		}
+		// if node.PluginOption.Path != "" || node.PluginOption.Tls || node.PluginOption.SkipCertVerify || node.PluginOption.Mux {
+		// 	clashNode["plugin-opts"] = map[string]interface{}{
+		// 		"mode":             node.PluginOption.Mode,
+		// 		"host":             node.PluginOption.Host,
+		// 		"tls":              node.PluginOption.Tls,
+		// 		"path":             node.PluginOption.Path,
+		// 		"skip-cert-verify": node.PluginOption.SkipCertVerify,
+		// 		"mux":              node.PluginOption.Mux,
+		// 	}
+		// } else {
+		// 	clashNode["plugin-opts"] = map[string]interface{}{
+		// 		"mode": node.PluginOption.Mode,
+		// 		"host": node.PluginOption.Host,
+		// 	}
+		// }
 	case "vmess":
 		clashNode["uuid"] = node.UUID
 		clashNode["alterId"] = node.AlterID

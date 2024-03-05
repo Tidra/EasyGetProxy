@@ -1,14 +1,16 @@
 package proxy
 
 import (
+	"encoding/json"
 	"net/url"
 	"strings"
 
 	"github.com/Tidra/EasyGetProxy/unit/tool"
+	"github.com/spf13/cast"
 )
 
 func (proxy *Proxy) ssConstruct(group, remarks, server, port, password, method, plugin string,
-	pluginopts *PluginOpts, udp, tfo, scv, tls13 *bool) {
+	pluginopts string, udp, tfo, scv, tls13 *bool) {
 	proxy.commonConstruct("ss", group, remarks, server, port, udp, tfo, scv, tls13)
 	proxy.Password = password
 	proxy.EncryptMethod = method
@@ -17,7 +19,7 @@ func (proxy *Proxy) ssConstruct(group, remarks, server, port, password, method, 
 }
 
 func explodeSS(ss string) (Proxy, error) {
-	var password, method, server, port, plugin string
+	var password, method, server, port, plugin, pluginOpts string
 	u, err := url.Parse(ss)
 	if err != nil {
 		return Proxy{}, err
@@ -51,24 +53,27 @@ func explodeSS(ss string) (Proxy, error) {
 	}
 	server = u.Hostname()
 	port = u.Port()
-	addition := u.RawQuery
+	plugins := tool.GetUrlArg(u.RawQuery, "plugin")
 
-	pluginOpts := new(PluginOpts)
-	pluginString := strings.ReplaceAll(tool.GetUrlArg(addition, "plugin"), ";", "&")
-	switch {
-	case strings.Contains(pluginString, "obfs"):
-		plugin = "obfs"
-		pluginOpts.Mode = tool.GetUrlArg(pluginString, "obfs")
-		pluginOpts.Host = tool.GetUrlArg(pluginString, "obfs-host")
-	case strings.Contains(pluginString, "v2ray"):
-		plugin = "v2ray-plugin"
-		pluginOpts.Mode = tool.GetUrlArg(pluginString, "mode")
-		pluginOpts.Host = tool.GetUrlArg(pluginString, "host")
-		pluginOpts.Path = tool.GetUrlArg(pluginString, "path")
-		pluginOpts.Mux = strings.Contains(pluginString, "mux")
-		pluginOpts.Tls = strings.Contains(pluginString, "tls")
-		pluginOpts.SkipCertVerify = true
-	}
+	var pluginpos = strings.Index(plugins, ";")
+	plugin = plugins[:pluginpos]
+	pluginOpts = plugins[pluginpos+1:]
+	// pluginOpts := new(PluginOpts)
+	// pluginString := strings.ReplaceAll(tool.GetUrlArg(addition, "plugin"), ";", "&")
+	// switch {
+	// case strings.Contains(pluginString, "obfs"):
+	// 	plugin = "obfs"
+	// 	pluginOpts.Mode = tool.GetUrlArg(pluginString, "obfs")
+	// 	pluginOpts.Host = tool.GetUrlArg(pluginString, "obfs-host")
+	// case strings.Contains(pluginString, "v2ray"):
+	// 	plugin = "v2ray-plugin"
+	// 	pluginOpts.Mode = tool.GetUrlArg(pluginString, "mode")
+	// 	pluginOpts.Host = tool.GetUrlArg(pluginString, "host")
+	// 	pluginOpts.Path = tool.GetUrlArg(pluginString, "path")
+	// 	pluginOpts.Mux = strings.Contains(pluginString, "mux")
+	// 	pluginOpts.Tls = strings.Contains(pluginString, "tls")
+	// 	pluginOpts.SkipCertVerify = true
+	// }
 	// group = tool.GetUrlArg(addition, "group")
 
 	// 构造节点
@@ -78,64 +83,74 @@ func explodeSS(ss string) (Proxy, error) {
 	return proxy, nil
 }
 
-// func ssConf(s string) (ClashSS, error) {
-// 	s, err := url.PathUnescape(s)
-// 	if err != nil {
-// 		return ClashSS{}, err
-// 	}
+func ProxieToSip002(node Proxy) string {
+	proxyStr := "ss://" + tool.Base64EncodeString(node.EncryptMethod+":"+node.Password) + "@" + node.Server + ":" + cast.ToString(node.Port)
+	if node.Type == "ss" {
+		if node.Plugin != "" && node.PluginOption != "" {
+			proxyStr += "/?plugin=" + url.QueryEscape(node.Plugin+";"+node.PluginOption)
+		}
+		proxyStr += "#" + url.QueryEscape(node.Name)
+		return proxyStr
+	} else if node.Type == "ssr" {
+		// 判断是否符合协议
+		if tool.Contains(SsCiphers, node.EncryptMethod) && (node.OBFS == "" || node.OBFS == "plain") && (node.Protocol == "" || node.Protocol == "origin") {
+			proxyStr += "#" + url.QueryEscape(node.Name)
+			return proxyStr
+		}
+	}
 
-// 	findStr := ssReg.FindStringSubmatch(s)
-// 	if len(findStr) < 4 {
-// 		return ClashSS{}, errors.New("ss 参数少于4个")
-// 	}
+	return ""
+}
 
-// 	rawSSRConfig, err := tool.Base64DecodeByte(findStr[1])
-// 	if err != nil {
-// 		return ClashSS{}, err
-// 	}
+func ProxieToSs(node Proxy) map[string]interface{} {
+	plugin := node.Plugin
+	switch node.Type {
+	case "ss":
+		if plugin == "simple-obfs" {
+			plugin = "obfs-local"
+		}
+	case "ssr":
+		// TODO: 是否判断是否要符合ssr条件
+	default:
+		return nil
+	}
 
-// 	s = strings.ReplaceAll(s, findStr[1], string(rawSSRConfig))
-// 	findStr = ssReg2.FindStringSubmatch(s)
+	proxy := map[string]interface{}{
+		"remarks":     node.Name,
+		"server":      node.Server,
+		"server_port": node.Port,
+		"method":      node.EncryptMethod,
+		"password":    node.Password,
+		"plugin":      plugin,
+		"plugin_opts": node.PluginOption,
+	}
 
-// 	ss := ClashSS{}
-// 	ss.Type = "ss"
-// 	ss.UDP = false
-// 	ss.Cipher = findStr[1]
-// 	ss.Password = findStr[2]
-// 	ss.Server = findStr[3]
-// 	ss.Port = findStr[4]
-// 	ss.Name = findStr[6]
+	return proxy
+}
 
-// 	if findStr[5] != "" && strings.Contains(findStr[5], "plugin") {
-// 		query := findStr[5][strings.Index(findStr[5], "?")+1:]
-// 		queryMap, err := url.ParseQuery(query)
-// 		if err != nil {
-// 			return ClashSS{}, err
-// 		}
+func SsToString(proxyList ProxyList, subType int) string {
+	var ssStrings strings.Builder
+	if subType == 1 {
+		for _, node := range proxyList {
+			if nodeStr := ProxieToSip002(node); nodeStr != "" {
+				ssStrings.WriteString(nodeStr + "\n")
+			}
+		}
 
-// 		ss.Plugin = queryMap["plugin"][0]
-// 		p := new(PluginOpts)
-// 		switch {
-// 		case strings.Contains(ss.Plugin, "obfs"):
-// 			ss.Plugin = "obfs"
-// 			p.Mode = queryMap["obfs"][0]
-// 			if strings.Contains(query, "obfs-host=") {
-// 				p.Host = queryMap["obfs-host"][0]
-// 			}
-// 		case ss.Plugin == "v2ray-plugin":
-// 			p.Mode = queryMap["mode"][0]
-// 			if strings.Contains(query, "host=") {
-// 				p.Host = queryMap["host"][0]
-// 			}
-// 			if strings.Contains(query, "path=") {
-// 				p.Path = queryMap["path"][0]
-// 			}
-// 			p.Mux = strings.Contains(query, "mux")
-// 			p.Tls = strings.Contains(query, "tls")
-// 			p.SkipCertVerify = true
-// 		}
-// 		ss.PluginOpts = p
-// 	}
+		return tool.Base64EncodeString(ssStrings.String())
+	} else {
+		proxies := make([]map[string]interface{}, 0)
+		for _, node := range proxyList {
+			if proxy := ProxieToSs(node); proxy != nil {
+				proxies = append(proxies, proxy)
+			}
+		}
+		jsonData, err := json.Marshal(proxies)
+		if err != nil {
+			return ""
+		}
 
-// 	return ss, nil
-// }
+		return string(jsonData)
+	}
+
+}

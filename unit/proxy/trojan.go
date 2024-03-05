@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Tidra/EasyGetProxy/unit/tool"
+	"github.com/spf13/cast"
 )
 
 func (proxy *Proxy) trojanConstruct(group, remarks, server, port, password, network, host,
@@ -76,34 +77,38 @@ func explodeTrojan(trojan string) (Proxy, error) {
 	return proxy, nil
 }
 
-// func trojanConf(s string) (ClashTrojan, error) {
-// 	s, err := url.PathUnescape(s)
-// 	if err != nil {
-// 		return ClashTrojan{}, err
-// 	}
+func ProxieToTrojan(node Proxy) string {
+	if node.Type != "trojan" {
+		return ""
+	}
 
-// 	findStr := trojanReg.FindStringSubmatch(s)
-// 	if len(findStr) == 6 {
-// 		return ClashTrojan{
-// 			Name:     findStr[5],
-// 			Type:     "trojan",
-// 			Server:   findStr[2],
-// 			Password: findStr[1],
-// 			Sni:      findStr[4],
-// 			Port:     findStr[3],
-// 		}, nil
-// 	}
+	proxyStr := "trojan://" + node.Password + "@" + node.Server + ":" + cast.ToString(node.Port)
+	if node.SkipCertVerify {
+		proxyStr += "?allowInsecure=1"
+	} else {
+		proxyStr += "?allowInsecure=0"
+	}
+	if node.Host != "" {
+		proxyStr += "&sni=" + node.Host
+	}
+	if node.TransferProtocol == "ws" {
+		proxyStr += "&ws=1"
+		if node.Path != "" {
+			proxyStr += "&wspath=" + url.QueryEscape(node.Path)
+		}
+	}
 
-// 	findStr = trojanReg2.FindStringSubmatch(s)
-// 	if len(findStr) < 5 {
-// 		return ClashTrojan{}, errors.New("trojan连接参数少于5个")
-// 	}
+	proxyStr += "#" + url.QueryEscape(node.Name)
+	return proxyStr
+}
 
-// 	return ClashTrojan{
-// 		Name:     findStr[4],
-// 		Type:     "trojan",
-// 		Server:   findStr[2],
-// 		Password: findStr[1],
-// 		Port:     findStr[3],
-// 	}, nil
-// }
+func TrojanToString(proxyList ProxyList) string {
+	var trojanStrings strings.Builder
+	for _, node := range proxyList {
+		if nodeStr := ProxieToTrojan(node); nodeStr != "" {
+			trojanStrings.WriteString(nodeStr + "\n")
+		}
+	}
+
+	return tool.Base64EncodeString(trojanStrings.String())
+}

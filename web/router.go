@@ -115,6 +115,56 @@ func setupRouter() {
 
 		web.String(200, text)
 	})
+
+	router.GET("/ss/sub", func(web *gin.Context) {
+		proxyTypes := web.DefaultQuery("type", "")
+		proxyCountry := web.DefaultQuery("c", "")
+		proxyNotCountry := web.DefaultQuery("nc", "")
+		allProxies := app.GetProxies("all")
+		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+
+		web.String(200, proxy.SsToString(filterProxies, 2))
+	})
+
+	router.GET("/sip002/sub", func(web *gin.Context) {
+		proxyTypes := web.DefaultQuery("type", "")
+		proxyCountry := web.DefaultQuery("c", "")
+		proxyNotCountry := web.DefaultQuery("nc", "")
+		allProxies := app.GetProxies("all")
+		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+
+		web.String(200, proxy.SsToString(filterProxies, 1))
+	})
+
+	router.GET("/ssr/sub", func(web *gin.Context) {
+		proxyTypes := web.DefaultQuery("type", "")
+		proxyCountry := web.DefaultQuery("c", "")
+		proxyNotCountry := web.DefaultQuery("nc", "")
+		allProxies := app.GetProxies("all")
+		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+
+		web.String(200, proxy.SsrToString(filterProxies))
+	})
+
+	router.GET("/vmess/sub", func(web *gin.Context) {
+		proxyTypes := web.DefaultQuery("type", "")
+		proxyCountry := web.DefaultQuery("c", "")
+		proxyNotCountry := web.DefaultQuery("nc", "")
+		allProxies := app.GetProxies("all")
+		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+
+		web.String(200, proxy.VmessToString(filterProxies))
+	})
+
+	router.GET("/trojan/sub", func(web *gin.Context) {
+		proxyTypes := web.DefaultQuery("type", "")
+		proxyCountry := web.DefaultQuery("c", "")
+		proxyNotCountry := web.DefaultQuery("nc", "")
+		allProxies := app.GetProxies("all")
+		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+
+		web.String(200, proxy.TrojanToString(filterProxies))
+	})
 }
 
 // 返回页面templates

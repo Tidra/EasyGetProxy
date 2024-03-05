@@ -1,7 +1,6 @@
 package getter
 
 import (
-	"io"
 	"strings"
 	"sync"
 
@@ -20,12 +19,8 @@ type Subscribe struct {
 
 // Get implements Getter.
 func (s *Subscribe) Get() proxy.ProxyList {
-	resp, err := tool.GetHttpClient().Get(s.Url)
-	if err != nil {
-		return nil
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	// 支持链接以及本地文件
+	body, err := tool.ReadFile(s.Url)
 	if err != nil {
 		return nil
 	}
