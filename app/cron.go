@@ -69,15 +69,20 @@ func CrawlTask() {
 
 	SetProxies("all", proxies)
 	SetString("all-clash", proxy.ClashToString(proxies))
+	SetString("all-surge", proxy.SurgeToString(proxies))
 }
 
 func SpeedCheckTask() {
 	proxies := GetProxies("all")
 	if config.Config.SpeedTest.IsUsed {
+		IsSpeedTest = "已开启"
 		check.SpeedCheckAll(proxies)
 		proxies = proxies.RenameAll()
 		SetProxies("all", proxies)
 		SetString("all-clash", proxy.ClashToString(proxies))
+		SetString("all-surge", proxy.SurgeToString(proxies))
+	} else {
+		IsSpeedTest = "未开启"
 	}
 }
 

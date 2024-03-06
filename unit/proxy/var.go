@@ -64,7 +64,7 @@ type Proxy struct {
 	SkipCertVerify bool `json:"skip-cert-verify,omitempty"` // *vmess,ssr,ss,*socks5,*http,*trojan,snell
 	TLS13          bool `json:"tls13,omitempty"`            // vmess,ss,http,trojan
 
-	SnellVersion any    `json:"version,omitempty"`    // *snell
+	SnellVersion int    `json:"version,omitempty"`    // *snell
 	ServerName   string `json:"servername,omitempty"` // *vmess
 }
 

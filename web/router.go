@@ -1,10 +1,14 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Tidra/EasyGetProxy/app"
@@ -21,18 +25,54 @@ import (
 const version = "v0.0.1"
 
 var router *gin.Engine
+var srv http.Server
 
 func StarWeb() {
 	// 初始化路由
 	setupRouter()
 
 	port := config.Config.Web.Port
-	err := router.Run(":" + port)
-	if err != nil {
-		log.LogError("router: Web server starting failed. Make sure your port %s has not been used. \n%s", port, err.Error())
-	} else {
-		log.LogInfo("Proxypool is serving on port: %s", port)
+
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: router,
 	}
+
+	go func() {
+		// service connections
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.LogError("监听错误: %s\n", err)
+		} else {
+			log.LogInfo("网页服务运行在端口: %s", port)
+		}
+	}()
+}
+
+func WebListenStop() {
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal)
+	// kill (no param) default send syscanll.SIGTERM
+	// kill -2 is syscall.SIGINT
+	// kill -9 is syscall. SIGKILL but can"t be catch, so don't need add it
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.LogInfo("服务关闭中 ...")
+	WebShutdown()
+}
+
+func WebShutdown() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.LogError("服务关闭失败:", err)
+	}
+	// catching ctx.Done(). timeout of 5 seconds.
+	select {
+	case <-ctx.Done():
+		log.LogInfo("服务关闭等待5秒.")
+	}
+	log.LogInfo("服务已关闭")
 }
 
 func setupRouter() {
@@ -79,6 +119,12 @@ func setupRouter() {
 		})
 	})
 
+	router.GET("/surge", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "assets/html/surge.html", gin.H{
+			"domain": config.Config.Web.Domain,
+		})
+	})
+
 	router.GET("/clash/config", func(c *gin.Context) {
 		domainUrl := strings.Split(config.Config.Web.Domain, ":")[0]
 		c.HTML(http.StatusOK, "assets/html/clash-config.yaml", gin.H{
@@ -92,6 +138,12 @@ func setupRouter() {
 			"domain":         config.Config.Web.Domain,
 			"delaydheck_url": config.Config.HealthCheck.Url,
 			"port":           config.Config.Web.Port,
+		})
+	})
+
+	router.GET("/surge/config", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "assets/html/surge.conf", gin.H{
+			"domain": config.Config.Web.Domain,
 		})
 	})
 
@@ -111,6 +163,27 @@ func setupRouter() {
 			allProxies := app.GetProxies("all")
 			filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
 			text = proxy.ClashToString(filterProxies)
+		}
+
+		web.String(200, text)
+	})
+
+	router.GET("/surge/proxies", func(web *gin.Context) {
+		proxyTypes := web.DefaultQuery("type", "")
+		proxyCountry := web.DefaultQuery("c", "")
+		proxyNotCountry := web.DefaultQuery("nc", "")
+		text := ""
+		if (proxyTypes == "" || proxyTypes == "all") && proxyCountry == "" && proxyNotCountry == "" {
+			text = app.GetString("all-surge")
+			if text == "" {
+				allProxies := app.GetProxies("all")
+				text = proxy.SurgeToString(allProxies)
+				app.SetString("all-surge", text)
+			}
+		} else {
+			allProxies := app.GetProxies("all")
+			filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+			text = proxy.SurgeToString(filterProxies)
 		}
 
 		web.String(200, text)

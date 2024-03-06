@@ -27,19 +27,20 @@ func ExplodeClash(clash string) (ProxyList, error) {
 		return proxyList, err
 	}
 
-	var proxyType, remark, server, port, cipher, password string //common
-	var id, aid, net, path, host, edge, tls, sni string          //vmess
-	var plugin string                                            //ss
-	var protocol, protoparam, obfs, obfsparam string             //ssr
-	var user string                                              //socks
-	var udp, tfo, scv bool
-	var singleProxy map[string]interface{}
 	section := "Proxy"
 	if _, ok := yamlnode["proxies"]; ok {
 		section = "proxies"
 	}
 
 	for _, v := range yamlnode[section].([]interface{}) {
+		var proxyType, remark, server, port, cipher, password string //common
+		var id, aid, net, path, host, edge, tls, sni string          //vmess
+		var plugin string                                            //ss
+		var protocol, protoparam, obfs, obfsparam string             //ssr
+		var user string                                              //socks
+		var udp, tfo, scv bool
+		var singleProxy map[string]interface{}
+
 		proxy := Proxy{}
 		// log.LogInfo("Info %+v", v)
 		singleProxy = v.(map[string]interface{})

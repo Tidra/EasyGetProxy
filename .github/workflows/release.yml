@@ -12,6 +12,20 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v1
 
+    - name: Create Dir Dist And Copy files
+      run: |
+        pwd
+        mkdir -p dist/EasyGetProxy_darwin_amd64_v1
+        mkdir -p dist/EasyGetProxy_linux_arm64
+        mkdir -p dist/EasyGetProxy_linux_amd64_v1
+        mkdir -p dist/EasyGetProxy_linux_386
+        mkdir -p dist/EasyGetProxy_darwin_arm64
+        mkdir -p dist/EasyGetProxy_windows_amd64_v1
+        mkdir -p dist/EasyGetProxy_windows_arm64
+        mkdir -p dist/EasyGetProxy_windows_386
+        ls -d dist/* | xargs -n 1 cp -vr config assets
+        chmod -R 777 dist
+
     - name: Validates GO releaser config
       uses: docker://goreleaser/goreleaser:latest
       with:

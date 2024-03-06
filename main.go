@@ -23,6 +23,7 @@ func main() {
 	go mainInit()
 	go app.Cron() // 定时运行
 	web.StarWeb()
+	web.WebListenStop()
 
 }
 
