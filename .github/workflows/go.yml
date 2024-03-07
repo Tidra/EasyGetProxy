@@ -8,8 +8,6 @@ on:
   push:
     # Publish semver tags as releases.
     tags: [ 'v*' ]
-  release:
-    types: [published]
   # push:
   #   branches: [ "main" ]
   # pull_request:
