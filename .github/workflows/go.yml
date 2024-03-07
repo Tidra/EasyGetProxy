@@ -51,13 +51,13 @@ jobs:
       run: go test -v ./...
 
     - name: Prepare Packaging
-      run: tar zcvf EasyGetProxy_${{ github.ref }}_${{ matrix.archive-name }}.tar.gz ${{ matrix.exe-name }} LICENSE config assets
+      run: tar zcvf EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz ${{ matrix.exe-name }} LICENSE config assets
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: EasyGetProxy_${{ github.ref }}_${{ matrix.archive-name }}.tar.gz
-        path: EasyGetProxy_${{ github.ref }}_${{ matrix.archive-name }}.tar.gz
+        name: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
+        path: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
       
     - name: Release Version
       uses: ncipollo/release-action@v1
@@ -65,5 +65,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         allowUpdates: true
-        artifacts: EasyGetProxy_${{ github.ref }}_${{ matrix.archive-name }}.tar.gz
-
+        artifacts: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
+    
+    - uses: fregante/release-with-changelog@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
