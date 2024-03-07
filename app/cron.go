@@ -20,7 +20,8 @@ var cacheFile = "assets/all-clash.dat"
 func Cron() {
 	_ = gocron.Every(config.Config.CrawlInterval).Minutes().Do(CrawlTask)
 	_ = gocron.Every(config.Config.SpeedTest.Interval).Minutes().Do(SpeedCheckTask)
-	_ = gocron.Every(1).Days().Do(SaveCacheToFileTask)
+	_ = gocron.Every(SaveCacheInterval).Days().Do(SaveCacheToFileTask)
+	_ = gocron.Every(ClearInvalidInterval).Days().Do(clearInvalidProxy)
 	<-gocron.Start()
 }
 
@@ -104,4 +105,10 @@ func SaveCacheToFileTask() {
 	}
 
 	log.LogInfo("写入缓存文件成功.")
+}
+
+func clearInvalidProxy() {
+	proxies := GetProxies("all")
+	filterProxies := proxies.Filter("", "", "")
+	SetProxies("all", filterProxies)
 }

@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cast"
 )
 
-// 设置surge版本为3
-var surgeVersion = 3
+// 设置surge版本为4
+var surgeVersion = 4
 var surgeSsrPath = ""
 
 func ProxieToSurge(node Proxy) string {
@@ -131,7 +131,7 @@ func SurgeToString(proxyList ProxyList) string {
 	var surgeStrings strings.Builder
 
 	for _, node := range proxyList {
-		if !node.IsAlive {
+		if !node.IsValid {
 			continue
 		}
 		if nodeStr := ProxieToSurge(node); nodeStr != "" {

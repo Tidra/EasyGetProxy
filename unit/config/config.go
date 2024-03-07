@@ -22,10 +22,10 @@ type ConfigOptions struct {
 		Port   string `json:"port" yaml:"port"`
 	}
 
-	SourceFiles   []string `json:"source-files" yaml:"source-files"`
-	DatabaseUrl   string   `json:"database-url" yaml:"database-url"`
-	TGApiUrl      string   `json:"TG-api-url" yaml:"TG-api-url"`
-	CrawlInterval uint64   `json:"crawl-interval" yaml:"crawl-interval"`
+	SourceFiles []string `json:"source-files" yaml:"source-files"`
+	// DatabaseUrl   string   `json:"database-url" yaml:"database-url"`
+	// TGApiUrl      string   `json:"TG-api-url" yaml:"TG-api-url"`
+	CrawlInterval uint64 `json:"crawl-interval" yaml:"crawl-interval"`
 
 	HealthCheck struct {
 		Url           string `json:"url" yaml:"url"`
@@ -89,9 +89,9 @@ func Parse() error {
 	}
 
 	// TG相关默认值
-	if Config.TGApiUrl == "" {
-		Config.TGApiUrl = "https://rsshub.v2fy.com/telegram/channel/"
-	}
+	// if Config.TGApiUrl == "" {
+	// 	Config.TGApiUrl = "https://rsshub.v2fy.com/telegram/channel/"
+	// }
 
 	// 爬虫相关默认值
 	if Config.CrawlInterval == 0 {

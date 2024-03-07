@@ -113,7 +113,7 @@ func (pl ProxyList) Filter(proxyTypes string, proxyCountry string, proxyNotCount
 	notCountries := strings.Split(proxyNotCountry, ",")
 
 	for _, p := range pl {
-		if !p.IsAlive {
+		if !p.IsValid {
 			continue
 		}
 		if proxyTypes != "" {
@@ -156,7 +156,7 @@ func (pl ProxyList) Count() (int, int, int, int, int, int) {
 	trojanProxiesCount := 0
 	for _, p := range pl {
 		allProxiesCount++
-		if !p.IsAlive {
+		if !p.IsValid {
 			continue
 		}
 

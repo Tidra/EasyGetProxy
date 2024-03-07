@@ -14,7 +14,7 @@ type ProxyList []Proxy
 type Proxy struct {
 	Country string  `json:"country,omitempty"`  // 自定义
 	Speed   float64 `json:"speed,omitempty"`    // 自定义
-	IsAlive bool    `json:"is-alive,omitempty"` // 自定义
+	IsValid bool    `json:"is-valid,omitempty"` // 自定义
 
 	Type   string `json:"type,omitempty"`
 	Group  string `json:"group,omitempty"`  // vmess,ssr,ss,socks5,http,trojan,snell

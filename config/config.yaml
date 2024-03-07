@@ -1,9 +1,9 @@
 # ======= 留空使用default值  ======= #
 # ==== 日志相关 ==== #
 log:
-  console-level: debug        # default info
-  file-level: debug           # default no log file
-  file-path:                  # default log/run.log
+  console-level:         # default info
+  file-level:            # default no log file
+  file-path:             # default log/run.log
 
 # ==== 网页相关 ==== #
 web:
@@ -17,11 +17,11 @@ source-files:
   # use web file
   # - https://example.com/config/source.yaml
 
-# ==== Postgresql database info ==== #
-database-url: ""
+# # ==== Postgresql database info ==== #
+# database-url: ""
 
-# ==== TG api info ==== #
-TG-api-url: ""              # default "https://rsshub.v2fy.com/telegram/channel/"
+# # ==== TG api info ==== #
+# TG-api-url: ""              # default "https://rsshub.v2fy.com/telegram/channel/"
 
 # ==== 爬取设置 ==== #
 crawl-interval:             # default 60 (minutes)

@@ -35,12 +35,12 @@ func SpeedCheckAll(proxies proxy.ProxyList) {
 		pool.JobQueue <- func(index int) func() {
 			return func() {
 				defer pool.JobDone()
-				if proxies[index].Country != "" || proxies[index].IsAlive {
+				if proxies[index].Country != "" || proxies[index].IsValid {
 					speed, err := ProxySpeedCheck(proxies[index])
 					// log.LogDebug(proxies[index].Server, country, err)
 					if err == nil && speed > 0 {
 						m.Lock()
-						proxies[index].IsAlive = true
+						proxies[index].IsValid = true
 						proxies[index].Speed = speed
 						m.Unlock()
 					}

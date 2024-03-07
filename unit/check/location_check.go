@@ -49,12 +49,14 @@ func LocationCheckAll(proxies proxy.ProxyList) {
 				defer pool.JobDone()
 				country, err := ProxyLocationCheck(proxies[index])
 				// log.LogDebug(proxies[index].Server, country, err)
+				m.Lock()
 				if err == nil && country != "" {
-					m.Lock()
-					proxies[index].IsAlive = true
+					proxies[index].IsValid = true
 					proxies[index].Country = country
-					m.Unlock()
+				} else if err != nil {
+					proxies[index].IsValid = false
 				}
+				m.Unlock()
 
 				// Progress status
 				dcm.Lock()

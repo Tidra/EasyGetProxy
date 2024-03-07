@@ -354,7 +354,7 @@ func ClashToString(proxyList ProxyList) string {
 	clashStrings.WriteString("proxies:\n")
 
 	for _, node := range proxyList {
-		if !node.IsAlive {
+		if !node.IsValid {
 			continue
 		}
 
