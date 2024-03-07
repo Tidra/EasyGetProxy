@@ -2,29 +2,8 @@ package tool
 
 import (
 	"encoding/base64"
-	"regexp"
-	"strconv"
 	"strings"
 )
-
-var (
-	// emoji表情的数据表达式
-	re = regexp.MustCompile(`(?i)\\\\u[0-9a-zA-Z]+`)
-	// 提取emoji数据表达式
-	reg = regexp.MustCompile(`(?i)\\\\u`)
-)
-
-func UnicodeEmojiDecode(s string) string {
-	src := re.FindAllString(s, -1)
-	for i := 0; i < len(src); i++ {
-		e := reg.ReplaceAllString(src[i], "")
-		p, err := strconv.ParseInt(e, 16, 32)
-		if err == nil {
-			s = strings.Replace(s, src[i], string(rune(p)), -1)
-		}
-	}
-	return s
-}
 
 func Base64DecodeByte(s string) ([]byte, error) {
 	if i := len(s) % 4; i != 0 {

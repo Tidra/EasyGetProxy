@@ -21,7 +21,6 @@ func main() {
 	config.SetConfigFilePath(configFilePath)
 
 	go mainInit()
-	go app.Cron() // 定时运行
 	web.StarWeb()
 	web.WebListenStop()
 
@@ -31,4 +30,6 @@ func mainInit() {
 	// 首次初始化所有信息
 	app.CrawlTask()
 	app.SpeedCheckTask()
+
+	app.Cron() // 定时运行
 }
