@@ -15,7 +15,7 @@
         <img alt="GitHub License" src="https://img.shields.io/github/license/Tidra/EasyGetProxy">
     </a>
     <a href="https://goreportcard.com/report/github.com/Tidra/EasyGetProxy">
-        <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Tidra/EasyGetProxy/release.yml">
+        <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Tidra/EasyGetProxy/go.yml">
     </a>
     <a href="https://github.com/Tidra/EasyGetProxy/releases">
         <img src="https://img.shields.io/github/release/Tidra/EasyGetProxy/all.svg?style=flat-square">
