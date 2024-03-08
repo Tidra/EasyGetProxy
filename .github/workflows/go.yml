@@ -55,6 +55,12 @@ jobs:
     - name: Prepare Packaging
       run: tar zcvf EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz ${{ matrix.exe-name }} LICENSE config assets
 
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
+        path: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
+
     - name: Upload to release
       uses: JasonEtco/upload-to-release@master
       with:
