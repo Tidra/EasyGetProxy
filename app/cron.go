@@ -14,7 +14,6 @@ import (
 	"github.com/jasonlvhit/gocron"
 )
 
-var location, _ = time.LoadLocation("Asia/Shanghai")
 var cacheFile = "assets/all-clash.dat"
 
 func Cron() {
@@ -60,6 +59,12 @@ func CrawlTask() {
 
 	GettersCount = len(getter.GetterList)
 	AllProxiesCount, UsefullProxiesCount, SSRProxiesCount, SSProxiesCount, VmessProxiesCount, TrojanProxiesCount = proxies.Count()
+
+	location, err := time.LoadLocation("Asia/Shanghai") //设置时区
+	if err != nil {
+		// 修复window获取不到时区问题
+		location = time.FixedZone("CST", 8*3600)
+	}
 	LastCrawlTime = time.Now().In(location).Format("2006-01-02 15:04:05")
 	log.LogInfo("节点总数: %d", AllProxiesCount)
 	log.LogInfo("有效节点数: %d", UsefullProxiesCount)
