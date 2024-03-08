@@ -7,7 +7,9 @@ on:
   workflow_dispatch:
   push:
     # Publish semver tags as releases.
-    tags: [ 'v*' ]
+    tags: [ 'v*' ]    
+  # release:
+  #   types: [published]
   # push:
   #   branches: [ "main" ]
   # pull_request:
@@ -50,19 +52,21 @@ jobs:
     - name: Test
       run: go test -v ./...
 
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
     - name: Prepare Packaging
-      run: tar zcvf EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz ${{ matrix.exe-name }} LICENSE config assets
+      run: tar zcvf EasyGetProxy_${{ steps.tag_version.outputs.previous_tag }}_${{ matrix.archive-name }}.tar.gz ${{ matrix.exe-name }} LICENSE config assets
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
-        path: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
-        
-    - uses: fregante/release-with-changelog@v3
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        exclude: '^Meta|readme|yml|yaml|ignore'
+        name: EasyGetProxy_${{ steps.tag_version.outputs.previous_tag }}_${{ matrix.archive-name }}.tar.gz
+        path: EasyGetProxy_${{ steps.tag_version.outputs.previous_tag }}_${{ matrix.archive-name }}.tar.gz
       
     - name: Release Version
       uses: ncipollo/release-action@v1
@@ -70,4 +74,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         allowUpdates: true
-        artifacts: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
+        artifacts: EasyGetProxy_${{ steps.tag_version.outputs.previous_tag }}_${{ matrix.archive-name }}.tar.gz
+        body: ${{ steps.tag_version.outputs.changelog }}
