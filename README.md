@@ -39,7 +39,7 @@
 - [x] 提供surge配置文件
 - [ ] 更改网页页面
 - [ ] snell、vless支持
-- [x] 提供ss、ssr、vmess、sip002订阅
+- [x] 提供ss、ssr、vmess、sip002、surge订阅
 
 ## 安装
 
