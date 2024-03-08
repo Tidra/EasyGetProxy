@@ -58,6 +58,11 @@ jobs:
       with:
         name: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
         path: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
+        
+    - uses: fregante/release-with-changelog@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        exclude: '^Meta|readme|yml|yaml|ignore'
       
     - name: Release Version
       uses: ncipollo/release-action@v1
