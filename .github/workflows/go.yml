@@ -58,6 +58,6 @@ jobs:
     - name: Upload to release
       uses: JasonEtco/upload-to-release@master
       with:
-        args: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
+        args: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz application/octet-stream
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
