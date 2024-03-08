@@ -16,6 +16,21 @@ on:
   #   branches: [ "main" ]
 
 jobs:
+  release:
+    name: Release on GitHub
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v1
+
+    - uses: fregante/release-with-changelog@v3
+      id: release
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        exclude: '^Ignore|yml|yaml|md|readme|vscode|^Merge'
+
   build:
     strategy:
       matrix:
@@ -38,6 +53,7 @@ jobs:
       contents: write
     
     runs-on: ${{ matrix.os }}
+    needs: release
     steps:
     - uses: actions/checkout@v3
 
@@ -61,7 +77,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ needs.release.outputs.upload_url }}
         asset_path: ${{ github.workspace }}/EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
         asset_name: EasyGetProxy_${{ github.ref_name }}_${{ matrix.archive-name }}.tar.gz
         asset_content_type: application/octet-stream
