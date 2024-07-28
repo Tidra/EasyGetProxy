@@ -40,7 +40,7 @@ type ConfigOptions struct {
 
 	SpeedTest struct {
 		Url           string `json:"url" yaml:"url"`
-		IsUsed        bool   `json:"is_used" yaml:"is_used"`
+		IsUsed        bool   `json:"is-used" yaml:"is-used"`
 		Interval      uint64 `json:"interval" yaml:"interval"`
 		Timeout       int    `json:"timeout" yaml:"timeout"`
 		MaxConnection int    `json:"max-conn" yaml:"max-conn"`

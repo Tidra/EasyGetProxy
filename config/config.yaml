@@ -23,6 +23,11 @@ source-files:
 # # ==== TG api info ==== #
 # TG-api-url: ""              # default "https://rsshub.v2fy.com/telegram/channel/"
 
+#  ==== 获取归属地 ==== #
+localcheck:
+  url:                      # default https://ip.011102.xyz/ (备选：https://ip.useragentinfo.com/json、http://ip-api.com/json/)
+  json-path:                # default IP.Country
+
 # ==== 爬取设置 ==== #
 crawl-interval:             # default 60 (minutes)
 healthcheck:
@@ -32,7 +37,7 @@ healthcheck:
 
 # ==== 测速 ==== #
 speedtest: 
-  is_used: true             # default false. Warning: this will consume large network resources.
+  is-used: true             # default false. Warning: this will consume large network resources.
   interval:                 # default 720 (min)
   timeout:                  # default 10 (seconds).
   max-conn:                 # default 5. The number of speed test connections simultaneously
