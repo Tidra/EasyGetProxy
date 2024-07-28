@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"reflect"
 )
 
 func GetFileFullPath(path string) string {
