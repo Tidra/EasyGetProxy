@@ -140,19 +140,32 @@ source-files:
   # use web file
   # - https://example.com/config/source.yaml
 
+# # ==== Postgresql database info ==== #
+# database-url: ""
+
+# # ==== TG api info ==== #
+# TG-api-url: ""              # default "https://rsshub.v2fy.com/telegram/channel/"
+
 # ==== 爬取设置 ==== #
 crawl-interval:             # default 60 (minutes)
 healthcheck:
   url:                      # default http://www.gstatic.com/generate_204
+
+#  ==== 获取归属地 ==== #
+localcheck:
+  url:                      # default https://ip.011102.xyz/ (备选：https://ip.useragentinfo.com/json、http://ip-api.com/json/)
+  json-path:                # default IP.Country
   timeout:                  # default 5 (seconds)
   max-conn:                 # default 500. The number of health check connections simultaneously
 
-# ==== 测速相关 ==== #
+# ==== 测速 ==== #
 speedtest: 
-  is_used: true             # default false. Warning: this will consume large network resources.
+  url:                      # default https://speed.cloudflare.com/__down?bytes=5242880
+  is-used: true             # default false. Warning: this will consume large network resources.
   interval:                 # default 720 (min)
   timeout:                  # default 10 (seconds).
   max-conn:                 # default 5. The number of speed test connections simultaneously
+
 ```
 
 ### 3. 配置源 `source.yaml`

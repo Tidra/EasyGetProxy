@@ -1,6 +1,7 @@
 package tool
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -8,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"reflect"
 )
 
 func GetFileFullPath(path string) string {
@@ -102,23 +102,38 @@ func ReadFile(path string) ([]byte, error) {
 	}
 }
 
-// 通过json路径字符串获取json数据
-func getFieldByPath(data interface{}, fieldPath string) (interface{}, error) {
-    // 按点分割字段路径字符串
-    path := strings.Split(fieldPath, ".")
+// getJSONStringPropertyValue 根据 JSON 字符串和属性路径获取对应的字符串属性值
+func GetJSONPropertyValue(jsonStr, path string) (string, error) {
+	// 解析 JSON 字符串为 map[string]interface{} 类型
+	var data map[string]interface{}
+	err := json.Unmarshal([]byte(jsonStr), &data)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse JSON: %v", err)
+	}
 
-    // 使用反射动态访问结构体字段
-    value := reflect.ValueOf(data)
-    for _, fieldName := range path {
-        if value.Kind() == reflect.Ptr {
-            value = value.Elem()
-        }
-        fieldValue := value.FieldByName(fieldName)
-        if !fieldValue.IsValid() {
-            return nil, fmt.Errorf("field '%s' not found", fieldName)
-        }
-        value = fieldValue
-    }
+	// 按点分割属性路径
+	parts := strings.Split(path, ".")
 
-    return value.Interface(), nil
+	// 从根节点逐级访问属性路径
+	var current interface{} = data
+	for _, part := range parts {
+		switch v := current.(type) {
+		case map[string]interface{}:
+			value, ok := v[part]
+			if !ok {
+				return "", fmt.Errorf("field '%s' not found", part)
+			}
+			current = value
+		default:
+			return "", fmt.Errorf("invalid operation: %T is not a map", current)
+		}
+	}
+
+	// 将最终的属性值转换为字符串类型
+	if strValue, ok := current.(string); ok {
+		return strValue, nil
+	}
+
+	// 如果最终值不是字符串类型，则返回错误
+	return "", fmt.Errorf("field '%s' is not a string", path)
 }

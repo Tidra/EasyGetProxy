@@ -1,6 +1,6 @@
-# - type: clash
-#   options:
-#     url: https://nodefree.org/dy/2024/02/20240227.yaml
+- type: clash
+  options:
+    url: https://proxypool.link/clash/proxies
 
 # - type: subscribe
 #   options:
@@ -18,9 +18,9 @@
 #           # - type: clash
 #           #   xpath: //div[1]/div[2]/div[1]/div/div/p[2]
             
-- type: crawl
-  options:
-    url: https://github.com/aiboboxx/v2rayfree
-    subs: 
-      - type: fuzzy
-        xpath: //*[@id="repo-content-pjax-container"]/div/div/div[2]/div[1]/react-partial/div/div/div[3]/div[2]/div/div[2]/article/div[8]/pre/code/text()
+# - type: crawl
+#   options:
+#     url: https://github.com/aiboboxx/v2rayfree
+#     subs: 
+#       - type: fuzzy
+#         xpath: //*[@id="repo-content-pjax-container"]/div/div/div[2]/div[1]/react-partial/div/div/div[3]/div[2]/div/div[2]/article/div[8]/pre/code/text()

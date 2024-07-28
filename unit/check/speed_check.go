@@ -1,7 +1,6 @@
 package check
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"sync"

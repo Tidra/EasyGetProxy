@@ -27,16 +27,16 @@ type ConfigOptions struct {
 	// TGApiUrl      string   `json:"TG-api-url" yaml:"TG-api-url"`
 	CrawlInterval uint64 `json:"crawl-interval" yaml:"crawl-interval"`
 
-	LocalCheck struct {
-		Url           string `json:"url" yaml:"url"`
-		jsonPath      string `json:"json-path" yaml:"json-path"`
-	} `json:"localcheck" yaml:"localcheck"`
-
 	HealthCheck struct {
 		Url           string `json:"url" yaml:"url"`
+	} `json:"healthcheck" yaml:"healthcheck"`
+
+	LocalCheck struct {
+		Url      string `json:"url" yaml:"url"`
+		JsonPath string `json:"json-path" yaml:"json-path"`
 		Timeout       int    `json:"timeout" yaml:"timeout"`
 		MaxConnection int    `json:"max-conn" yaml:"max-conn"`
-	} `json:"healthcheck" yaml:"healthcheck"`
+	} `json:"localcheck" yaml:"localcheck"`
 
 	SpeedTest struct {
 		Url           string `json:"url" yaml:"url"`
@@ -103,26 +103,26 @@ func Parse() error {
 	if Config.CrawlInterval == 0 {
 		Config.CrawlInterval = 60
 	}
-	
-	if Config.LocalCheck.Url == "" {
-		Config.LocalCheck.Url = "https://ip.011102.xyz/"
-	}
-	if Config.LocalCheck.jsonPath == "" {
-		Config.LocalCheck.jsonPath = "IP.Country"
-	}
 
 	if Config.HealthCheck.Url == "" {
 		Config.HealthCheck.Url = "http://www.google.com/generate_204"
 	}
-	if Config.HealthCheck.Timeout <= 0 {
-		Config.HealthCheck.Timeout = 5
+
+	if Config.LocalCheck.Url == "" {
+		Config.LocalCheck.Url = "https://ip.011102.xyz"
 	}
-	if Config.HealthCheck.MaxConnection <= 0 {
-		Config.HealthCheck.MaxConnection = 500
+	if Config.LocalCheck.JsonPath == "" {
+		Config.LocalCheck.JsonPath = "IP.Country"
+	}
+	if Config.LocalCheck.Timeout <= 0 {
+		Config.LocalCheck.Timeout = 5
+	}
+	if Config.LocalCheck.MaxConnection <= 0 {
+		Config.LocalCheck.MaxConnection = 500
 	}
 
 	if Config.SpeedTest.Url == "" {
-		Config.SpeedTest.Url = fmt.Sprintf("https://speed.cloudflare.com/__down?bytes=%d", 1024*1024*5)
+		Config.SpeedTest.Url = "https://speed.cloudflare.com/__down?bytes=5242880"
 	}
 	if Config.SpeedTest.Interval == 0 {
 		Config.SpeedTest.Interval = 720

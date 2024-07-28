@@ -1,7 +1,6 @@
 package check
 
 import (
-	"encoding/json"
 	"io"
 	"strings"
 	"sync"
@@ -15,20 +14,8 @@ import (
 	"github.com/ivpusic/grpool"
 )
 
-type Data struct {
-	Ip       string `json:"ip"`
-	Location struct {
-		City        string `json:"city"`
-		CountryCode string `json:"country_code"`
-		CountryName string `json:"country_name"`
-		Latitude    string `json:"latitude"`
-		Longitude   string `json:"longitude"`
-		Province    string `json:"province"`
-	} `json:"location"`
-}
-
 func LocationCheckAll(proxies proxy.ProxyList) {
-	numWorker := config.Config.HealthCheck.MaxConnection
+	numWorker := config.Config.LocalCheck.MaxConnection
 	numJob := 1
 	if numWorker > 4 {
 		numJob = (numWorker + 2) / 3
@@ -41,7 +28,7 @@ func LocationCheckAll(proxies proxy.ProxyList) {
 
 	doneCount := 0
 	progress_num := 0
-	log.LogInfo("[归属地检查] num: %d, connection: %d, timeout: %ds", len(proxies), numWorker, config.Config.HealthCheck.Timeout)
+	log.LogInfo("[归属地检查] num: %d, connection: %d, timeout: %ds", len(proxies), numWorker, config.Config.LocalCheck.Timeout)
 	// 线程：归属地检查，检查过程通过grpool的job并发
 	for i := range proxies {
 		pool.JobQueue <- func(index int) func() {
@@ -84,7 +71,7 @@ func ProxyLocationCheck(p proxy.Proxy) (country string, err error) {
 		return "", err
 	}
 
-	timeout := time.Second * time.Duration(config.Config.HealthCheck.Timeout)
+	timeout := time.Second * time.Duration(config.Config.LocalCheck.Timeout)
 
 	var body []byte
 	for r := 1; r <= maxRetryGet; r++ {
@@ -100,17 +87,13 @@ func ProxyLocationCheck(p proxy.Proxy) (country string, err error) {
 		time.Sleep(retryInterval)
 	}
 
-	var data Data
-	if err := json.Unmarshal(body, &data); err == nil {
-		fieldPath := config.Config.LocalCheck.jsonPath
+	fieldPath := config.Config.LocalCheck.JsonPath
 
-		// 获取字段值
-		fieldValue, err := tool.getFieldByPath(app, fieldPath)
-		if err != nil {
-			return fieldValue, nil
-		}
-		return "", err
-	} else {
+	// 获取字段值
+	fieldValue, err := tool.GetJSONPropertyValue(string(body), fieldPath)
+	// log.LogDebug(fieldValue, string(body))
+	if err != nil {
 		return "", err
 	}
+	return fieldValue, nil
 }
