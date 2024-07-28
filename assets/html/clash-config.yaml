@@ -29,25 +29,22 @@ proxy-groups:
       - 选择节点
       - 失败切换
       - 负载均衡
+      - DIRECT
   - name: 选择国家
     type: select
     proxies:
-      - 🇨🇳 中国
-      - 🇯🇵 日本
-      - 🇸🇬 新加坡
-      - 🇺🇸 美国
-      - 🇨🇦 加拿大
-      - 🇷🇺 俄罗斯
-      - 🇦🇺 澳大利亚
-      - 🇨🇭 瑞士
-      - 🇩🇪 德国
-      - 🇫🇷 法国
-      - 🇬🇧 英国
-      - 🇳🇱 荷兰
+      - 🇨🇳 中国-自选
+      - 🇨🇳 中国-延迟
+      - 🇯🇵 日本-自选
+      - 🇯🇵 日本-延迟
+      - 🇸🇬 新加坡-自选
+      - 🇸🇬 新加坡-延迟
+      - 🇺🇸 美国-自选
+      - 🇺🇸 美国-延迟
+      - 🇪🇺 欧洲
       - 其他国家
- 
-  # 规则外的
-  - name: 漏网之鱼
+  
+  - name: 直连
     type: select
     proxies:
       - DIRECT
@@ -58,8 +55,8 @@ proxy-groups:
       - 失败切换
       - 负载均衡
  
-  # 游戏
-  - name: 游戏
+  # 规则外的
+  - name: 漏网之鱼
     type: select
     proxies:
       - DIRECT
@@ -93,12 +90,6 @@ proxy-groups:
     type: select
     use:
       - all
-  - name: 🇨🇳 中国
-    type: select
-    proxies:
-      - 🇨🇳 中国-失败切换
-      - 🇨🇳 中国-自选
-      - 🇨🇳 中国-延迟
   - name: 🇨🇳 中国-自选
     type: select
     use:
@@ -110,19 +101,6 @@ proxy-groups:
     filter: 'HK|TW'
     use:
       - cn
-  - name: 🇨🇳 中国-失败切换
-    type: fallback
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    filter: 'HK|TW'
-    use:
-      - cn
-  - name: 🇯🇵 日本
-    type: select
-    proxies:
-      - 🇯🇵 日本-失败切换
-      - 🇯🇵 日本-自选
-      - 🇯🇵 日本-延迟
   - name: 🇯🇵 日本-自选
     type: select
     use:
@@ -133,18 +111,6 @@ proxy-groups:
     interval: 300
     use:
       - jp
-  - name: 🇯🇵 日本-失败切换
-    type: fallback
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - jp
-  - name: 🇸🇬 新加坡
-    type: select
-    proxies:
-      - 🇸🇬 新加坡-失败切换
-      - 🇸🇬 新加坡-自选
-      - 🇸🇬 新加坡-延迟
   - name: 🇸🇬 新加坡-自选
     type: select
     use:
@@ -155,18 +121,6 @@ proxy-groups:
     interval: 300
     use:
       - sg
-  - name: 🇸🇬 新加坡-失败切换
-    type: fallback
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - sg
-  - name: 🇺🇸 美国
-    type: select
-    proxies:
-      - 🇺🇸 美国-失败切换
-      - 🇺🇸 美国-自选
-      - 🇺🇸 美国-延迟
   - name: 🇺🇸 美国-自选
     type: select
     use:
@@ -178,61 +132,12 @@ proxy-groups:
     filter: '\|'
     use:
       - us
-  - name: 🇺🇸 美国-失败切换
-    type: fallback
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    filter: '\|'
-    use:
-      - us
-  - name: 🇨🇦 加拿大
+  - name: 🇪🇺 欧洲
     type: url-test
     url: '{{ .delaydheck_url }}'
     interval: 300
     use:
-      - ca
-  - name: 🇷🇺 俄罗斯
-    type: url-test
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - ru
-  - name: 🇦🇺 澳大利亚
-    type: url-test
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - au
-  - name: 🇨🇭 瑞士
-    type: url-test
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - ch
-  - name: 🇩🇪 德国
-    type: url-test
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - de
-  - name: 🇫🇷 法国
-    type: url-test
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - fr
-  - name: 🇬🇧 英国
-    type: url-test
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - gb
-  - name: 🇳🇱 荷兰
-    type: url-test
-    url: '{{ .delaydheck_url }}'
-    interval: 300
-    use:
-      - nl
+      - eu
   - name: 其他国家
     type: url-test
     url: '{{ .delaydheck_url }}'
@@ -259,14 +164,6 @@ proxy-groups:
     interval: 300
 
 proxy-providers:
-  au:
-    type: http
-    url: "https://{{ .domain }}/clash/proxies?c=AU"
-    path: {{ .domain_url }}/provider-au.yaml
-    health-check:
-      enable: true
-      interval: 600
-      url: {{ .delaydheck_url }}
   cn:
     type: http
     url: "https://{{ .domain }}/clash/proxies?c=CN,HK,TW"
@@ -279,14 +176,6 @@ proxy-providers:
     type: http
     url: "https://{{ .domain }}/clash/proxies?c=US"
     path: {{ .domain_url }}/provider-us.yaml
-    health-check:
-      enable: true
-      interval: 600
-      url: {{ .delaydheck_url }}
-  ca:
-    type: http
-    url: "https://{{ .domain }}/clash/proxies?c=CA"
-    path: {{ .domain_url }}/provider-ca.yaml
     health-check:
       enable: true
       interval: 600
@@ -307,50 +196,10 @@ proxy-providers:
       enable: true
       interval: 600
       url: {{ .delaydheck_url }}
-  ru:
+  eu:
     type: http
-    url: "https://{{ .domain }}/clash/proxies?c=RU"
-    path: {{ .domain_url }}/provider-ru.yaml
-    health-check:
-      enable: true
-      interval: 600
-      url: {{ .delaydheck_url }}
-  ch:
-    type: http
-    url: "https://{{ .domain }}/clash/proxies?c=CH"
-    path: {{ .domain_url }}/provider-ch.yaml
-    health-check:
-      enable: true
-      interval: 600
-      url: {{ .delaydheck_url }}
-  de:
-    type: http
-    url: "https://{{ .domain }}/clash/proxies?c=DE"
-    path: {{ .domain_url }}/provider-de.yaml
-    health-check:
-      enable: true
-      interval: 600
-      url: {{ .delaydheck_url }}
-  fr:
-    type: http
-    url: "https://{{ .domain }}/clash/proxies?c=FR"
-    path: {{ .domain_url }}/provider-fr.yaml
-    health-check:
-      enable: true
-      interval: 600
-      url: {{ .delaydheck_url }}
-  gb:
-    type: http
-    url: "https://{{ .domain }}/clash/proxies?c=GB"
-    path: {{ .domain_url }}/provider-gb.yaml
-    health-check:
-      enable: true
-      interval: 600
-      url: {{ .delaydheck_url }}
-  nl:
-    type: http
-    url: "https://{{ .domain }}/clash/proxies?c=NL"
-    path: {{ .domain_url }}/provider-nl.yaml
+    url: "https://{{ .domain }}/clash/proxies?c=AU,CA,RU,CH,DE,FR,GB,NL"
+    path: {{ .domain_url }}/provider-au.yaml
     health-check:
       enable: true
       interval: 600
@@ -373,129 +222,104 @@ proxy-providers:
       url: {{ .delaydheck_url }}
 
 rules:
+  - RULE-SET,ads,广告
   - RULE-SET,applications,DIRECT
-  - DOMAIN,clash.razord.top,DIRECT
-  - DOMAIN,yacd.haishan.me,DIRECT
   - RULE-SET,private,DIRECT
-  - RULE-SET,reject,广告
-  - RULE-SET,icloud,DIRECT #
-  - RULE-SET,apple,DIRECT # 这三个为国内可直连地址，如果希望走代理改为全局选择
-  - RULE-SET,google,DIRECT # 
+  - RULE-SET,privateip,DIRECT,no-resolve
+  - RULE-SET,telegramip,全局选择,no-resolve
   - RULE-SET,tld-not-cn,全局选择
   - RULE-SET,gfw,全局选择
-  - RULE-SET,greatfire,全局选择
-  - RULE-SET,telegramcidr,全局选择
-  - RULE-SET,lancidr,DIRECT
-  - RULE-SET,cncidr,DIRECT
-  - RULE-SET,china,DIRECT
-  - GEOIP,LAN,DIRECT
-  - GEOIP,CN,DIRECT
-  - RULE-SET,direct,DIRECT
+  - RULE-SET,cn,直连
+  - RULE-SET,cnip,直连
   - RULE-SET,proxy,代理域名
   - MATCH,漏网之鱼 # 规则之外的
 
+# https://github.com/DustinWin/ruleset_geodata?tab=readme-ov-file#-clash-%E5%86%85%E6%A0%B8
 rule-providers:
-  reject: # 广告域名列表
+  # 广告
+  ads:
     type: http
     behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
-    path: ./ruleset/reject.yaml
+    format: text
+    path: ./rules/ads.list
+    url: "https://cdn.tidnotes.top/gh/DustinWin/ruleset_geodata@clash-ruleset/ads.list"
     interval: 86400
-    
-  icloud: # iCloud 域名列表
+
+  # 直连代理软件
+  applications:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rules/applications.list
+    url: "https://cdn.tidnotes.top/gh/DustinWin/ruleset_geodata@clash-ruleset/applications.list"
+    interval: 86400
+
+  # 私有网络
+  private:
     type: http
     behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt"
-    path: ./ruleset/icloud.yaml
+    format: text
+    path: ./rules/private.list
+    url: "https://cdn.tidnotes.top/gh/DustinWin/ruleset_geodata@clash-ruleset/private.list"
     interval: 86400
-    
-  apple: # Apple 在中国大陆可直连的域名列表
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt"
-    path: ./ruleset/apple.yaml
-    interval: 86400
-    
-  google: # Google 在中国大陆可直连的域名列表
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt"
-    path: ./ruleset/google.yaml
-    interval: 86400
-    
-  proxy: # 代理域名列表
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt"
-    path: ./ruleset/proxy.yaml
-    interval: 86400
-    
-  direct: # 直连域名列表
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt"
-    path: ./ruleset/direct.yaml
-    interval: 86400
-    
-  private: # 私有网络专用域名列表
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt"
-    path: ./ruleset/private.yaml
-    interval: 86400
-    
-  gfw: # GFWList 域名列表
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt"
-    path: ./ruleset/gfw.yaml
-    interval: 86400
-    
-  greatfire: # GreatFire 域名列表
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/greatfire.txt"
-    path: ./ruleset/greatfire.yaml
-    interval: 86400
-    
-  tld-not-cn: # 非中国大陆使用的顶级域名列表
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt"
-    path: ./ruleset/tld-not-cn.yaml
-    interval: 86400
-    
-  telegramcidr: # Telegram 使用的 IP 地址列表
+
+  # 私有网络ip
+  privateip:
     type: http
     behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt"
-    path: ./ruleset/telegramcidr.yaml
-    interval: 86400
-    
-  cncidr: # 中国大陆 IP 地址列表
-    type: http
-    behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt"
-    path: ./ruleset/cncidr.yaml
+    format: text
+    path: ./rules/privateip.list
+    url: "https://cdn.tidnotes.top/gh/DustinWin/ruleset_geodata@clash-ruleset/privateip.list"
     interval: 86400
   
-  china:
+  # 代理域名
+  proxy:
     type: http
-    behavior: classical
-    url: https://raw.staticdn.net/DivineEngine/Profiles/master/Clash/RuleSet/China.yaml
-    path: ./ruleset/china.yaml
+    behavior: domain
+    format: text
+    path: ./rules/proxy.list
+    url: "https://cdn.tidnotes.top/gh/DustinWin/ruleset_geodata@clash-ruleset/proxy.list"
     interval: 86400
-    
-  lancidr: # 局域网 IP 及保留 IP 地址列表
+
+  # 电报消息
+  telegramip:
     type: http
     behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt"
-    path: ./ruleset/lancidr.yaml
+    format: text
+    path: ./rules/telegramip.list
+    url: "https://cdn.tidnotes.top/gh/DustinWin/ruleset_geodata@clash-ruleset/telegramip.list"
     interval: 86400
-    
-  applications: # 需要直连的常见软件列表
+  
+  # 防火墙
+  gfw:
     type: http
-    behavior: classical
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt"
-    path: ./ruleset/applications.yaml
+    behavior: domain
+    url: "https://cdn.tidnotes.top/gh/Loyalsoldier/clash-rules@release/gfw.txt"
+    path: ./ruleset/gfw.yaml
+    interval: 86400
+
+  # 非中国域名
+  tld-not-cn:
+    type: http
+    behavior: domain
+    url: "https://cdn.tidnotes.top/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt"
+    path: ./ruleset/tld-not-cn.yaml
+    interval: 86400
+
+  # 直连域名
+  cn:
+    type: http
+    behavior: domain
+    format: text
+    path: ./rules/cn.list
+    url: "https://cdn.tidnotes.top/gh/DustinWin/ruleset_geodata@clash-ruleset/cn.list"
+    interval: 86400
+
+  # 直连域名ip
+  cnip:
+    type: http
+    behavior: ipcidr
+    format: text
+    path: ./rules/cnip.list
+    url: "https://cdn.tidnotes.top/gh/DustinWin/ruleset_geodata@clash-ruleset/cnip.list"
     interval: 86400

@@ -100,3 +100,24 @@ func ReadFile(path string) ([]byte, error) {
 		return os.ReadFile(path)
 	}
 }
+
+// 通过json路径字符串获取json数据
+func getFieldByPath(data interface{}, fieldPath string) (interface{}, error) {
+    // 按点分割字段路径字符串
+    path := strings.Split(fieldPath, ".")
+
+    // 使用反射动态访问结构体字段
+    value := reflect.ValueOf(data)
+    for _, fieldName := range path {
+        if value.Kind() == reflect.Ptr {
+            value = value.Elem()
+        }
+        fieldValue := value.FieldByName(fieldName)
+        if !fieldValue.IsValid() {
+            return nil, fmt.Errorf("field '%s' not found", fieldName)
+        }
+        value = fieldValue
+    }
+
+    return value.Interface(), nil
+}

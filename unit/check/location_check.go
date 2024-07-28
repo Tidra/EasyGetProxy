@@ -77,7 +77,7 @@ func LocationCheckAll(proxies proxy.ProxyList) {
 }
 
 func ProxyLocationCheck(p proxy.Proxy) (country string, err error) {
-	url := "https://api.myip.la/cn?json"
+	url := config.Config.LocalCheck.Url
 	pmap := proxy.ProxieToClash(p)
 	proxy, err := adapter.ParseProxy(pmap)
 	if err != nil {
@@ -102,7 +102,14 @@ func ProxyLocationCheck(p proxy.Proxy) (country string, err error) {
 
 	var data Data
 	if err := json.Unmarshal(body, &data); err == nil {
-		return data.Location.CountryCode, nil
+		fieldPath := config.Config.LocalCheck.jsonPath
+
+		// 获取字段值
+		fieldValue, err := tool.getFieldByPath(app, fieldPath)
+		if err != nil {
+			return fieldValue, nil
+		}
+		return "", err
 	} else {
 		return "", err
 	}

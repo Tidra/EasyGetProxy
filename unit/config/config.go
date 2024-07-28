@@ -27,6 +27,11 @@ type ConfigOptions struct {
 	// TGApiUrl      string   `json:"TG-api-url" yaml:"TG-api-url"`
 	CrawlInterval uint64 `json:"crawl-interval" yaml:"crawl-interval"`
 
+	LocalCheck struct {
+		Url           string `json:"url" yaml:"url"`
+		jsonPath      string `json:"json-path" yaml:"json-path"`
+	} `json:"localcheck" yaml:"localcheck"`
+
 	HealthCheck struct {
 		Url           string `json:"url" yaml:"url"`
 		Timeout       int    `json:"timeout" yaml:"timeout"`
@@ -34,6 +39,7 @@ type ConfigOptions struct {
 	} `json:"healthcheck" yaml:"healthcheck"`
 
 	SpeedTest struct {
+		Url           string `json:"url" yaml:"url"`
 		IsUsed        bool   `json:"is_used" yaml:"is_used"`
 		Interval      uint64 `json:"interval" yaml:"interval"`
 		Timeout       int    `json:"timeout" yaml:"timeout"`
@@ -97,6 +103,13 @@ func Parse() error {
 	if Config.CrawlInterval == 0 {
 		Config.CrawlInterval = 60
 	}
+	
+	if Config.LocalCheck.Url == "" {
+		Config.LocalCheck.Url = "https://ip.011102.xyz/"
+	}
+	if Config.LocalCheck.jsonPath == "" {
+		Config.LocalCheck.jsonPath = "IP.Country"
+	}
 
 	if Config.HealthCheck.Url == "" {
 		Config.HealthCheck.Url = "http://www.google.com/generate_204"
@@ -108,6 +121,9 @@ func Parse() error {
 		Config.HealthCheck.MaxConnection = 500
 	}
 
+	if Config.SpeedTest.Url == "" {
+		Config.SpeedTest.Url = fmt.Sprintf("https://speed.cloudflare.com/__down?bytes=%d", 1024*1024*5)
+	}
 	if Config.SpeedTest.Interval == 0 {
 		Config.SpeedTest.Interval = 720
 	}

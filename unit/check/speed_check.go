@@ -72,7 +72,7 @@ func ProxySpeedCheck(p proxy.Proxy) (speedResult float64, err error) {
 	}
 
 	timeout := time.Second * time.Duration(config.Config.SpeedTest.Timeout)
-	speedUrl := fmt.Sprintf("https://speed.cloudflare.com/__down?bytes=%d", 1024*1024*downloadSize)
+	speedUrl := config.Config.SpeedTest.Url
 
 	var writeSize int64
 	var bandwidth float64
