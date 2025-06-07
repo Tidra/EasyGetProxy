@@ -1,0 +1,246 @@
+# 所有节点均从公开互联网上抓取，使用clash自动检查可用性即可
+# 抓取程序已开源： https://github.com/Tidra/EasyGetProxy
+
+# port of HTTP
+port: 7890
+
+# port of SOCKS5
+socks-port: 7891
+
+# (HTTP and SOCKS5 in one port)
+# mixed-port: 7890
+
+# redir port for Linux and macOS
+# redir-port: 7892
+
+allow-lan: false
+mode: rule
+log-level: info
+external-controller: 127.0.0.1:9090
+
+proxies:
+
+proxy-groups:
+  - name: 🌍 全局选择
+    type: select
+    proxies:
+      - ⚡ 延迟最低
+      - 🗺️ 选择国家
+      - 🚀 选择节点
+      - 🪫 失败切换
+      - 🌐 负载均衡
+      - DIRECT
+
+  - name: 🗺️ 选择国家
+    type: select
+    proxies:
+      - 🇨🇳 中国-自选
+      - 🇨🇳 中国-延迟
+      - 🇯🇵 日本-自选
+      - 🇯🇵 日本-延迟
+      - 🇸🇬 新加坡-自选
+      - 🇸🇬 新加坡-延迟
+      - 🇺🇸 美国-自选
+      - 🇺🇸 美国-延迟
+      - 🇪🇺 欧洲
+      - 其他国家
+ 
+  # 代理域名
+  - name: 🧱 代理域名
+    type: select
+    proxies:
+      - 🌍 全局选择
+      - DIRECT
+  
+  - name: 🛡️ 直连服务
+    type: select
+    proxies:
+      - DIRECT
+      - 🌍 全局选择
+ 
+  # 规则外的
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies:
+      - DIRECT
+      - 🌍 全局选择
+
+  - name: 🚀 选择节点
+    type: select
+    use:
+      - all
+  - name: 🇨🇳 中国-自选
+    type: select
+    use:
+      - cn
+  - name: 🇨🇳 中国-延迟
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    filter: 'HK|TW'
+    use:
+      - cn
+  - name: 🇯🇵 日本-自选
+    type: select
+    use:
+      - jp
+  - name: 🇯🇵 日本-延迟
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - jp
+  - name: 🇸🇬 新加坡-自选
+    type: select
+    use:
+      - sg
+  - name: 🇸🇬 新加坡-延迟
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - sg
+  - name: 🇺🇸 美国-自选
+    type: select
+    use:
+      - us
+  - name: 🇺🇸 美国-延迟
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    filter: '\|'
+    use:
+      - us
+  - name: 🇪🇺 欧洲
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - eu
+  - name: 其他国家
+    type: url-test
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+    use:
+      - others
+  - name: ⚡ 延迟最低
+    type: url-test
+    use:
+      - all
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+  - name: 🌐 负载均衡
+    type: load-balance
+    use:
+      - all
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+  - name: 🪫 失败切换
+    type: fallback
+    use:
+      - all
+    url: '{{ .delaydheck_url }}'
+    interval: 300
+ 
+  # 国内服务
+  - name: 💖 国内服务
+    type: select
+    proxies:
+      - DIRECT
+      - 🌍 全局选择
+ 
+  # 广告
+  - name: 🛑 广告域名
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+
+proxy-providers:
+  cn:
+    type: http
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=CN,HK,TW"
+    path: ./providers/provider-cn.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  us:
+    type: http
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=US"
+    path: ./providers/provider-us.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  jp:
+    type: http
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=JP"
+    path: ./providers/provider-jp.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  sg:
+    type: http
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=SG"
+    path: ./providers/provider-sg.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  eu:
+    type: http
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=AU,CA,RU,CH,DE,FR,GB,NL"
+    path: ./providers/provider-au.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  others:
+    type: http
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?nc=CN,HK,TW,US,CA,JP,SG,AU,CH,DE,GB,NL,FR,RU"
+    path: ./providers/provider-others.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+  all:
+    type: http
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies"
+    path: ./providers/provider.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: {{ .delaydheck_url }}
+
+# 规则
+rules:
+  - GEOSITE,ads,🛑 广告域名
+  - GEOSITE,private,DIRECT
+  - GEOIP,privateip,DIRECT,no-resolve
+  - GEOSITE,fakeip-filter,🛡️ 直连服务
+  - GEOSITE,trackerslist,🛡️ 直连服务
+  - GEOSITE,cn,💖 国内服务
+  - GEOIP,cn,💖 国内服务
+  - GEOSITE,media,🌍 全局选择
+  - GEOIP,media,🌍 全局选择
+  - GEOIP,telegram,🌍 全局选择,no-resolve
+  - GEOSITE,microsoft-cn,🛡️ 直连服务
+  - GEOSITE,apple-cn,🛡️ 直连服务
+  - GEOSITE,google-cn,🛡️ 直连服务
+  - GEOSITE,games-cn,🛡️ 直连服务
+  - GEOSITE,games,🧱 代理域名
+  - GEOIP,games,🧱 代理域名
+  - GEOSITE,ai,🧱 代理域名
+  - GEOSITE,tld-proxy,🧱 代理域名
+  - GEOSITE,proxy,🧱 代理域名
+  - MATCH,🐟 漏网之鱼 # 规则之外的
+
+# https://github.com/DustinWin/ruleset_geodata?tab=readme-ov-file#-clash-%E5%86%85%E6%A0%B8
+geodata-mode: true
+geox-url:
+  geosite: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo/geosite-all.dat"
+  geoip: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo/geoip.dat"
+  mmdb: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo/Country.mmdb"
+  asn: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo/Country-ASN.mmdb"

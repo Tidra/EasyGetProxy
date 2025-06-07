@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"gopkg.in/yaml.v2"
@@ -18,8 +16,7 @@ type ConfigOptions struct {
 	} `json:"log" yaml:"log"`
 
 	Web struct {
-		Domain string `json:"domain" yaml:"domain"`
-		Port   string `json:"port" yaml:"port"`
+		Port string `json:"port" yaml:"port"`
 	}
 
 	SourceFiles []string `json:"source-files" yaml:"source-files"`
@@ -28,12 +25,12 @@ type ConfigOptions struct {
 	CrawlInterval uint64 `json:"crawl-interval" yaml:"crawl-interval"`
 
 	HealthCheck struct {
-		Url           string `json:"url" yaml:"url"`
+		Url string `json:"url" yaml:"url"`
 	} `json:"healthcheck" yaml:"healthcheck"`
 
 	LocalCheck struct {
-		Url      string `json:"url" yaml:"url"`
-		JsonPath string `json:"json-path" yaml:"json-path"`
+		Url           string `json:"url" yaml:"url"`
+		JsonPath      string `json:"json-path" yaml:"json-path"`
 		Timeout       int    `json:"timeout" yaml:"timeout"`
 		MaxConnection int    `json:"max-conn" yaml:"max-conn"`
 	} `json:"localcheck" yaml:"localcheck"`
@@ -49,14 +46,6 @@ type ConfigOptions struct {
 
 // Config 配置
 var Config ConfigOptions
-
-func (config ConfigOptions) HostUrl() string {
-	if config.Web.Domain == "" {
-		return "127.0.0.1:" + config.Web.Port
-	} else {
-		return config.Web.Domain
-	}
-}
 
 func SetConfigFilePath(path string) {
 	if tool.IsLocalFile(path) {
@@ -132,11 +121,6 @@ func Parse() error {
 	}
 	if Config.SpeedTest.MaxConnection <= 0 {
 		Config.SpeedTest.MaxConnection = 5
-	}
-
-	// 部分配置环境变量优先
-	if domain := os.Getenv("DOMAIN"); domain != "" {
-		Config.Web.Domain = domain
 	}
 
 	return nil

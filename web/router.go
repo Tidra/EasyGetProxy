@@ -22,7 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "v0.0.1"
+const version = "v0.1.2"
 
 var router *gin.Engine
 var srv http.Server
@@ -51,7 +51,7 @@ func StarWeb() {
 func WebListenStop() {
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	// kill (no param) default send syscanll.SIGTERM
 	// kill -2 is syscall.SIGINT
 	// kill -9 is syscall. SIGKILL but can"t be catch, so don't need add it
@@ -68,10 +68,8 @@ func WebShutdown() {
 		log.LogError("服务关闭失败:", err)
 	}
 	// catching ctx.Done(). timeout of 5 seconds.
-	select {
-	case <-ctx.Done():
-		log.LogInfo("服务关闭等待5秒.")
-	}
+	<-ctx.Done()
+	log.LogInfo("服务关闭等待5秒.")
 	log.LogInfo("服务已关闭")
 }
 
@@ -90,9 +88,10 @@ func setupRouter() {
 
 	router.StaticFile("/static/index.js", "assets/static/index.js")
 
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "assets/html/index.html", gin.H{
-			"domain":               config.Config.Web.Domain,
+	router.GET("/", func(web *gin.Context) {
+		web.HTML(http.StatusOK, "assets/html/index.html", gin.H{
+			"scheme":               getScheme(web),
+			"domain":               web.Request.Host,
 			"getters_count":        app.GettersCount,
 			"all_proxies_count":    app.AllProxiesCount,
 			"ss_proxies_count":     app.SSProxiesCount,
@@ -106,44 +105,51 @@ func setupRouter() {
 		})
 	})
 
-	router.GET("/clash", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "assets/html/clash.html", gin.H{
-			"domain": config.Config.Web.Domain,
-			"port":   config.Config.Web.Port,
+	router.GET("/clash", func(web *gin.Context) {
+		web.HTML(http.StatusOK, "assets/html/clash.html", gin.H{
+			"scheme":  getScheme(web),
+			"domain":  web.Request.Host,
+			"version": version,
 		})
 	})
 
-	router.GET("/shadowrocket", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "assets/html/shadowrocket.html", gin.H{
-			"domain": config.Config.Web.Domain,
+	router.GET("/shadowrocket", func(web *gin.Context) {
+		web.HTML(http.StatusOK, "assets/html/shadowrocket.html", gin.H{
+			"scheme":  getScheme(web),
+			"domain":  web.Request.Host,
+			"version": version,
 		})
 	})
 
-	router.GET("/surge", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "assets/html/surge.html", gin.H{
-			"domain": config.Config.Web.Domain,
+	router.GET("/surge", func(web *gin.Context) {
+		web.HTML(http.StatusOK, "assets/html/surge.html", gin.H{
+			"scheme":  getScheme(web),
+			"domain":  web.Request.Host,
+			"version": version,
 		})
 	})
 
-	router.GET("/clash/config", func(c *gin.Context) {
-		domainUrl := strings.Split(config.Config.Web.Domain, ":")[0]
-		c.HTML(http.StatusOK, "assets/html/clash-config.yaml", gin.H{
-			"domain":         config.Config.Web.Domain,
-			"domain_url":     domainUrl,
+	router.GET("/clash/config", func(web *gin.Context) {
+		fileType := web.DefaultQuery("t", "")
+		yamlFile := "assets/html/clash-config.yaml"
+		switch fileType {
+		case "mihomo":
+			yamlFile = "assets/html/clash-config-mihomo.yaml"
+		case "mrs":
+			yamlFile = "assets/html/clash-config-mrs.yaml"
+		}
+
+		web.HTML(http.StatusOK, yamlFile, gin.H{
+			"scheme":         getScheme(web),
+			"domain":         web.Request.Host,
 			"delaydheck_url": config.Config.HealthCheck.Url,
 		})
 	})
-	router.GET("/clash/localconfig", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "assets/html/clash-config-local.yaml", gin.H{
-			"domain":         config.Config.Web.Domain,
-			"delaydheck_url": config.Config.HealthCheck.Url,
-			"port":           config.Config.Web.Port,
-		})
-	})
 
-	router.GET("/surge/config", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "assets/html/surge.conf", gin.H{
-			"domain": config.Config.Web.Domain,
+	router.GET("/surge/config", func(web *gin.Context) {
+		web.HTML(http.StatusOK, "assets/html/surge.conf", gin.H{
+			"scheme": getScheme(web),
+			"domain": web.Request.Host,
 		})
 	})
 
@@ -240,6 +246,14 @@ func setupRouter() {
 	})
 }
 
+func getScheme(web *gin.Context) string {
+	scheme := "http"
+	if web.Request.TLS != nil {
+		scheme = "https"
+	}
+	return scheme
+}
+
 // 返回页面templates
 func loadHTMLTemplate() (t *template.Template, err error) {
 	t = template.New("")
@@ -259,8 +273,9 @@ func loadHTMLTemplate() (t *template.Template, err error) {
 // AssetNames returns the names of the assets.
 func AssetNames() []string {
 	var _bindata = []string{
-		"assets/html/clash-config-local.yaml",
 		"assets/html/clash-config.yaml",
+		"assets/html/clash-config-mihomo.yaml",
+		"assets/html/clash-config-mrs.yaml",
 		"assets/html/clash.html",
 		"assets/html/index.html",
 		"assets/html/shadowrocket.html",

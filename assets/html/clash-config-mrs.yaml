@@ -219,7 +219,7 @@ rules:
   - RULE-SET,ads,🛑 广告域名
   - RULE-SET,private,DIRECT
   - RULE-SET,privateip,DIRECT,no-resolve
-  - RULE-SET,fakeip-filter,🛡️ 直连服务
+  - GEOSITE,fakeip-filter,🛡️ 直连服务
   - RULE-SET,trackerslist,🛡️ 直连服务
   - RULE-SET,cn,💖 国内服务
   - RULE-SET,cnip,💖 国内服务
@@ -245,33 +245,33 @@ rule-providers:
   fakeip-filter:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/fakeip-filter.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.list"
+    format: mrs
+    path: ./rules/fakeip-filter.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs"
     interval: 86400
 
   private:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/private.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/private.list"
+    format: mrs
+    path: ./rules/private.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/private.mrs"
     interval: 86400
 
   ads:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/ads.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/ads.list"
+    format: mrs
+    path: ./rules/ads.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/ads.mrs"
     interval: 86400
 
   trackerslist:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/trackerslist.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/trackerslist.list"
+    format: mrs
+    path: ./rules/trackerslist.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/trackerslist.mrs"
     interval: 86400
 
   applications:
@@ -285,135 +285,135 @@ rule-providers:
   microsoft-cn:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/microsoft-cn.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/microsoft-cn.list"
+    format: mrs
+    path: ./rules/microsoft-cn.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/microsoft-cn.mrs"
     interval: 86400
 
   apple-cn:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/apple-cn.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/apple-cn.list"
+    format: mrs
+    path: ./rules/apple-cn.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/apple-cn.mrs"
     interval: 86400
 
   google-cn:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/google-cn.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/google-cn.list"
+    format: mrs
+    path: ./rules/google-cn.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/google-cn.mrs"
     interval: 86400
 
   netflix:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/netflix.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflix.list"
+    format: mrs
+    path: ./rules/netflix.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflix.mrs"
     interval: 86400
 
   primevideo:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/primevideo.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/primevideo.list"
+    format: mrs
+    path: ./rules/primevideo.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/primevideo.mrs"
     interval: 86400
 
   appletv:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/appletv.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/appletv.list"
+    format: mrs
+    path: ./rules/appletv.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/appletv.mrs"
     interval: 86400
 
   youtube:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/youtube.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/youtube.list"
+    format: mrs
+    path: ./rules/youtube.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/youtube.mrs"
     interval: 86400
 
   media:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/media.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/media.list"
+    format: mrs
+    path: ./rules/media.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/media.mrs"
     interval: 86400
 
   ai:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/ai.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/ai.list"
+    format: mrs
+    path: ./rules/ai.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/ai.mrs"
     interval: 86400
 
   tld-proxy:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/tld-proxy.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/tld-proxy.list"
+    format: mrs
+    path: ./rules/tld-proxy.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/tld-proxy.mrs"
     interval: 86400
 
   proxy:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/proxy.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/proxy.list"
+    format: mrs
+    path: ./rules/proxy.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/proxy.mrs"
     interval: 86400
 
   cn:
     type: http
     behavior: domain
-    format: text
-    path: ./rules/cn.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.list"
+    format: mrs
+    path: ./rules/cn.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cn.mrs"
     interval: 86400
 
   privateip:
     type: http
     behavior: ipcidr
-    format: text
-    path: ./rules/privateip.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/privateip.list"
+    format: mrs
+    path: ./rules/privateip.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/privateip.mrs"
     interval: 86400
 
   cnip:
     type: http
     behavior: ipcidr
-    format: text
-    path: ./rules/cnip.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cnip.list"
+    format: mrs
+    path: ./rules/cnip.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/cnip.mrs"
     interval: 86400
 
   netflixip:
     type: http
     behavior: ipcidr
-    format: text
-    path: ./rules/netflixip.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflixip.list"
+    format: mrs
+    path: ./rules/netflixip.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/netflixip.mrs"
     interval: 86400
 
   mediaip:
     type: http
     behavior: ipcidr
-    format: text
-    path: ./rules/mediaip.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/mediaip.list"
+    format: mrs
+    path: ./rules/mediaip.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/mediaip.mrs"
     interval: 86400
 
   telegramip:
     type: http
     behavior: ipcidr
-    format: text
-    path: ./rules/telegramip.list
-    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/telegramip.list"
+    format: mrs
+    path: ./rules/telegramip.mrs
+    url: "https://cdn.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/telegramip.mrs"
     interval: 86400

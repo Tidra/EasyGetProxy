@@ -7,7 +7,6 @@ log:
 
 # ==== 网页相关 ==== #
 web:
-  domain: example.com:12580   # or example.com:9443 for reserve proxy server
   port:                       # default 12580
 
 # ==== 代理源配置文件 ==== #

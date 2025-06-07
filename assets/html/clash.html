@@ -12,7 +12,8 @@
     <meta name="keywords" content="免费的ss、ssr、vmess、torjan节点">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     <!-- <link rel="stylesheet" type="text/css" href="css/client/metron-icon.css" /> -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/sansui233/proxypool-fe/css/client/metron-icon.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/gh/sansui233/proxypool-fe/css/client/metron-icon.css" />
     <!-- <link rel="stylesheet" type="text/css" href="css/index.css" /> -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/sansui233/proxypool-fe/css/index.css">
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
@@ -22,10 +23,11 @@
     <!-- Navigation -->
     <nav class="navbar is-primary pl-2 pr-2" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
-            <a href="https://{{ .domain }}" class="navbar-item">
+            <a href="./" class="navbar-item">
                 <h1 class="title is-4">Free Proxies</h1>
             </a>
-            <a role="button" class="navbar-burger burger is-white" aria-label="menu" aria-expanded="false" data-target="clients">
+            <a role="button" class="navbar-burger burger is-white" aria-label="menu" aria-expanded="false"
+                data-target="clients">
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
@@ -33,9 +35,12 @@
         </div>
         <div id="clients" class="navbar-menu">
             <div class="navbar-start is-size-6">
-                <a href="./clash" class="navbar-item"><span class="icon"><i class="metron-clash"></i></span>&nbspClash</a>
-                <a href="./shadowrocket" class="navbar-item"><span class="icon"><i class="metron-shadowrocket"></i></span>&nbspShadowRocket</a>
-                <a href="./surge" class="navbar-item"><span class="icon"><i class="metron-surge"></i></span>&nbspSurge</a>
+                <a href="./clash" class="navbar-item"><span class="icon"><i
+                            class="metron-clash"></i></span>&nbspClash</a>
+                <a href="./shadowrocket" class="navbar-item"><span class="icon"><i
+                            class="metron-shadowrocket"></i></span>&nbspShadowRocket</a>
+                <a href="./surge" class="navbar-item"><span class="icon"><i
+                            class="metron-surge"></i></span>&nbspSurge</a>
                 <a href="https://bianyuan.xyz/" class="navbar-item">&nbsp?&nbsp&nbspMore</a>
             </div>
         </div>
@@ -51,14 +56,25 @@
                 <table class="table is-fullwidth">
                     <tbody>
                         <tr>
-                            <th>远程配置文件</th>
-                            <td>https://{{ .domain }}/clash/config</td>
-                            <td class="has-text-right"><a href="clash://install-config?url=https://{{ .domain }}/clash/config" class="button is-small is-link">一键导入</a></td>
+                            <th>通用配置文件</th>
+                            <td>{{ .scheme }}://{{ .domain }}/clash/config</td>
+                            <td class="has-text-right"><a
+                                    href="clash://install-config?url={{ .scheme }}://{{ .domain }}/clash/config"
+                                    class="button is-small is-link">一键导入</a></td>
                         </tr>
                         <tr>
-                            <th>本地部署时配置文件</th>
-                            <td>http://127.0.0.1:{{ .port }}/clash/config</td>
-                            <td class="has-text-right"><a href="clash://install-config?url=http://127.0.0.1:{{ .port }}/clash/localconfig" class="button is-small is-link">一键导入</a></td>
+                            <th>mihomo-mrs 规则组配置文件</th>
+                            <td>{{ .scheme }}://{{ .domain }}/clash/config?t=mrs</td>
+                            <td class="has-text-right"><a
+                                    href="clash://install-config?url={{ .scheme }}://{{ .domain }}/clash/config?t=mrs"
+                                    class="button is-small is-link">一键导入</a></td>
+                        </tr>
+                        <tr>
+                            <th>mihomo-geodata 规则组配置文件</th>
+                            <td>{{ .scheme }}://{{ .domain }}/clash/config?t=mihomo</td>
+                            <td class="has-text-right"><a
+                                    href="clash://install-config?url={{ .scheme }}://{{ .domain }}/clash/config?t=mihomo"
+                                    class="button is-small is-link">一键导入</a></td>
                         </tr>
                     </tbody>
                 </table>
@@ -77,13 +93,15 @@
                         <tbody>
                             <tr>
                                 <th>所有节点</th>
-                                <td>https://{{ .domain }}/clash/proxies</td>
-                                <td class="has-text-right"><button class="button is-small is-primary" onclick="onCopy(this)">复制</button></td>
+                                <td>{{ .scheme }}://{{ .domain }}/clash/proxies</td>
+                                <td class="has-text-right"><button class="button is-small is-primary"
+                                        onclick="onCopy(this)">复制</button></td>
                             </tr>
                             <tr>
                                 <th>筛选节点示例</th>
-                                <td>https://{{ .domain }}/clash/proxies?c=CN,HK,TW&speed=15,30&type=ss</td>
-                                <td class="has-text-right"><button class="button is-small is-primary" onclick="onCopy(this)">复制</button></td>
+                                <td>{{ .scheme }}://{{ .domain }}/clash/proxies?c=CN,HK,TW&speed=15,30&type=ss</td>
+                                <td class="has-text-right"><button class="button is-small is-primary"
+                                        onclick="onCopy(this)">复制</button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -133,12 +151,6 @@
                             <td>任何数字</td>
                             <td>单个数字选择最低速度<br>两个数字选择速度区间</td>
                         </tr>
-                        <tr>
-                            <th>过滤</th>
-                            <td>filter</td>
-                            <td>r,p,rp,nr,np,nrp</td>
-                            <td>默认不进行过滤<br>r: 中转节点<br>p: pool节点<br>rp: 中转与pool节点<br>n*: 表示not</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -146,23 +158,13 @@
     </div>
     <footer class="footer has-text-centered">
         <!-- 所有使用本代码提供服务的禁止删除、修改版权信息 -->
-        <p>欢迎关注tg频道：<a href="https://t.me/peekfun">@peekfun</a></p>
         <p>抓取程序已开源：<a href="https://github.com/zu1k/proxypool">zu1k/proxypool</a></p>
-        <p>本程序为fork版：<a href="https://github.com/sansui233/proxypool">sansui233/proxypool</a><br>{{ .version }}</p>
+        <p>本程序为修改版：<a href="https://github.com/Tidra/EasyGetProxy">Tidra/EasyGetProxy</a><br>{{ .version }}</p>
         <br>
-        <p><b>Theme</b>&nbspby&nbsp<a href="https://github.com/sansui233/" class="has-text-primary"><b>Sansui233</b></a> Powered&nbspby&nbsp<b>Bulma</b></p>
+        <p><b>Theme</b>&nbspby&nbsp<a href="https://github.com/sansui233/" class="has-text-primary"><b>Sansui233</b></a>
+            Powered&nbspby&nbsp<b>Bulma</b></p>
     </footer>
     <script src="static/index.js"></script>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9VK0B43EQ3"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-9VK0B43EQ3');
-    </script>
 </body>
 
 </html>
