@@ -1,7 +1,6 @@
 package app
 
 import (
-	"os"
 	"sync"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/Tidra/EasyGetProxy/unit/getter"
 	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/proxy"
-	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"github.com/jasonlvhit/gocron"
 )
 
@@ -19,7 +17,7 @@ var cacheFile = "assets/all-clash.dat"
 func Cron() {
 	_ = gocron.Every(config.Config.CrawlInterval).Minutes().Do(CrawlTask)
 	_ = gocron.Every(config.Config.SpeedTest.Interval).Minutes().Do(SpeedCheckTask)
-	_ = gocron.Every(SaveCacheInterval).Days().Do(SaveCacheToFileTask)
+	_ = gocron.Every(SaveCacheInterval).Days().Do(saveCacheToFileTask)
 	_ = gocron.Every(ClearInvalidInterval).Days().Do(clearInvalidProxy)
 	<-gocron.Start()
 }
@@ -37,11 +35,9 @@ func CrawlTask() {
 	}
 
 	proxies := GetProxies("all")
-	if cacheData, err := tool.ReadFile(cacheFile); err == nil {
-		if cacheProxies, err := proxy.ExplodeClash(string(cacheData)); err == nil {
-			log.LogInfo("读取缓存文件[%s]节点数: %d", cacheFile, len(cacheProxies))
-			proxies.UniqAppendProxys(cacheProxies)
-		}
+	if cacheProxies, err := LoadCacheFromFile(cacheFile); err == nil {
+		log.LogInfo("读取缓存文件[%s]节点数: %d", cacheFile, len(cacheProxies))
+		proxies.UniqAppendProxys(cacheProxies)
 	}
 
 	go func() {
@@ -58,7 +54,7 @@ func CrawlTask() {
 	proxies = proxies.RenameAll()
 
 	GettersCount = len(getter.GetterList)
-	AllProxiesCount, UsefullProxiesCount, SSRProxiesCount, SSProxiesCount, VmessProxiesCount, TrojanProxiesCount = proxies.Count()
+	AllProxiesCount, UsefullProxiesCount, SSRProxiesCount, SSProxiesCount, VlessProxiesCount, VmessProxiesCount, TrojanProxiesCount, HysteriaProxiesCount, Hysteria2ProxiesCount, SnellProxiesCount = proxies.Count()
 
 	location, err := time.LoadLocation("Asia/Shanghai") //设置时区
 	if err != nil {
@@ -70,12 +66,17 @@ func CrawlTask() {
 	log.LogInfo("有效节点数: %d", UsefullProxiesCount)
 	log.LogInfo("SSR节点数: %d", SSRProxiesCount)
 	log.LogInfo("SS节点数: %d", SSProxiesCount)
+	log.LogInfo("Vless节点数: %d", VlessProxiesCount)
 	log.LogInfo("Vmess节点数: %d", VmessProxiesCount)
 	log.LogInfo("Trojan节点数: %d", TrojanProxiesCount)
+	log.LogInfo("Hysteria节点数: %d", HysteriaProxiesCount)
+	log.LogInfo("Hysteria2节点数: %d", Hysteria2ProxiesCount)
+	log.LogInfo("Snell节点数: %d", SnellProxiesCount)
 
 	SetProxies("all", proxies)
 	SetString("all-clash", proxy.ClashToString(proxies))
 	SetString("all-surge", proxy.SurgeToString(proxies))
+	saveCacheToFileTask()
 }
 
 func SpeedCheckTask() {
@@ -92,19 +93,9 @@ func SpeedCheckTask() {
 	}
 }
 
-func SaveCacheToFileTask() {
-	proxiesText := GetString("all-clash")
-	// 打开文件，如果文件不存在则创建，如果存在则截断
-	file, err := os.Create(cacheFile)
-	if err != nil {
-		log.LogError("创建缓存文件失败: %s", err.Error())
-		return
-	}
-	defer file.Close()
-
+func saveCacheToFileTask() {
 	// 将数据写入文件
-	_, err = file.WriteString(proxiesText)
-	if err != nil {
+	if err := SaveCacheToFile(cacheFile); err != nil {
 		log.LogError("写入缓存文件失败: %s", err.Error())
 		return
 	}
@@ -114,6 +105,6 @@ func SaveCacheToFileTask() {
 
 func clearInvalidProxy() {
 	proxies := GetProxies("all")
-	filterProxies := proxies.Filter("", "", "")
+	filterProxies := proxies.Filter("", "", "", "", "", true)
 	SetProxies("all", filterProxies)
 }

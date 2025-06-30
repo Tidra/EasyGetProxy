@@ -2,7 +2,7 @@
     <br>EasyGetProxy<br>
 </h1>
 
-<h5 align="center">简易的用于获取代理连接池的go程序，包括订阅地址、公开互联网上的ss、ssr、vmess、trojan节点信息</h5>
+<h5 align="center">简易的用于获取代理连接池的go程序，包括订阅地址、公开互联网上的ss、ssr、vmess、trojan等节点信息</h5>
 
 <p align="center">
     <a href="https://github.com/Tidra">
@@ -32,13 +32,28 @@
 - 自动检测节点可用性
 - 提供clash配置文件
 
+## 支持协议列表
+
+| 序号 | 协议类型 | 支持 |
+|------|----------|-----|
+| 1 | http | [x] |
+| 2 | socks5 | [x] |
+| 3 | ss | [x] |
+| 4 | ssr | [x] |
+| 5 | vmess | [x] |
+| 6 | trojan | [x] |
+| 7 | vless | [x] |
+| 8 | hysteria | [x] |
+| 9 | hysteria2 | [x] |
+| 10 | snell | [x] |
+
 ## 待办
 
 - [ ] 从数据库读取缓存信息
-- [ ] 增加信息源获取方式
+- [x] 增加信息源获取方式
 - [x] 提供surge配置文件
-- [ ] 更改网页页面
-- [ ] snell、vless支持
+- [x] 更改网页页面
+- [x] snell、vless支持
 - [x] 提供ss、ssr、vmess、sip002、surge订阅
 
 ## 安装
@@ -130,7 +145,6 @@ log:
 
 # ==== 网页相关 ==== #
 web:
-  domain: example.com:12580   # or example.com:9443 for reserve proxy server
   port:                       # default 12580
 
 # ==== 代理源配置文件 ==== #
@@ -150,6 +164,13 @@ source-files:
 crawl-interval:             # default 60 (minutes)
 healthcheck:
   url:                      # default http://www.gstatic.com/generate_204
+rename-format:              # default "[{{.Type}}]{{.Country}}{{.Num}}"
+  # {{.Name}}: 代理原名称
+  # {{.Type}}: 代理类型
+  # {{.Speed}}: 代理速度
+  # {{.Country}}: 代理归属地
+  # {{.Identity}}: 代理标识(代理类型-Server-Port)
+  # {{.Num}}: 代理序号(必须)
 
 #  ==== 获取归属地 ==== #
 localcheck:

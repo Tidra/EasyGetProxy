@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Dreamacro/clash/adapter"
 	"github.com/Tidra/EasyGetProxy/unit/config"
 	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/proxy"
 	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"github.com/ivpusic/grpool"
+	"github.com/metacubex/mihomo/adapter"
 )
 
 func SpeedCheckAll(proxies proxy.ProxyList) {
@@ -34,13 +34,13 @@ func SpeedCheckAll(proxies proxy.ProxyList) {
 		pool.JobQueue <- func(index int) func() {
 			return func() {
 				defer pool.JobDone()
-				if proxies[index].Country != "" || proxies[index].IsValid {
+				if proxies[index].GetCountry() != "" || proxies[index].IsValid() {
 					speed, err := ProxySpeedCheck(proxies[index])
 					// log.LogDebug(proxies[index].Server, country, err)
 					if err == nil && speed > 0 {
 						m.Lock()
-						proxies[index].IsValid = true
-						proxies[index].Speed = speed
+						proxies[index].SetIsValid(true)
+						proxies[index].SetSpeed(speed)
 						m.Unlock()
 					}
 				}

@@ -48,7 +48,7 @@
     <!-- Body -->
     <div class="container">
         <div class="section pb-0">
-            <p>⭐️ 自动抓取tg频道、订阅地址、公开互联网上的ss、ssr、vmess、trojan节点信息，聚合去重检测后提供节点列表</p>
+            <p>⭐️ 自动抓取tg频道、订阅地址、公开互联网上的ss、ssr、vmess、trojan等节点信息，聚合去重检测后提供节点列表</p>
             <p>❗️ 任何使用此开源项目的人须遵守<a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL3.0</a>协议，禁止盈利</p>
             <hr class="pt-0 pb-0 mb-0 mt-2">
         </div>
@@ -57,8 +57,12 @@
             <p>目前共有抓取源<b class="has-text-primary"> {{ .getters_count }} </b>个，
                 全部节点<b class="has-text-primary"> {{ .all_proxies_count }} </b>个，ss节点<b class="has-text-primary"> {{
                     .ss_proxies_count }} </b>个，ssr节点<b class="has-text-primary"> {{ .ssr_proxies_count }}
-                </b>个，vmess节点<b class="has-text-primary"> {{ .vmess_proxies_count }} </b>个，trojan节点<b
-                    class="has-text-primary"> {{ .trojan_proxies_count }} </b>个</p>
+                </b>个，vless节点<b class="has-text-primary"> {{ .vless_proxies_count }} </b>个，vmess节点<b
+                    class="has-text-primary"> {{ .vmess_proxies_count }} </b>个，trojan节点<b class="has-text-primary"> {{
+                    .trojan_proxies_count }} </b>个，hysteria节点<b class="has-text-primary"> {{ .hysteria_proxies_count }}
+                </b>个，hysteria2节点<b class="has-text-primary"> {{ .hysteria2_proxies_count }} </b>个，snell节点<b
+                    class="has-text-primary"> {{ .snell_proxies_count }}
+                </b>个</p>
             <p>可用节点数量：<b class="has-text-primary">{{ .useful_proxies_count }}</b></p>
             <p>是否开启测速：<b class="has-text-primary">{{ .is_speed_test }}</b></p>
             <p>最后更新时间：<b class="has-text-primary">{{ .last_crawl_time }}</b></p>
@@ -141,12 +145,6 @@
                                     onclick="onCopy(this)">复制</button></td>
                         </tr>
                         <tr>
-                            <th>ss-sip002</th>
-                            <td>{{ .scheme }}://{{ .domain }}/sip002/sub</td>
-                            <td class="has-text-right"><button class="button is-small is-primary"
-                                    onclick="onCopy(this)">复制</button></td>
-                        </tr>
-                        <tr>
                             <th>ssr</th>
                             <td>{{ .scheme }}://{{ .domain }}/ssr/sub</td>
                             <td class="has-text-right"><button class="button is-small is-primary"
@@ -161,6 +159,12 @@
                         <tr>
                             <th>trojan</th>
                             <td>{{ .scheme }}://{{ .domain }}/trojan/sub</td>
+                            <td class="has-text-right"><button class="button is-small is-primary"
+                                    onclick="onCopy(this)">复制</button></td>
+                        </tr>
+                        <tr>
+                            <th>v2ray</th>
+                            <td>{{ .scheme }}://{{ .domain }}/v2ray/sub</td>
                             <td class="has-text-right"><button class="button is-small is-primary"
                                     onclick="onCopy(this)">复制</button></td>
                         </tr>

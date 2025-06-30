@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Dreamacro/clash/adapter"
 	"github.com/Tidra/EasyGetProxy/unit/config"
 	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/proxy"
 	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"github.com/ivpusic/grpool"
+	"github.com/metacubex/mihomo/adapter"
 )
 
 func LocationCheckAll(proxies proxy.ProxyList) {
@@ -38,10 +38,10 @@ func LocationCheckAll(proxies proxy.ProxyList) {
 				// log.LogDebug(proxies[index].Server, country, err)
 				m.Lock()
 				if err == nil && country != "" {
-					proxies[index].IsValid = true
-					proxies[index].Country = country
+					proxies[index].SetIsValid(true)
+					proxies[index].SetCountry(country)
 				} else if err != nil {
-					proxies[index].IsValid = false
+					proxies[index].SetIsValid(false)
 				}
 				m.Unlock()
 

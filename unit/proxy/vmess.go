@@ -3,6 +3,7 @@ package proxy
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -11,56 +12,184 @@ import (
 	"github.com/spf13/cast"
 )
 
+// Vmess 结构体实现 Proxy 接口
 type Vmess struct {
-	Add  string `json:"add"`
-	Aid  any    `json:"aid"`
-	Host string `json:"host"`
-	ID   string `json:"id"`
-	Net  string `json:"net"`
-	Path string `json:"path"`
-	Port any    `json:"port"`
-	PS   string `json:"ps"`
-	TLS  string `json:"tls"`
-	Type string `json:"type"`
-	Sni  string `json:"sni"`
-	V    any    `json:"v"`
+	Group            string  `json:"group,omitempty"`
+	Name             string  `json:"name,omitempty"`
+	Server           string  `json:"server,omitempty"`
+	Port             int     `json:"port,omitempty"`
+	UUID             string  `json:"uuid,omitempty"`
+	AlterID          int     `json:"alterId,omitempty"`
+	EncryptMethod    string  `json:"encryptMethod,omitempty"`
+	TransferProtocol string  `json:"transferProtocol,omitempty"`
+	Edge             string  `json:"edge,omitempty"`
+	ServerName       string  `json:"serverName,omitempty"`
+	Host             string  `json:"host,omitempty"`
+	Path             string  `json:"path,omitempty"`
+	QUICSecure       string  `json:"quicSecure,omitempty"`
+	QUICSecret       string  `json:"quicSecret,omitempty"`
+	FakeType         string  `json:"fakeType,omitempty"`
+	TLSSecure        bool    `json:"tlsSecure,omitempty"`
+	UDP              bool    `json:"udp,omitempty"`
+	TCPFastOpen      bool    `json:"tfo,omitempty"`
+	SkipCertVerify   bool    `json:"skipCertVerify,omitempty"`
+	TLS13            bool    `json:"tls13,omitempty"`
+	Country          string  `json:"country,omitempty"`
+	Speed            float64 `json:"speed,omitempty"`
+	IsValidFlag      bool    `json:"isValidFlag,omitempty"`
+	OriginName       string  `json:"-,omitempty"` // 原始名称
 }
 
-func (proxy *Proxy) vmessConstruct(group, ps, add string, port any, fakeType, id string,
+// vmessConstruct 构造 vmess 代理
+func (v *Vmess) vmessConstruct(group, ps, add string, port any, fakeType, id string,
 	aid any, net, cipher, path, host, edge, tls, sni string, udp, tfo, scv, tls13 *bool) {
-	proxy.commonConstruct("vmess", group, ps, add, port, udp, tfo, scv, tls13)
+	v.Group = group
+	v.Name = ps
+	v.OriginName = ps // 保存原始名称
+	v.Server = add
+	v.Port = cast.ToInt(port)
 	if id == "" {
-		proxy.UUID = "00000000-0000-0000-0000-000000000000"
+		v.UUID = "00000000-0000-0000-0000-000000000000"
 	} else {
-		proxy.UUID = id
+		v.UUID = id
 	}
-	proxy.AlterID = cast.ToInt(aid)
-	proxy.EncryptMethod = cipher
+	v.AlterID = cast.ToInt(aid)
+	v.EncryptMethod = cipher
 	if net == "" {
-		proxy.TransferProtocol = "tcp"
+		v.TransferProtocol = "tcp"
 	} else {
-		proxy.TransferProtocol = net
+		v.TransferProtocol = net
 	}
-	proxy.Edge = edge
-	proxy.ServerName = sni
+	v.Edge = edge
+	v.ServerName = sni
 
 	if strings.EqualFold(net, "quic") {
-		proxy.QUICSecure = host
-		proxy.QUICSecret = path
+		v.QUICSecure = host
+		v.QUICSecret = path
 	} else {
 		if host == "" {
-			proxy.Host = add
+			v.Host = add
 		} else {
-			proxy.Host = strings.TrimSpace(host)
+			v.Host = strings.TrimSpace(host)
 		}
 		if path == "" {
-			proxy.Path = "/"
+			v.Path = "/"
 		} else {
-			proxy.Path = strings.TrimSpace(path)
+			v.Path = strings.TrimSpace(path)
 		}
 	}
-	proxy.FakeType = fakeType
-	proxy.TLSSecure = strings.EqualFold(tls, "tls")
+	v.FakeType = fakeType
+	v.TLSSecure = strings.EqualFold(tls, "tls")
+
+	if udp != nil {
+		v.UDP = *udp
+	}
+	if tfo != nil {
+		v.TCPFastOpen = *tfo
+	}
+	if scv != nil {
+		v.SkipCertVerify = *scv
+	}
+	if tls13 != nil {
+		v.TLS13 = *tls13
+	}
+}
+
+// GetType 实现 Proxy 接口的 GetType 方法
+func (v *Vmess) GetType() string {
+	return "vmess"
+}
+
+// GetName 实现 Proxy 接口的 GetName 方法
+func (v *Vmess) GetName() string {
+	return v.Name
+}
+
+// SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
+func (v *Vmess) SetName(name string) {
+	v.Name = name
+}
+
+// GetOriginName 实现 Proxy 接口的 GetOriginName 方法，返回代理原始名称
+func (v *Vmess) GetOriginName() string {
+	if v.OriginName != "" {
+		return v.OriginName
+	}
+	return v.Name
+}
+
+// GetCountry 实现 Proxy 接口的 GetCountry 方法
+func (v *Vmess) GetCountry() string {
+	return v.Country
+}
+
+// SetCountry 实现 Proxy 接口的 SetCountry 方法
+func (v *Vmess) SetCountry(country string) {
+	v.Country = country
+}
+
+// GetSpeed 实现 Proxy 接口的 GetSpeed 方法
+func (v *Vmess) GetSpeed() float64 {
+	return v.Speed
+}
+
+// SetSpeed 实现 Proxy 接口的 SetSpeed 方法
+func (v *Vmess) SetSpeed(speed float64) {
+	v.Speed = speed
+}
+
+// IsValid 实现 Proxy 接口的 IsValid 方法
+func (v *Vmess) IsValid() bool {
+	return v.IsValidFlag
+}
+
+// SetIsValid 实现 Proxy 接口的 SetIsValid 方法
+func (v *Vmess) SetIsValid(isValid bool) {
+	v.IsValidFlag = isValid
+}
+
+// GetIdentifier 实现 Proxy 接口的 GetIdentifier 方法
+func (v *Vmess) GetIdentifier() string {
+	return fmt.Sprintf("%s-%s-%d", v.GetType(), v.Server, v.Port)
+}
+
+// ToString 实现 Proxy 接口的 ToString 方法
+func (v *Vmess) ToString() string {
+	vmessNode := map[string]interface{}{
+		"v":    "2",
+		"ps":   v.Name,
+		"add":  v.Server,
+		"port": v.Port,
+		"type": func() string {
+			if v.FakeType == "" {
+				return "none"
+			}
+			return v.FakeType
+		}(),
+		"id":  v.UUID,
+		"aid": v.AlterID,
+		"net": func() string {
+			if v.TransferProtocol == "" {
+				return "tcp"
+			}
+			return v.TransferProtocol
+		}(),
+		"path": v.Path,
+		"host": v.Host,
+		"tls": func() string {
+			if v.TLSSecure {
+				return "tls"
+			}
+			return ""
+		}(),
+	}
+
+	jsonData, err := json.Marshal(vmessNode)
+	if err != nil {
+		return ""
+	}
+
+	return "vmess://" + tool.Base64EncodeString(string(jsonData))
 }
 
 func explodeShadowrocket(vmess string) (Proxy, error) {
@@ -68,7 +197,7 @@ func explodeShadowrocket(vmess string) (Proxy, error) {
 
 	u, err := url.Parse(vmess)
 	if err != nil {
-		return Proxy{}, err
+		return nil, fmt.Errorf("解析 URL 失败: %w", err)
 	}
 
 	// 分解主配置和附加参数
@@ -77,7 +206,7 @@ func explodeShadowrocket(vmess string) (Proxy, error) {
 
 	configStr, err = tool.Base64DecodeString(configStr)
 	if err != nil {
-		return Proxy{}, err
+		return nil, fmt.Errorf("Base64 解码失败: %w", err)
 	}
 
 	// 使用正则解析参数
@@ -86,15 +215,15 @@ func explodeShadowrocket(vmess string) (Proxy, error) {
 		result := regex.FindStringSubmatch(configStr)[1:]
 		cipher, id, add, port = result[0], result[1], result[2], result[3]
 	} else {
-		return Proxy{}, errors.New("vmess config not match: uuid, add, port")
+		return nil, errors.New("vmess config not match: uuid, add, port")
 	}
 
 	if port == "0" {
-		return Proxy{}, errors.New("vmess config port is 0")
+		return nil, errors.New("vmess config port is 0")
 	}
 
 	// 解析 Addition
-	remarks = url.QueryEscape(tool.GetUrlArg(addition, "remarks"))
+	remarks = tool.GetUrlArg(addition, "remarks")
 	obfs := tool.GetUrlArg(addition, "obfs")
 
 	if obfs == "websocket" {
@@ -118,7 +247,7 @@ func explodeShadowrocket(vmess string) (Proxy, error) {
 	}
 
 	// 构造节点
-	proxy := Proxy{}
+	proxy := &Vmess{}
 	proxy.vmessConstruct("vmess_group", remarks, add, port, fakeType, id, aid, net, cipher,
 		path, host, "", tls, "", nil, nil, nil, nil)
 	return proxy, nil
@@ -131,7 +260,7 @@ func explodeKitsunebi(vmess string) (Proxy, error) {
 
 	u, err := url.Parse(vmess)
 	if err != nil {
-		return Proxy{}, err
+		return nil, fmt.Errorf("解析 URL 失败: %w", err)
 	}
 
 	// 分解主配置和附加参数
@@ -143,7 +272,7 @@ func explodeKitsunebi(vmess string) (Proxy, error) {
 	addition := u.RawQuery
 
 	if port == "0" {
-		return Proxy{}, errors.New("vmess1 config port is 0")
+		return nil, errors.New("vmess1 config port is 0")
 	}
 
 	// 解析addition
@@ -163,7 +292,7 @@ func explodeKitsunebi(vmess string) (Proxy, error) {
 	}
 
 	if remarks == "" {
-		remarks = add + ":" + port
+		remarks = fmt.Sprintf("%s:%s", add, port)
 	}
 
 	scv := false
@@ -172,22 +301,18 @@ func explodeKitsunebi(vmess string) (Proxy, error) {
 	}
 
 	// 构造节点
-	proxy := Proxy{}
+	proxy := &Vmess{}
 	proxy.vmessConstruct("vmess_group", remarks, add, port, fakeType, id, aid, net, cipher,
 		path, host, "", tls, "", nil, nil, &scv, nil)
 	return proxy, nil
-
 }
 
 func explodeVmess(vmess string) (Proxy, error) {
 	shadowrocketPattern := regexp.MustCompile(`vmess://([A-Za-z0-9-_]+)\?(.*)`)
-	// stdVMessPattern := regexp.MustCompile(`vmess://(.*?)@(.*)`)
 	kitsunebiPattern := regexp.MustCompile(`vmess1://(.*?)\?(.*)`)
 
 	if shadowrocketPattern.MatchString(vmess) {
 		return explodeShadowrocket(vmess)
-		// } else if stdVMessPattern.MatchString(vmess) {
-		// 	return		explodeStdVMess(vmess)
 	} else if kitsunebiPattern.MatchString(vmess) {
 		return explodeKitsunebi(vmess)
 	}
@@ -197,16 +322,15 @@ func explodeVmess(vmess string) (Proxy, error) {
 	// 使用正则表达式替换并解码
 	vmess, err := tool.Base64DecodeString(re.ReplaceAllString(vmess, ""))
 	if err != nil {
-		return Proxy{}, errors.New("base64解码失败")
+		return nil, fmt.Errorf("base64 解码失败: %w", err)
 	}
-	// log.LogInfo(vmess)
 
 	var version, ps, add, port, fakeType, id, aid, net, path, host, tls, sni string
 	var jsondata map[string]interface{}
 	err = json.Unmarshal([]byte(vmess), &jsondata)
 	// 判断是否解析出错或者解析结果不是一个对象
 	if err != nil || jsondata == nil {
-		return Proxy{}, errors.New("JSON解析出错或者不是一个对象")
+		return nil, errors.New("JSON 解析出错或者不是一个对象")
 	}
 
 	// 获取version
@@ -218,7 +342,7 @@ func explodeVmess(vmess string) (Proxy, error) {
 	add = tool.SafeAsString(jsondata, "add")
 	port = tool.SafeAsString(jsondata, "port")
 	if port == "0" || port == "" {
-		return Proxy{}, errors.New("端口不能为0或置空")
+		return nil, errors.New("端口不能为 0 或置空")
 	}
 	fakeType = tool.SafeAsString(jsondata, "type")
 	id = tool.SafeAsString(jsondata, "id")
@@ -242,62 +366,8 @@ func explodeVmess(vmess string) (Proxy, error) {
 	}
 
 	// 构造节点
-	proxy := Proxy{}
+	proxy := &Vmess{}
 	proxy.vmessConstruct("vmess_group", ps, add, port, fakeType, id, aid, net, "auto",
 		path, host, "", tls, sni, nil, nil, nil, nil)
 	return proxy, nil
-}
-
-func ProxieToVmess(node Proxy) string {
-	if node.Type != "vmess" {
-		return ""
-	}
-
-	vmessNode := map[string]interface{}{
-		"v":    "2",
-		"ps":   node.Name,
-		"add":  node.Server,
-		"port": node.Port,
-		"type": func() string {
-			if node.FakeType == "" {
-				return "none"
-			}
-			return node.FakeType
-		}(),
-		"id":  node.UUID,
-		"aid": node.AlterID,
-		"net": func() string {
-			if node.TransferProtocol == "" {
-				return "tcp"
-			}
-			return node.TransferProtocol
-		}(),
-		"path": node.Path,
-		"host": node.Host,
-		"tls": func() string {
-			if node.TLSSecure {
-				return "tls"
-			}
-			return ""
-		}(),
-	}
-
-	jsonData, err := json.Marshal(vmessNode)
-	if err != nil {
-		return ""
-	}
-
-	proxyStr := "vmess://" + tool.Base64EncodeString(string(jsonData))
-	return proxyStr
-}
-
-func VmessToString(proxyList ProxyList) string {
-	var vmessStrings strings.Builder
-	for _, node := range proxyList {
-		if nodeStr := ProxieToVmess(node); nodeStr != "" {
-			vmessStrings.WriteString(nodeStr + "\n")
-		}
-	}
-
-	return tool.Base64EncodeString(vmessStrings.String())
 }

@@ -19,6 +19,9 @@ func main() {
 		configFilePath = "config/config.yaml"
 	}
 	config.SetConfigFilePath(configFilePath)
+	if err := config.Parse(); err != nil {
+		panic(err)
+	}
 
 	go mainInit()
 	web.StarWeb()

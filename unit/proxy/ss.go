@@ -1,7 +1,8 @@
 package proxy
 
 import (
-	"encoding/json"
+	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -9,44 +10,176 @@ import (
 	"github.com/spf13/cast"
 )
 
-func (proxy *Proxy) ssConstruct(group, remarks, server, port, password, method, plugin string,
-	pluginopts string, udp, tfo, scv, tls13 *bool) {
-	proxy.commonConstruct("ss", group, remarks, server, port, udp, tfo, scv, tls13)
-	proxy.Password = password
-	proxy.EncryptMethod = method
-	proxy.Plugin = plugin
-	proxy.PluginOption = pluginopts
+// SSProxy ss 代理结构体
+type SSProxy struct {
+	Group          string  `json:"group,omitempty"`
+	Name           string  `json:"name,omitempty"`
+	Server         string  `json:"server,omitempty"`
+	Port           int     `json:"port,omitempty"`
+	Password       string  `json:"password,omitempty"`
+	EncryptMethod  string  `json:"encryptMethod,omitempty"`
+	Plugin         string  `json:"plugin,omitempty"`
+	PluginOption   string  `json:"pluginOption,omitempty"`
+	UDP            bool    `json:"udp,omitempty"`
+	TCPFastOpen    bool    `json:"tfo,omitempty"`
+	SkipCertVerify bool    `json:"skipCertVerify,omitempty"`
+	Country        string  `json:"country,omitempty"`
+	Speed          float64 `json:"speed,omitempty"`
+	IsValidFlag    bool    `json:"isValidFlag,omitempty"`
+	OriginName     string  `json:"-,omitempty"` // 原始名称
 }
 
+// GetType 实现 Proxy 接口的 GetType 方法
+func (s *SSProxy) GetType() string {
+	return "ss"
+}
+
+// GetName 实现 Proxy 接口的 GetName 方法
+func (s *SSProxy) GetName() string {
+	return s.Name
+}
+
+// GetOriginName 实现 Proxy 接口的 GetOriginName 方法，返回代理原始名称
+func (s *SSProxy) GetOriginName() string {
+	if s.OriginName != "" {
+		return s.OriginName
+	}
+	return s.Name
+}
+
+// SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
+func (s *SSProxy) SetName(name string) {
+	s.Name = name
+}
+
+// GetCountry 实现 Proxy 接口的 GetCountry 方法
+func (s *SSProxy) GetCountry() string {
+	return s.Country
+}
+
+// SetCountry 实现 Proxy 接口的 SetCountry 方法
+func (s *SSProxy) SetCountry(country string) {
+	s.Country = country
+}
+
+// GetSpeed 实现 Proxy 接口的 GetSpeed 方法
+func (s *SSProxy) GetSpeed() float64 {
+	return s.Speed
+}
+
+// SetSpeed 实现 Proxy 接口的 SetSpeed 方法
+func (s *SSProxy) SetSpeed(speed float64) {
+	s.Speed = speed
+}
+
+// IsValid 实现 Proxy 接口的 IsValid 方法
+func (s *SSProxy) IsValid() bool {
+	return s.IsValidFlag
+}
+
+// SetIsValid 实现 Proxy 接口的 SetIsValid 方法
+func (s *SSProxy) SetIsValid(isValid bool) {
+	s.IsValidFlag = isValid
+}
+
+// GetIdentifier 实现 Proxy 接口的 GetIdentifier 方法
+func (s *SSProxy) GetIdentifier() string {
+	return fmt.Sprintf("%s-%s-%d", s.GetType(), s.Server, s.Port)
+}
+
+// ToString 实现 Proxy 接口的 ToString 方法，将 ss 代理转换为 ss 链接
+func (s *SSProxy) ToString() string {
+	proxyStr := "ss://" + tool.Base64EncodeString(s.EncryptMethod+":"+s.Password) + "@" + s.Server + ":" + cast.ToString(s.Port)
+	if s.Plugin != "" && s.PluginOption != "" {
+		proxyStr += "/?plugin=" + url.QueryEscape(s.Plugin+";"+s.PluginOption)
+	}
+	if s.Name != "" {
+		proxyStr += "#" + url.QueryEscape(s.Name)
+	}
+	return proxyStr
+}
+
+// 实现 ParamProxy 接口的 ToStringWithParam 方法
+func (s *SSProxy) ToStringWithParam(param string) string {
+	if param == "ssr" {
+		// 判断是否符合协议
+		if tool.Contains(SsrCiphers, s.EncryptMethod) && s.Plugin == "" {
+			baseStr := fmt.Sprintf("%s:%d:origin:%s:plain:%s",
+				s.Server,
+				s.Port,
+				s.EncryptMethod,
+				tool.Base64EncodeString(s.Password),
+			)
+
+			params := []string{}
+			if s.Group != "" {
+				params = append(params, fmt.Sprintf("group=%s", tool.Base64EncodeString(s.Group)))
+			}
+			if s.Name != "" {
+				params = append(params, fmt.Sprintf("remarks=%s", tool.Base64EncodeString(s.Name)))
+			}
+
+			if len(params) > 0 {
+				baseStr += "/?" + strings.Join(params, "&")
+			}
+
+			return "ssr://" + tool.Base64EncodeString(baseStr)
+		} else {
+			return ""
+		}
+	}
+	return s.ToString()
+}
+
+// ssConstruct 构造 ss 代理
+func (s *SSProxy) ssConstruct(group, remarks, server, port, password, method, plugin string,
+	pluginopts string) {
+	s.Group = group
+	s.Name = remarks
+	s.OriginName = remarks // 保存原始名称
+	s.Server = server
+	s.Port = cast.ToInt(port)
+	s.Password = password
+	s.EncryptMethod = method
+	s.Plugin = plugin
+	s.PluginOption = pluginopts
+}
+
+// explodeSS 解析 ss 代理链接
 func explodeSS(ss string) (Proxy, error) {
 	var password, method, server, port, plugin, pluginOpts string
 	u, err := url.Parse(ss)
 	if err != nil {
-		return Proxy{}, err
+		return nil, fmt.Errorf("解析 URL 失败: %w", err)
 	}
 
 	// 分解主配置和附加参数
 	remarks := u.Fragment
 	if u.User.String() == "" {
-		// base64的情况
+		// base64 的情况
 		infos, err := tool.Base64DecodeString(u.Hostname())
 		if err != nil {
-			return Proxy{}, err
+			return nil, fmt.Errorf("Base64 解码失败: %w", err)
 		}
 		u, err = url.Parse("ss://" + infos)
 		if err != nil {
-			return Proxy{}, err
+			return nil, fmt.Errorf("解析 URL 失败: %w", err)
 		}
 		method = u.User.Username()
 		password, _ = u.User.Password()
 	} else {
 		cipherInfoString, err := tool.Base64DecodeString(u.User.Username())
 		if err != nil {
-			return Proxy{}, err
+			return nil, fmt.Errorf("Base64 解码失败: %w", err)
+		} else if strings.Contains(cipherInfoString, "ss:") {
+			cipherInfoString, err = tool.Base64DecodeString(strings.TrimPrefix(cipherInfoString, "ss://"))
+			if err != nil {
+				return nil, fmt.Errorf("Base64 解码失败: %w", err)
+			}
 		}
 		cipherInfo := strings.SplitN(cipherInfoString, ":", 2)
 		if len(cipherInfo) < 2 {
-			return Proxy{}, err
+			return nil, errors.New("密码信息格式错误")
 		}
 		method = strings.ToLower(cipherInfo[0])
 		password = cipherInfo[1]
@@ -61,99 +194,9 @@ func explodeSS(ss string) (Proxy, error) {
 	} else {
 		plugin = plugins
 	}
-	// pluginOpts := new(PluginOpts)
-	// pluginString := strings.ReplaceAll(tool.GetUrlArg(addition, "plugin"), ";", "&")
-	// switch {
-	// case strings.Contains(pluginString, "obfs"):
-	// 	plugin = "obfs"
-	// 	pluginOpts.Mode = tool.GetUrlArg(pluginString, "obfs")
-	// 	pluginOpts.Host = tool.GetUrlArg(pluginString, "obfs-host")
-	// case strings.Contains(pluginString, "v2ray"):
-	// 	plugin = "v2ray-plugin"
-	// 	pluginOpts.Mode = tool.GetUrlArg(pluginString, "mode")
-	// 	pluginOpts.Host = tool.GetUrlArg(pluginString, "host")
-	// 	pluginOpts.Path = tool.GetUrlArg(pluginString, "path")
-	// 	pluginOpts.Mux = strings.Contains(pluginString, "mux")
-	// 	pluginOpts.Tls = strings.Contains(pluginString, "tls")
-	// 	pluginOpts.SkipCertVerify = true
-	// }
-	// group = tool.GetUrlArg(addition, "group")
 
 	// 构造节点
-	proxy := Proxy{}
-	proxy.ssConstruct("ss_group", remarks, server, port, password, method, plugin, pluginOpts,
-		nil, nil, nil, nil)
+	proxy := &SSProxy{}
+	proxy.ssConstruct("ss_group", remarks, server, port, password, method, plugin, pluginOpts)
 	return proxy, nil
-}
-
-func ProxieToSip002(node Proxy) string {
-	proxyStr := "ss://" + tool.Base64EncodeString(node.EncryptMethod+":"+node.Password) + "@" + node.Server + ":" + cast.ToString(node.Port)
-	if node.Type == "ss" {
-		if node.Plugin != "" && node.PluginOption != "" {
-			proxyStr += "/?plugin=" + url.QueryEscape(node.Plugin+";"+node.PluginOption)
-		}
-		proxyStr += "#" + url.QueryEscape(node.Name)
-		return proxyStr
-	} else if node.Type == "ssr" {
-		// 判断是否符合协议
-		if tool.Contains(SsCiphers, node.EncryptMethod) && (node.OBFS == "" || node.OBFS == "plain") && (node.Protocol == "" || node.Protocol == "origin") {
-			proxyStr += "#" + url.QueryEscape(node.Name)
-			return proxyStr
-		}
-	}
-
-	return ""
-}
-
-func ProxieToSs(node Proxy) map[string]interface{} {
-	plugin := node.Plugin
-	switch node.Type {
-	case "ss":
-		if plugin == "simple-obfs" {
-			plugin = "obfs-local"
-		}
-	case "ssr":
-		// TODO: 是否判断是否要符合ssr条件
-	default:
-		return nil
-	}
-
-	proxy := map[string]interface{}{
-		"remarks":     node.Name,
-		"server":      node.Server,
-		"server_port": node.Port,
-		"method":      node.EncryptMethod,
-		"password":    node.Password,
-		"plugin":      plugin,
-		"plugin_opts": node.PluginOption,
-	}
-
-	return proxy
-}
-
-func SsToString(proxyList ProxyList, subType int) string {
-	var ssStrings strings.Builder
-	if subType == 1 {
-		for _, node := range proxyList {
-			if nodeStr := ProxieToSip002(node); nodeStr != "" {
-				ssStrings.WriteString(nodeStr + "\n")
-			}
-		}
-
-		return tool.Base64EncodeString(ssStrings.String())
-	} else {
-		proxies := make([]map[string]interface{}, 0)
-		for _, node := range proxyList {
-			if proxy := ProxieToSs(node); proxy != nil {
-				proxies = append(proxies, proxy)
-			}
-		}
-		jsonData, err := json.Marshal(proxies)
-		if err != nil {
-			return ""
-		}
-
-		return string(jsonData)
-	}
-
 }

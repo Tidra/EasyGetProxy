@@ -60,6 +60,21 @@ func SafeAsBool(m map[string]interface{}, keys ...string) bool {
 	return false
 }
 
+func SafeAsInt(m map[string]interface{}, keys ...string) int {
+	var current interface{} = m
+	for _, key := range keys {
+		if v, ok := current.(map[string]interface{}); ok {
+			if val, ok := v[key]; ok {
+				if intVal, ok := val.(int); ok {
+					return intVal
+				}
+			}
+		}
+	}
+
+	return 0
+}
+
 func Contains(arr []string, key string) bool {
 	for _, i := range arr {
 		if i == key {

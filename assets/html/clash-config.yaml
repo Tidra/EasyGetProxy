@@ -159,7 +159,7 @@ proxy-groups:
 proxy-providers:
   cn:
     type: http
-    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=CN,HK,TW"
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?{{ .proxy_after_value }}c=CN,HK,TW"
     path: ./providers/provider-cn.yaml
     health-check:
       enable: true
@@ -167,7 +167,7 @@ proxy-providers:
       url: {{ .delaydheck_url }}
   us:
     type: http
-    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=US"
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?{{ .proxy_after_value }}c=US"
     path: ./providers/provider-us.yaml
     health-check:
       enable: true
@@ -175,7 +175,7 @@ proxy-providers:
       url: {{ .delaydheck_url }}
   jp:
     type: http
-    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=JP"
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?{{ .proxy_after_value }}c=JP"
     path: ./providers/provider-jp.yaml
     health-check:
       enable: true
@@ -183,7 +183,7 @@ proxy-providers:
       url: {{ .delaydheck_url }}
   sg:
     type: http
-    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=SG"
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?{{ .proxy_after_value }}c=SG"
     path: ./providers/provider-sg.yaml
     health-check:
       enable: true
@@ -191,7 +191,7 @@ proxy-providers:
       url: {{ .delaydheck_url }}
   eu:
     type: http
-    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?c=AU,CA,RU,CH,DE,FR,GB,NL"
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?{{ .proxy_after_value }}c=AU,CA,RU,CH,DE,FR,GB,NL"
     path: ./providers/provider-au.yaml
     health-check:
       enable: true
@@ -199,7 +199,7 @@ proxy-providers:
       url: {{ .delaydheck_url }}
   others:
     type: http
-    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?nc=CN,HK,TW,US,CA,JP,SG,AU,CH,DE,GB,NL,FR,RU"
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?{{ .proxy_after_value }}c=CN,HK,TW,US,CA,JP,SG,AU,CH,DE,GB,NL,FR,RU"
     path: ./providers/provider-others.yaml
     health-check:
       enable: true
@@ -207,7 +207,7 @@ proxy-providers:
       url: {{ .delaydheck_url }}
   all:
     type: http
-    url: "{{ .scheme }}://{{ .domain }}/clash/proxies"
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies{{ .proxy_pre_value }}"
     path: ./providers/provider.yaml
     health-check:
       enable: true

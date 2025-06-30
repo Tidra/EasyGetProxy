@@ -64,16 +64,23 @@
                         </tr>
                         <tr>
                             <th>mihomo-mrs 规则组配置文件</th>
-                            <td>{{ .scheme }}://{{ .domain }}/clash/config?t=mrs</td>
+                            <td>{{ .scheme }}://{{ .domain }}/clash/config?f=mrs</td>
                             <td class="has-text-right"><a
-                                    href="clash://install-config?url={{ .scheme }}://{{ .domain }}/clash/config?t=mrs"
+                                    href="clash://install-config?url={{ .scheme }}://{{ .domain }}/clash/config?f=mrs"
                                     class="button is-small is-link">一键导入</a></td>
                         </tr>
                         <tr>
                             <th>mihomo-geodata 规则组配置文件</th>
-                            <td>{{ .scheme }}://{{ .domain }}/clash/config?t=mihomo</td>
+                            <td>{{ .scheme }}://{{ .domain }}/clash/config?f=mihomo</td>
                             <td class="has-text-right"><a
-                                    href="clash://install-config?url={{ .scheme }}://{{ .domain }}/clash/config?t=mihomo"
+                                    href="clash://install-config?url={{ .scheme }}://{{ .domain }}/clash/config?f=mihomo"
+                                    class="button is-small is-link">一键导入</a></td>
+                        </tr>
+                        <tr>
+                            <th>通用配置文件(附带节点筛选样例)</th>
+                            <td>{{ .scheme }}://{{ .domain }}/clash/config?t=all</td>
+                            <td class="has-text-right"><a
+                                    href="clash://install-config?url={{ .scheme }}://{{ .domain }}/clash/config?t=all"
                                     class="button is-small is-link">一键导入</a></td>
                         </tr>
                     </tbody>
@@ -99,7 +106,7 @@
                             </tr>
                             <tr>
                                 <th>筛选节点示例</th>
-                                <td>{{ .scheme }}://{{ .domain }}/clash/proxies?c=CN,HK,TW&speed=15,30&type=ss</td>
+                                <td>{{ .scheme }}://{{ .domain }}/clash/proxies?c=CN,HK,TW&s=15,30&t=ss</td>
                                 <td class="has-text-right"><button class="button is-small is-primary"
                                         onclick="onCopy(this)">复制</button></td>
                             </tr>
@@ -129,8 +136,14 @@
                     <tbody>
                         <tr>
                             <th>类型</th>
-                            <td>type</td>
-                            <td>ss,ssr,vmess,trojan</td>
+                            <td>t</td>
+                            <td>http,https,socks5,ss,ssr,vless,vmess,trojan,hysteria,hysteria2,snell</td>
+                            <td>clash默认不含vless,hysteria,hysteria2<br>其他默认all代表全部类型<br>可同时选择多个类型</td>
+                        </tr>
+                        <tr>
+                            <th>排除类型</th>
+                            <td>nt</td>
+                            <td>http,https,socks5,ss,ssr,vless,vmess,trojan,hysteria,hysteria2,snell</td>
                             <td>可同时选择多个类型</td>
                         </tr>
                         <tr>
@@ -147,9 +160,15 @@
                         </tr>
                         <tr>
                             <th>速度</th>
-                            <td>speed</td>
+                            <td>s</td>
                             <td>任何数字</td>
-                            <td>单个数字选择最低速度<br>两个数字选择速度区间</td>
+                            <td>单位: mb/s<br>单个数字选择最低速度<br>两个数字选择速度区间</td>
+                        </tr>
+                        <tr>
+                            <th>只需有效节点</th>
+                            <td>v</td>
+                            <td>true,false</td>
+                            <td>筛选有效或全部节点</td>
                         </tr>
                     </tbody>
                 </table>

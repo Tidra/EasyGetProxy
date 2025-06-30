@@ -26,6 +26,13 @@ source-files:
 crawl-interval:             # default 60 (minutes)
 healthcheck:
   url:                      # default http://www.gstatic.com/generate_204
+rename-format: "[{{.Type}}]{{.Country}}{{.Num}}|{{.Speed}}"              # default "[{{.Type}}]{{.Country}}{{.Num}}"
+  # {{.Name}}: 代理原名称
+  # {{.Type}}: 代理类型
+  # {{.Speed}}: 代理速度
+  # {{.Country}}: 代理归属地
+  # {{.Identity}}: 代理标识(代理类型-Server-Port)
+  # {{.Num}}: 代理序号(必须)
 
 #  ==== 获取归属地 ==== #
 localcheck:

@@ -71,7 +71,7 @@ func StringArray2ProxyArray(origin []string) proxy.ProxyList {
 	for _, link := range origin {
 		// log.LogInfo(link)
 		p, err := proxy.ParseProxy(link)
-		if err == nil && !p.IsEmpty() {
+		if err == nil && p != nil {
 			results = append(results, p)
 		}
 	}

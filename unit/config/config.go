@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/Tidra/EasyGetProxy/unit/log"
 	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"gopkg.in/yaml.v2"
@@ -27,6 +29,9 @@ type ConfigOptions struct {
 	HealthCheck struct {
 		Url string `json:"url" yaml:"url"`
 	} `json:"healthcheck" yaml:"healthcheck"`
+
+	// RenameFormat 重命名格式
+	RenameFormat string `json:"rename-format" yaml:"rename-format"`
 
 	LocalCheck struct {
 		Url           string `json:"url" yaml:"url"`
@@ -95,6 +100,14 @@ func Parse() error {
 
 	if Config.HealthCheck.Url == "" {
 		Config.HealthCheck.Url = "http://www.google.com/generate_204"
+	}
+
+	// 重命名格式默认值
+	Config.RenameFormat = strings.TrimSpace(Config.RenameFormat)
+	if Config.RenameFormat == "" {
+		Config.RenameFormat = "[{{.Type}}]{{.Country}}{{.Num}}"
+	} else if !strings.Contains(Config.RenameFormat, "{{.Num}}") {
+		Config.RenameFormat += "{{.Num}}"
 	}
 
 	if Config.LocalCheck.Url == "" {

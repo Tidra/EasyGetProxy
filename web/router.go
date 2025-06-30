@@ -90,18 +90,22 @@ func setupRouter() {
 
 	router.GET("/", func(web *gin.Context) {
 		web.HTML(http.StatusOK, "assets/html/index.html", gin.H{
-			"scheme":               getScheme(web),
-			"domain":               web.Request.Host,
-			"getters_count":        app.GettersCount,
-			"all_proxies_count":    app.AllProxiesCount,
-			"ss_proxies_count":     app.SSProxiesCount,
-			"ssr_proxies_count":    app.SSRProxiesCount,
-			"vmess_proxies_count":  app.VmessProxiesCount,
-			"trojan_proxies_count": app.TrojanProxiesCount,
-			"useful_proxies_count": app.UsefullProxiesCount,
-			"last_crawl_time":      app.LastCrawlTime,
-			"is_speed_test":        app.IsSpeedTest,
-			"version":              version,
+			"scheme":                  getScheme(web),
+			"domain":                  web.Request.Host,
+			"getters_count":           app.GettersCount,
+			"all_proxies_count":       app.AllProxiesCount,
+			"ss_proxies_count":        app.SSProxiesCount,
+			"ssr_proxies_count":       app.SSRProxiesCount,
+			"vless_proxies_count":     app.VlessProxiesCount,
+			"vmess_proxies_count":     app.VmessProxiesCount,
+			"trojan_proxies_count":    app.TrojanProxiesCount,
+			"hysteria_proxies_count":  app.HysteriaProxiesCount,
+			"hysteria2_proxies_count": app.Hysteria2ProxiesCount,
+			"snell_proxies_count":     app.SnellProxiesCount,
+			"useful_proxies_count":    app.UsefullProxiesCount,
+			"last_crawl_time":         app.LastCrawlTime,
+			"is_speed_test":           app.IsSpeedTest,
+			"version":                 version,
 		})
 	})
 
@@ -130,15 +134,49 @@ func setupRouter() {
 	})
 
 	router.GET("/clash/config", func(web *gin.Context) {
-		fileType := web.DefaultQuery("t", "")
+		fileType := web.DefaultQuery("f", "")
+		proxyTypes := web.DefaultQuery("t", "")
+		proxyNotTypes := web.DefaultQuery("nt", "")
+		proxyValue := []string{}
+		if proxyTypes != "" {
+			proxyValue = append(proxyValue, "t="+proxyTypes)
+		}
+		if proxyNotTypes != "" {
+			proxyValue = append(proxyValue, "nt="+proxyNotTypes)
+		}
+
 		yamlFile := "assets/html/clash-config.yaml"
 		switch fileType {
 		case "mihomo":
 			yamlFile = "assets/html/clash-config-mihomo.yaml"
+			if proxyTypes == "" && proxyNotTypes == "" {
+				proxyValue = append(proxyValue, "t=all")
+			}
 		case "mrs":
 			yamlFile = "assets/html/clash-config-mrs.yaml"
+			if proxyTypes == "" && proxyNotTypes == "" {
+				proxyValue = append(proxyValue, "t=all")
+			}
 		}
 
+		proxyPreValue := ""
+		proxyAfterValue := ""
+		if len(proxyValue) > 0 {
+			proxyPreValue = "?" + strings.Join(proxyValue, "&")
+			proxyAfterValue = strings.Join(proxyValue, "&") + "&"
+		}
+
+		web.HTML(http.StatusOK, yamlFile, gin.H{
+			"scheme":            getScheme(web),
+			"domain":            web.Request.Host,
+			"delaydheck_url":    config.Config.HealthCheck.Url,
+			"proxy_pre_value":   template.HTML(proxyPreValue),
+			"proxy_after_value": template.HTML(proxyAfterValue),
+		})
+	})
+
+	router.GET("/clash-mrs/config", func(web *gin.Context) {
+		yamlFile := "assets/html/clash-config-mrs.yaml"
 		web.HTML(http.StatusOK, yamlFile, gin.H{
 			"scheme":         getScheme(web),
 			"domain":         web.Request.Host,
@@ -154,11 +192,23 @@ func setupRouter() {
 	})
 
 	router.GET("/clash/proxies", func(web *gin.Context) {
-		proxyTypes := web.DefaultQuery("type", "")
+		proxyTypes := web.DefaultQuery("t", "")
+		proxyNotTypes := web.DefaultQuery("nt", "")
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
+		proxySpeed := web.DefaultQuery("s", "")
+		proxyOnlyValid := web.DefaultQuery("v", "true")
 		text := ""
-		if (proxyTypes == "" || proxyTypes == "all") && proxyCountry == "" && proxyNotCountry == "" {
+		if proxyTypes == "" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" {
+			text = app.GetString("only-clash")
+			if text == "" {
+				allProxies := app.GetProxies("all")
+				proxyNotTypes = "vless,hysteria,hysteria2"
+				filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+				text = proxy.ClashToString(filterProxies)
+				app.SetString("only-clash", text)
+			}
+		} else if proxyTypes == "all" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" {
 			text = app.GetString("all-clash")
 			if text == "" {
 				allProxies := app.GetProxies("all")
@@ -167,7 +217,7 @@ func setupRouter() {
 			}
 		} else {
 			allProxies := app.GetProxies("all")
-			filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+			filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
 			text = proxy.ClashToString(filterProxies)
 		}
 
@@ -175,11 +225,14 @@ func setupRouter() {
 	})
 
 	router.GET("/surge/proxies", func(web *gin.Context) {
-		proxyTypes := web.DefaultQuery("type", "")
+		proxyTypes := web.DefaultQuery("t", "")
+		proxyNotTypes := web.DefaultQuery("nt", "")
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
+		proxySpeed := web.DefaultQuery("s", "")
+		proxyOnlyValid := web.DefaultQuery("v", "true")
 		text := ""
-		if (proxyTypes == "" || proxyTypes == "all") && proxyCountry == "" && proxyNotCountry == "" {
+		if (proxyTypes == "" || proxyTypes == "all") && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" {
 			text = app.GetString("all-surge")
 			if text == "" {
 				allProxies := app.GetProxies("all")
@@ -188,7 +241,7 @@ func setupRouter() {
 			}
 		} else {
 			allProxies := app.GetProxies("all")
-			filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+			filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
 			text = proxy.SurgeToString(filterProxies)
 		}
 
@@ -196,62 +249,90 @@ func setupRouter() {
 	})
 
 	router.GET("/ss/sub", func(web *gin.Context) {
-		proxyTypes := web.DefaultQuery("type", "")
+		proxyTypes := web.DefaultQuery("t", "")
+		proxyNotTypes := web.DefaultQuery("nt", "")
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
+		proxySpeed := web.DefaultQuery("s", "")
+		proxyOnlyValid := web.DefaultQuery("v", "true")
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
 
-		web.String(200, proxy.SsToString(filterProxies, 2))
-	})
-
-	router.GET("/sip002/sub", func(web *gin.Context) {
-		proxyTypes := web.DefaultQuery("type", "")
-		proxyCountry := web.DefaultQuery("c", "")
-		proxyNotCountry := web.DefaultQuery("nc", "")
-		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
-
-		web.String(200, proxy.SsToString(filterProxies, 1))
+		web.String(200, proxy.SsToString(filterProxies))
 	})
 
 	router.GET("/ssr/sub", func(web *gin.Context) {
-		proxyTypes := web.DefaultQuery("type", "")
+		proxyTypes := web.DefaultQuery("t", "")
+		proxyNotTypes := web.DefaultQuery("nt", "")
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
+		proxySpeed := web.DefaultQuery("s", "")
+		proxyOnlyValid := web.DefaultQuery("v", "true")
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
 
 		web.String(200, proxy.SsrToString(filterProxies))
 	})
 
 	router.GET("/vmess/sub", func(web *gin.Context) {
-		proxyTypes := web.DefaultQuery("type", "")
+		proxyTypes := web.DefaultQuery("t", "")
+		proxyNotTypes := web.DefaultQuery("nt", "")
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
+		proxySpeed := web.DefaultQuery("s", "")
+		proxyOnlyValid := web.DefaultQuery("v", "true")
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
 
 		web.String(200, proxy.VmessToString(filterProxies))
 	})
 
 	router.GET("/trojan/sub", func(web *gin.Context) {
-		proxyTypes := web.DefaultQuery("type", "")
+		proxyTypes := web.DefaultQuery("t", "")
+		proxyNotTypes := web.DefaultQuery("nt", "")
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
+		proxySpeed := web.DefaultQuery("s", "")
+		proxyOnlyValid := web.DefaultQuery("v", "true")
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyCountry, proxyNotCountry)
-
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
 		web.String(200, proxy.TrojanToString(filterProxies))
+	})
+
+	router.GET("/v2ray/sub", func(web *gin.Context) {
+		proxyTypes := web.DefaultQuery("t", "")
+		proxyNotTypes := web.DefaultQuery("nt", "")
+		proxyCountry := web.DefaultQuery("c", "")
+		proxyNotCountry := web.DefaultQuery("nc", "")
+		proxySpeed := web.DefaultQuery("s", "")
+		proxyOnlyValid := web.DefaultQuery("v", "true")
+		allProxies := app.GetProxies("all")
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+
+		web.String(200, proxy.V2rayToString(filterProxies))
 	})
 }
 
+// getScheme 函数用于获取请求的协议方案，优先检查代理头信息
 func getScheme(web *gin.Context) string {
-	scheme := "http"
-	if web.Request.TLS != nil {
-		scheme = "https"
+	// 首先检查 X-Forwarded-Proto 请求头
+	log.LogInfo("Header: %s %s", web.Request.Header, web.Request.TLS)
+	if proto := web.Request.Header.Get("X-Forwarded-Proto"); proto == "https" {
+		return "https"
 	}
-	return scheme
+	// 其次检查 X-Real-Proto 请求头（部分场景下可辅助判断）
+	if proto := web.Request.Header.Get("X-Real-Proto"); proto == "https" {
+		return "https"
+	}
+	// 其次检查 X-Forwarded-Port 请求头（部分场景下可辅助判断）
+	if port := web.Request.Header.Get("X-Forwarded-Port"); port == "443" {
+		return "https"
+	}
+	// 最后检查 TLS 信息
+	if web.Request.TLS != nil {
+		return "https"
+	}
+	return "http"
 }
 
 // 返回页面templates
