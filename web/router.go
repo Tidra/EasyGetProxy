@@ -199,16 +199,16 @@ func setupRouter() {
 		proxySpeed := web.DefaultQuery("s", "")
 		proxyOnlyValid := web.DefaultQuery("v", "true")
 		text := ""
-		if proxyTypes == "" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" {
+		if proxyTypes == "" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid == "true" {
 			text = app.GetString("only-clash")
 			if text == "" {
 				allProxies := app.GetProxies("all")
 				proxyNotTypes = "vless,hysteria,hysteria2"
-				filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+				filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, true)
 				text = proxy.ClashToString(filterProxies)
 				app.SetString("only-clash", text)
 			}
-		} else if proxyTypes == "all" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" {
+		} else if proxyTypes == "all" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid == "true" {
 			text = app.GetString("all-clash")
 			if text == "" {
 				allProxies := app.GetProxies("all")
@@ -232,7 +232,7 @@ func setupRouter() {
 		proxySpeed := web.DefaultQuery("s", "")
 		proxyOnlyValid := web.DefaultQuery("v", "true")
 		text := ""
-		if (proxyTypes == "" || proxyTypes == "all") && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" {
+		if (proxyTypes == "" || proxyTypes == "all") && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid == "true" {
 			text = app.GetString("all-surge")
 			if text == "" {
 				allProxies := app.GetProxies("all")

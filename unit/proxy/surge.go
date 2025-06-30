@@ -168,9 +168,9 @@ func SurgeToString(proxyList ProxyList) string {
 	var surgeStrings strings.Builder
 
 	for _, node := range proxyList {
-		if !node.IsValid() {
-			continue
-		}
+		// if !node.IsValid() {
+		// 	continue
+		// }
 		if nodeStr := ProxieToSurge(node); nodeStr != "" {
 			surgeStrings.WriteString(nodeStr + "\n")
 		}

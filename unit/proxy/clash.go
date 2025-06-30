@@ -587,9 +587,9 @@ func ClashToString(proxyList ProxyList) string {
 	clashStrings.WriteString("proxies:\n")
 
 	for _, node := range proxyList {
-		if !node.IsValid() {
-			continue
-		}
+		// if !node.IsValid() {
+		// 	continue
+		// }
 
 		clashNode := ProxieToClash(node)
 		jsonData, err := json.Marshal(clashNode)

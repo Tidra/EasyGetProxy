@@ -74,9 +74,9 @@ func CrawlTask() {
 	log.LogInfo("Snell节点数: %d", SnellProxiesCount)
 
 	SetProxies("all", proxies)
-	SetString("all-clash", proxy.ClashToString(proxies))
-	SetString("all-surge", proxy.SurgeToString(proxies))
-	saveCacheToFileTask()
+	filterProxies := proxies.Filter("", "", "", "", "", true)
+	SetString("all-clash", proxy.ClashToString(filterProxies))
+	SetString("all-surge", proxy.SurgeToString(filterProxies))
 }
 
 func SpeedCheckTask() {

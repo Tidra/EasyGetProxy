@@ -2,9 +2,9 @@
 #   options:
 #     url: https://proxypool.link/clash/proxies
 
-- type: subscribe
-  options:
-    url: https://v2rsub.tidnotes.top/
+# - type: subscribe
+#   options:
+#     url: https://v2rsub.top/
 
 # - type: crawl
 #   options:
