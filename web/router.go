@@ -87,6 +87,10 @@ func setupRouter() {
 	router.SetHTMLTemplate(temp) // 应用模板
 
 	router.StaticFile("/static/index.js", "assets/static/index.js")
+	router.StaticFile("/static/index.css", "assets/static/index.css")
+	router.StaticFile("/static/darkstyles.css", "assets/static/darkstyles.css")
+	router.StaticFile("/static/lightstyles.css", "assets/static/lightstyles.css")
+	router.StaticFile("/static/metron-icon.css", "assets/static/metron-icon.css")
 
 	router.GET("/", func(web *gin.Context) {
 		web.HTML(http.StatusOK, "assets/html/index.html", gin.H{
@@ -197,27 +201,32 @@ func setupRouter() {
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
 		proxySpeed := web.DefaultQuery("s", "")
-		proxyOnlyValid := web.DefaultQuery("v", "true")
+		proxyOnlyValid := web.DefaultQuery("v", "true") == "true"
 		text := ""
-		if proxyTypes == "" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid == "true" {
-			text = app.GetString("only-clash")
+		// 默认排除的代理类型
+		defaultExcludedTypes := "vless,hysteria,hysteria2"
+		if proxyTypes == "" && proxyNotTypes == "" {
+			proxyNotTypes = defaultExcludedTypes
+		}
+
+		var cacheKey string
+		if proxyTypes == "" && proxyNotTypes == defaultExcludedTypes && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid {
+			cacheKey = "only-clash"
+		} else if proxyTypes == "all" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid {
+			cacheKey = "all-clash"
+		}
+
+		if cacheKey != "" {
+			text = app.GetString(cacheKey)
 			if text == "" {
 				allProxies := app.GetProxies("all")
-				proxyNotTypes = "vless,hysteria,hysteria2"
-				filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, true)
+				filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid)
 				text = proxy.ClashToString(filterProxies)
-				app.SetString("only-clash", text)
-			}
-		} else if proxyTypes == "all" && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid == "true" {
-			text = app.GetString("all-clash")
-			if text == "" {
-				allProxies := app.GetProxies("all")
-				text = proxy.ClashToString(allProxies)
-				app.SetString("all-clash", text)
+				app.SetString(cacheKey, text)
 			}
 		} else {
 			allProxies := app.GetProxies("all")
-			filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+			filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid)
 			text = proxy.ClashToString(filterProxies)
 		}
 
@@ -230,9 +239,9 @@ func setupRouter() {
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
 		proxySpeed := web.DefaultQuery("s", "")
-		proxyOnlyValid := web.DefaultQuery("v", "true")
+		proxyOnlyValid := web.DefaultQuery("v", "true") == "true"
 		text := ""
-		if (proxyTypes == "" || proxyTypes == "all") && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid == "true" {
+		if (proxyTypes == "" || proxyTypes == "all") && proxyNotTypes == "" && proxySpeed == "" && proxyCountry == "" && proxyNotCountry == "" && proxyOnlyValid {
 			text = app.GetString("all-surge")
 			if text == "" {
 				allProxies := app.GetProxies("all")
@@ -241,7 +250,7 @@ func setupRouter() {
 			}
 		} else {
 			allProxies := app.GetProxies("all")
-			filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+			filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid)
 			text = proxy.SurgeToString(filterProxies)
 		}
 
@@ -254,9 +263,9 @@ func setupRouter() {
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
 		proxySpeed := web.DefaultQuery("s", "")
-		proxyOnlyValid := web.DefaultQuery("v", "true")
+		proxyOnlyValid := web.DefaultQuery("v", "true") == "true"
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid)
 
 		web.String(200, proxy.SsToString(filterProxies))
 	})
@@ -267,9 +276,9 @@ func setupRouter() {
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
 		proxySpeed := web.DefaultQuery("s", "")
-		proxyOnlyValid := web.DefaultQuery("v", "true")
+		proxyOnlyValid := web.DefaultQuery("v", "true") == "true"
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid)
 
 		web.String(200, proxy.SsrToString(filterProxies))
 	})
@@ -280,9 +289,9 @@ func setupRouter() {
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
 		proxySpeed := web.DefaultQuery("s", "")
-		proxyOnlyValid := web.DefaultQuery("v", "true")
+		proxyOnlyValid := web.DefaultQuery("v", "true") == "true"
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid)
 
 		web.String(200, proxy.VmessToString(filterProxies))
 	})
@@ -293,9 +302,9 @@ func setupRouter() {
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
 		proxySpeed := web.DefaultQuery("s", "")
-		proxyOnlyValid := web.DefaultQuery("v", "true")
+		proxyOnlyValid := web.DefaultQuery("v", "true") == "true"
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid)
 		web.String(200, proxy.TrojanToString(filterProxies))
 	})
 
@@ -305,9 +314,9 @@ func setupRouter() {
 		proxyCountry := web.DefaultQuery("c", "")
 		proxyNotCountry := web.DefaultQuery("nc", "")
 		proxySpeed := web.DefaultQuery("s", "")
-		proxyOnlyValid := web.DefaultQuery("v", "true")
+		proxyOnlyValid := web.DefaultQuery("v", "true") == "true"
 		allProxies := app.GetProxies("all")
-		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid == "true")
+		filterProxies := allProxies.Filter(proxyTypes, proxyNotTypes, proxyCountry, proxyNotCountry, proxySpeed, proxyOnlyValid)
 
 		web.String(200, proxy.V2rayToString(filterProxies))
 	})
@@ -363,6 +372,10 @@ func AssetNames() []string {
 		"assets/html/surge.conf",
 		"assets/html/surge.html",
 		"assets/static/index.js",
+		"assets/static/index.css",
+		"assets/static/darkstyles.css",
+		"assets/static/lightstyles.css",
+		"assets/static/metron-icon.css",
 	}
 	return _bindata
 }
