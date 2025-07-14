@@ -64,8 +64,11 @@ func xmlFunction(c *Crawl, s Sub) func(x *colly.XMLElement) {
 		switch s.Type {
 		case "url":
 			url := x.Attr("href")
-			if url == "javascript:;" {
+			if url == "javascript:;" || url == "#" || url == "" {
 				return
+			}
+			if url[0] == '/' {
+				url = c.Url + url
 			}
 			if s.Subs != nil {
 				// log.LogDebug("%v", s.Subs)
@@ -85,21 +88,17 @@ func xmlFunction(c *Crawl, s Sub) func(x *colly.XMLElement) {
 			}
 		case "clash":
 			innerHTML := x.Text
-			log.LogInfo(s.Type, s.Xpath, innerHTML)
+			log.LogInfo("Crawl-sub type: %s, path: %s, value: %s", s.Type, s.Xpath, innerHTML)
 			// log.LogDebug("%v", c.results)
-			// c.results.UniqAppendProxys((&Clash{Url: innerHTML}).Get())
 			c.results = append(c.results, (&Clash{Url: innerHTML}).Get()...)
-			// log.LogDebug("fin1")
 		case "subscribe":
 			innerHTML := x.Text
-			log.LogInfo(s.Type, s.Xpath, innerHTML)
+			log.LogInfo("Crawl-sub type: %s, path: %s, value: %s", s.Type, s.Xpath, innerHTML)
 			// log.LogDebug("%v", c.results)
-			// c.results.UniqAppendProxys((&Subscribe{Url: innerHTML}).Get())
 			c.results = append(c.results, (&Subscribe{Url: innerHTML}).Get()...)
-			// log.LogDebug("fin2")
 		case "fuzzy":
 			innerHTML := x.Text
-			// log.LogInfo(s.Type, s.Xpath, innerHTML)
+			log.LogInfo("Crawl-sub type: %s, path: %s, value: %s", s.Type, s.Xpath, innerHTML)
 			nodesString := strings.ReplaceAll(innerHTML, "\t", "")
 			nodes := strings.Split(nodesString, "\n")
 			c.results = append(c.results, StringArray2ProxyArray(nodes)...)
