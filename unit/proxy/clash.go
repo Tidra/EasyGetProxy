@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/Tidra/EasyGetProxy/unit/log"
@@ -22,8 +23,12 @@ func ExplodeClash(clash string) (ProxyList, error) {
 	if _, ok := yamlnode["proxies"]; ok {
 		section = "proxies"
 	}
+	nodes, ok := yamlnode[section].([]interface{})
+	if !ok {
+		return nil, errors.New("clash config proxies not found")
+	}
 
-	for _, v := range yamlnode[section].([]interface{}) {
+	for _, v := range nodes {
 		var proxyType, remark, server string // common
 		var port int                         // common
 		var udp, scv bool                    // common

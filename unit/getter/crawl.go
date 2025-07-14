@@ -98,7 +98,7 @@ func xmlFunction(c *Crawl, s Sub) func(x *colly.XMLElement) {
 			c.results = append(c.results, (&Subscribe{Url: innerHTML}).Get()...)
 		case "fuzzy":
 			innerHTML := x.Text
-			log.LogInfo("Crawl-sub type: %s, path: %s, value: %s", s.Type, s.Xpath, innerHTML)
+			log.LogInfo("Crawl-sub type: %s, path: %s, value: %s...", s.Type, s.Xpath, innerHTML[0:10])
 			nodesString := strings.ReplaceAll(innerHTML, "\t", "")
 			nodes := strings.Split(nodesString, "\n")
 			c.results = append(c.results, StringArray2ProxyArray(nodes)...)
