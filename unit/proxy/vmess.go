@@ -14,29 +14,34 @@ import (
 
 // Vmess 结构体实现 Proxy 接口
 type Vmess struct {
-	Group             string   `json:"group,omitempty"`
-	Name              string   `json:"name,omitempty"`
-	OriginName        string   `json:"-,omitempty"` // 原始名称
-	Server            string   `json:"server,omitempty"`
-	Port              int      `json:"port,omitempty"`
-	UUID              string   `json:"uuid,omitempty"`
-	AlterID           int      `json:"alterId,omitempty"`
-	Type              string   `json:"type,omitempty"` // 伪装类型
-	Cipher            string   `json:"cipher,omitempty"`
-	Network           string   `json:"network,omitempty"`
+	Group               string `json:"group,omitempty"`
+	Name                string `json:"name,omitempty"`
+	OriginName          string `json:"-,omitempty"` // 原始名称
+	Server              string `json:"server,omitempty"`
+	Port                int    `json:"port,omitempty"`
+	UDP                 bool   `json:"udp,omitempty"`
+	UUID                string `json:"uuid,omitempty"`
+	AlterID             int    `json:"alterId,omitempty"`
+	Type                string `json:"type,omitempty"` // 伪装类型
+	Cipher              string `json:"cipher,omitempty"`
+	PacketEncoding      string `json:"packet-encoding,omitempty"`
+	GlobalPadding       bool   `json:"global-padding,omitempty"`
+	AuthenticatedLength bool   `json:"authenticated-length,omitempty"`
+
+	TLSSecure         bool     `json:"tlsSecure,omitempty"`
 	ServerName        string   `json:"serverName,omitempty"`
 	Host              string   `json:"host,omitempty"`
 	Path              string   `json:"path,omitempty"`
-	TLSSecure         bool     `json:"tlsSecure,omitempty"`
-	UDP               bool     `json:"udp,omitempty"`
-	PacketEncoding    string   `json:"packetEncoding,omitempty"`
 	ALPN              []string `json:"alpn,omitempty"`
-	ClientFingerprint string   `json:"client-fingerprint,omitempty"`
 	Fingerprint       string   `json:"fingerprint,omitempty"`
-	SkipCertVerify    bool     `json:"skipCertVerify,omitempty"`
-	Country           string   `json:"country,omitempty"`
-	Speed             float64  `json:"speed,omitempty"`
-	IsValidFlag       bool     `json:"isValidFlag,omitempty"`
+	ClientFingerprint string   `json:"client-fingerprint,omitempty"`
+	SkipCertVerify    bool     `json:"skip-cert-verify,omitempty"`
+
+	Network string `json:"network,omitempty"`
+
+	Smux struct {
+		Enable bool `json:"enable,omitempty"`
+	} `json:"smux,omitempty"`
 
 	RealityOpts struct {
 		PublicKey string `json:"public-key,omitempty"`
@@ -66,6 +71,10 @@ type Vmess struct {
 	GRPCOpts struct {
 		ServiceName string `json:"serviceName,omitempty"`
 	} `json:"grpc-opts,omitempty"`
+
+	Country     string  `json:"country,omitempty"`
+	Speed       float64 `json:"speed,omitempty"`
+	IsValidFlag bool    `json:"isValidFlag,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法

@@ -51,6 +51,11 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			socks5Proxy.Port = port
 			socks5Proxy.Username = tool.SafeAsString(singleProxy, "username")
 			socks5Proxy.Password = tool.SafeAsString(singleProxy, "password")
+			socks5Proxy.TLSSecure = tool.SafeAsBool(singleProxy, "tls")
+			socks5Proxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+			socks5Proxy.SkipCertVerify = scv
+			socks5Proxy.UDP = udp
+			socks5Proxy.IpVersion = tool.SafeAsString(singleProxy, "ip-version")
 
 			proxy = socks5Proxy
 
@@ -73,6 +78,11 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			ssProxy.Server = server
 			ssProxy.Port = tool.SafeAsInt(singleProxy, "port")
 			ssProxy.Password = tool.SafeAsString(singleProxy, "password")
+			ssProxy.UDP = udp
+			ssProxy.UdpOverTCP = tool.SafeAsBool(singleProxy, "udp-over-tcp")
+			ssProxy.UdpOverTCPVersion = tool.SafeAsInt(singleProxy, "udp-over-tcp-version")
+			ssProxy.IpVersion = tool.SafeAsString(singleProxy, "ip-version")
+			ssProxy.Smux.Enable = tool.SafeAsBool(singleProxy, "smux", "enabled")
 
 			cipher := tool.SafeAsString(singleProxy, "cipher")
 			// support for go-shadowsocks2
@@ -175,14 +185,15 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			trojanProxy.Name = remark
 			trojanProxy.Server = server
 			trojanProxy.Port = port
-			trojanProxy.UDP = udp
-			trojanProxy.SkipCertVerify = scv
-
 			trojanProxy.Password = tool.SafeAsString(singleProxy, "password")
+			trojanProxy.UDP = udp
+
 			trojanProxy.SNI = tool.SafeAsString(singleProxy, "sni")
 			trojanProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
 			trojanProxy.ClientFingerprint = tool.SafeAsString(singleProxy, "client-fingerprint")
 			trojanProxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+			trojanProxy.SkipCertVerify = scv
+			trojanProxy.Smux.Enable = tool.SafeAsBool(singleProxy, "smux", "enabled")
 
 			if singleProxy["ss-opts"] != nil {
 				trojanProxy.SSOpts.Enabled = tool.SafeAsBool(singleProxy, "ss-opts", "enabled")
@@ -224,11 +235,16 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			vmessProxy.UUID = tool.SafeAsString(singleProxy, "uuid")
 			vmessProxy.AlterID = tool.SafeAsInt(singleProxy, "alterId")
 			vmessProxy.Cipher = tool.SafeAsString(singleProxy, "cipher")
-			vmessProxy.ServerName = tool.SafeAsString(singleProxy, "servername")
 			vmessProxy.PacketEncoding = tool.SafeAsString(singleProxy, "packet-encoding")
+			vmessProxy.GlobalPadding = tool.SafeAsBool(singleProxy, "global-padding")
+			vmessProxy.AuthenticatedLength = tool.SafeAsBool(singleProxy, "authenticated-length")
+
+			vmessProxy.TLSSecure = tool.SafeAsBool(singleProxy, "tls")
+			vmessProxy.ServerName = tool.SafeAsString(singleProxy, "servername")
 			vmessProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
-			vmessProxy.ClientFingerprint = tool.SafeAsString(singleProxy, "client-fingerprint")
 			vmessProxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+			vmessProxy.ClientFingerprint = tool.SafeAsString(singleProxy, "client-fingerprint")
+			vmessProxy.Smux.Enable = tool.SafeAsBool(singleProxy, "smux", "enabled")
 
 			if singleProxy["reality-opts"] != nil {
 				vmessProxy.RealityOpts.PublicKey = tool.SafeAsString(singleProxy, "reality-opts", "public-key")
@@ -285,8 +301,6 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			vmessProxy.Path = path
 			vmessProxy.Host = host
 
-			vmessProxy.TLSSecure = tool.SafeAsBool(singleProxy, "tls")
-
 			proxy = vmessProxy
 
 		case "vless":
@@ -305,6 +319,7 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			vlessProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
 			vlessProxy.ClientFingerprint = tool.SafeAsString(singleProxy, "client-fingerprint")
 			vlessProxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+			vlessProxy.Smux.Enable = tool.SafeAsBool(singleProxy, "smux", "enabled")
 
 			if vlessProxy.PacketEncoding = tool.SafeAsString(singleProxy, "packet-encoding"); vlessProxy.PacketEncoding == "xudp" {
 				vlessProxy.XUDP = true
@@ -347,7 +362,7 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			hysteriaProxy.Name = remark
 			hysteriaProxy.Server = server
 			hysteriaProxy.Port = port
-			hysteriaProxy.SkipCertVerify = scv
+			hysteriaProxy.Ports = tool.SafeAsString(singleProxy, "ports")
 
 			// 优先获取 auth_str，若为空则获取 auth-str
 			auth := tool.SafeAsString(singleProxy, "auth-str")
@@ -356,12 +371,20 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			}
 			hysteriaProxy.Auth = auth
 
+			hysteriaProxy.Obfs = tool.SafeAsString(singleProxy, "obfs")
+			hysteriaProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
+			hysteriaProxy.Protocol = tool.SafeAsString(singleProxy, "protocol")
 			hysteriaProxy.Up = tool.SafeAsString(singleProxy, "up")
 			hysteriaProxy.Down = tool.SafeAsString(singleProxy, "down")
 			hysteriaProxy.SNI = tool.SafeAsString(singleProxy, "sni")
-			hysteriaProxy.Protocol = tool.SafeAsString(singleProxy, "protocol")
-			hysteriaProxy.Obfs = tool.SafeAsString(singleProxy, "obfs")
-			hysteriaProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
+			hysteriaProxy.SkipCertVerify = scv
+			hysteriaProxy.RecvWindowConn = tool.SafeAsInt(singleProxy, "recv-window-conn")
+			hysteriaProxy.RecvWindow = tool.SafeAsInt(singleProxy, "recv-window")
+			hysteriaProxy.Ca = tool.SafeAsString(singleProxy, "ca")
+			hysteriaProxy.CaStr = tool.SafeAsString(singleProxy, "ca-str")
+			hysteriaProxy.DisableMTU = tool.SafeAsBool(singleProxy, "disable_mtu_discovery")
+			hysteriaProxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+			hysteriaProxy.FastOpen = tool.SafeAsBool(singleProxy, "fast-open")
 
 			proxy = hysteriaProxy
 
@@ -377,7 +400,7 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			hy2Proxy.Obfs = tool.SafeAsString(singleProxy, "obfs")
 			hy2Proxy.ObfsPassword = tool.SafeAsString(singleProxy, "obfs-password")
 			hy2Proxy.SNI = tool.SafeAsString(singleProxy, "sni")
-			hy2Proxy.Insecure = scv
+			hy2Proxy.SkipCertVerify = scv
 			hy2Proxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
 			hy2Proxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
 			hy2Proxy.Ca = tool.SafeAsString(singleProxy, "ca")
@@ -424,7 +447,15 @@ func ProxieToClash(node Proxy) map[string]any {
 		clashNode["port"] = socks5Node.Port
 		clashNode["username"] = socks5Node.Username
 		clashNode["password"] = socks5Node.Password
+		clashNode["tls"] = socks5Node.TLSSecure
+		if socks5Node.Fingerprint != "" {
+			clashNode["fingerprint"] = socks5Node.Fingerprint
+		}
 		clashNode["skip-cert-verify"] = socks5Node.SkipCertVerify
+		clashNode["udp"] = socks5Node.UDP
+		if socks5Node.IpVersion != "" {
+			clashNode["ip-version"] = socks5Node.IpVersion
+		}
 	case "http", "https":
 		httpNode := node.(*HTTPProxy)
 		clashNode["server"] = httpNode.Server
@@ -433,6 +464,16 @@ func ProxieToClash(node Proxy) map[string]any {
 		clashNode["password"] = httpNode.Password
 		clashNode["tls"] = httpNode.TLSSecure
 		clashNode["skip-cert-verify"] = httpNode.SkipCertVerify
+		if httpNode.SNI != "" {
+			clashNode["sni"] = httpNode.SNI
+		}
+		if httpNode.Fingerprint != "" {
+			clashNode["fingerprint"] = httpNode.Fingerprint
+		}
+		if httpNode.IpVersion != "" {
+			clashNode["ip-version"] = httpNode.IpVersion
+		}
+		clashNode["headers"] = httpNode.Headers
 	case "ss":
 		// TODO: 判断协议是否符合
 		ssNode := node.(*SSProxy)
@@ -440,6 +481,17 @@ func ProxieToClash(node Proxy) map[string]any {
 		clashNode["port"] = ssNode.Port
 		clashNode["cipher"] = ssNode.EncryptMethod
 		clashNode["password"] = ssNode.Password
+		clashNode["udp"] = ssNode.UDP
+		if ssNode.UDP {
+			clashNode["udp-over-tcp"] = ssNode.UdpOverTCP
+		}
+		if ssNode.UdpOverTCPVersion != 0 {
+			clashNode["udp-over-tcp-version"] = ssNode.UdpOverTCPVersion
+		}
+		if ssNode.IpVersion != "" {
+			clashNode["ip-version"] = ssNode.IpVersion
+		}
+
 		switch ssNode.Plugin.Name {
 		case "simple-obfs", "obfs-local":
 			clashNode["plugin"] = "obfs"
@@ -456,6 +508,12 @@ func ProxieToClash(node Proxy) map[string]any {
 			}
 			clashNode["plugin-opts"] = pluginOpts
 		}
+
+		if ssNode.Smux.Enable {
+			clashNode["smux"] = map[string]interface{}{
+				"enabled": ssNode.Smux.Enable,
+			}
+		}
 	case "ssr":
 		ssrNode := node.(*SSRProxy)
 		clashNode["server"] = ssrNode.Server
@@ -467,10 +525,11 @@ func ProxieToClash(node Proxy) map[string]any {
 			clashNode["cipher"] = ssrNode.EncryptMethod
 		}
 		clashNode["password"] = ssrNode.Password
-		clashNode["protocol"] = ssrNode.Protocol
 		clashNode["obfs"] = ssrNode.OBFS
-		clashNode["protocol-param"] = ssrNode.ProtocolParam
+		clashNode["protocol"] = ssrNode.Protocol
 		clashNode["obfs-param"] = ssrNode.OBFSParam
+		clashNode["protocol-param"] = ssrNode.ProtocolParam
+		clashNode["udp"] = ssrNode.UDP
 	case "trojan":
 		trojanNode := node.(*TrojanProxy)
 		clashNode["server"] = trojanNode.Server
@@ -478,12 +537,12 @@ func ProxieToClash(node Proxy) map[string]any {
 		clashNode["password"] = trojanNode.Password
 		clashNode["udp"] = trojanNode.UDP
 		clashNode["sni"] = trojanNode.SNI
-		clashNode["client-fingerprint"] = trojanNode.ClientFingerprint
-		clashNode["fingerprint"] = trojanNode.Fingerprint
-		clashNode["skip-cert-verify"] = trojanNode.SkipCertVerify
 		if len(trojanNode.ALPN) > 0 {
 			clashNode["alpn"] = trojanNode.ALPN
 		}
+		clashNode["client-fingerprint"] = trojanNode.ClientFingerprint
+		clashNode["fingerprint"] = trojanNode.Fingerprint
+		clashNode["skip-cert-verify"] = trojanNode.SkipCertVerify
 		if trojanNode.SSOpts.Method != "" {
 			r := map[string]interface{}{
 				"enabled": trojanNode.SSOpts.Enabled,
@@ -502,6 +561,11 @@ func ProxieToClash(node Proxy) map[string]any {
 				r["short-id"] = trojanNode.RealityOpts.ShortID
 			}
 			clashNode["reality-opts"] = r
+		}
+		if trojanNode.Smux.Enable {
+			clashNode["smux"] = map[string]interface{}{
+				"enabled": trojanNode.Smux.Enable,
+			}
 		}
 
 		clashNode["network"] = trojanNode.Network
@@ -532,18 +596,25 @@ func ProxieToClash(node Proxy) map[string]any {
 		vmessNode := node.(*Vmess)
 		clashNode["server"] = vmessNode.Server
 		clashNode["port"] = vmessNode.Port
+		clashNode["udp"] = vmessNode.UDP
 		clashNode["uuid"] = vmessNode.UUID
 		clashNode["alterId"] = vmessNode.AlterID
 		clashNode["cipher"] = vmessNode.Cipher
+		if vmessNode.PacketEncoding != "" {
+			clashNode["packet-encoding"] = vmessNode.PacketEncoding
+		}
+		clashNode["global-padding"] = vmessNode.GlobalPadding
+		clashNode["authenticated-length"] = vmessNode.AuthenticatedLength
+
 		clashNode["tls"] = vmessNode.TLSSecure
-		clashNode["udp"] = vmessNode.UDP
-		clashNode["skip-cert-verify"] = vmessNode.SkipCertVerify
 		clashNode["servername"] = vmessNode.ServerName
-		clashNode["client-fingerprint"] = vmessNode.ClientFingerprint
-		clashNode["fingerprint"] = vmessNode.Fingerprint
 		if len(vmessNode.ALPN) > 0 {
 			clashNode["alpn"] = vmessNode.ALPN
 		}
+		clashNode["fingerprint"] = vmessNode.Fingerprint
+		clashNode["client-fingerprint"] = vmessNode.ClientFingerprint
+		clashNode["skip-cert-verify"] = vmessNode.SkipCertVerify
+
 		if vmessNode.RealityOpts.PublicKey != "" {
 			r := map[string]interface{}{
 				"public-key": vmessNode.RealityOpts.PublicKey,
@@ -554,8 +625,10 @@ func ProxieToClash(node Proxy) map[string]any {
 			clashNode["reality-opts"] = r
 		}
 
-		if vmessNode.PacketEncoding != "" {
-			clashNode["packet-encoding"] = vmessNode.PacketEncoding
+		if vmessNode.Smux.Enable {
+			clashNode["smux"] = map[string]interface{}{
+				"enabled": vmessNode.Smux.Enable,
+			}
 		}
 
 		clashNode["network"] = vmessNode.Network
@@ -603,13 +676,17 @@ func ProxieToClash(node Proxy) map[string]any {
 		clashNode["packet-encoding"] = vlessNode.PacketEncoding
 		clashNode["tls"] = vlessNode.TLSSecure
 		clashNode["servername"] = vlessNode.SNI
+		if len(vlessNode.ALPN) > 0 {
+			clashNode["alpn"] = vlessNode.ALPN
+		}
 		clashNode["fingerprint"] = vlessNode.Fingerprint
 		clashNode["client-fingerprint"] = vlessNode.ClientFingerprint
 		clashNode["skip-cert-verify"] = vlessNode.SkipCertVerify
 		clashNode["network"] = vlessNode.Network
-		if len(vlessNode.ALPN) > 0 {
-			clashNode["alpn"] = vlessNode.ALPN
+		clashNode["smux"] = map[string]interface{}{
+			"enabled": vlessNode.Smux.Enable,
 		}
+
 		if vlessNode.RealityOpts.PublicKey != "" {
 			r := map[string]interface{}{
 				"public-key": vlessNode.RealityOpts.PublicKey,
@@ -660,24 +737,50 @@ func ProxieToClash(node Proxy) map[string]any {
 		hysteriaNode := node.(*HysteriaProxy)
 		clashNode["server"] = hysteriaNode.Server
 		clashNode["port"] = hysteriaNode.Port
+		if hysteriaNode.Ports != "" {
+			clashNode["ports"] = hysteriaNode.Ports
+		}
 		if hysteriaNode.Auth != "" {
 			clashNode["auth-str"] = hysteriaNode.Auth
 		}
-		clashNode["up"] = hysteriaNode.Up
-		clashNode["down"] = hysteriaNode.Down
-		clashNode["sni"] = hysteriaNode.SNI
 		if hysteriaNode.Obfs != "" {
 			clashNode["obfs"] = hysteriaNode.Obfs
 		}
 		if len(hysteriaNode.ALPN) > 0 {
 			clashNode["alpn"] = hysteriaNode.ALPN
 		}
-		// 根据 UDP 字段设置 protocol
 		if hysteriaNode.Protocol != "" {
 			clashNode["protocol"] = hysteriaNode.Protocol
 		}
-		clashNode["skip-cert-verify"] = hysteriaNode.SkipCertVerify
-
+		clashNode["up"] = hysteriaNode.Up
+		clashNode["down"] = hysteriaNode.Down
+		if hysteriaNode.SNI != "" {
+			clashNode["sni"] = hysteriaNode.SNI
+		}
+		if hysteriaNode.SkipCertVerify {
+			clashNode["skip-cert-verify"] = hysteriaNode.SkipCertVerify
+		}
+		if hysteriaNode.RecvWindowConn > 0 {
+			clashNode["recv-window-conn"] = hysteriaNode.RecvWindowConn
+		}
+		if hysteriaNode.RecvWindow > 0 {
+			clashNode["recv-window"] = hysteriaNode.RecvWindow
+		}
+		if hysteriaNode.Ca != "" {
+			clashNode["ca"] = hysteriaNode.Ca
+		}
+		if hysteriaNode.CaStr != "" {
+			clashNode["ca-str"] = hysteriaNode.CaStr
+		}
+		if hysteriaNode.DisableMTU {
+			clashNode["disable_mtu_discovery"] = hysteriaNode.DisableMTU
+		}
+		if hysteriaNode.Fingerprint != "" {
+			clashNode["fingerprint"] = hysteriaNode.Fingerprint
+		}
+		if hysteriaNode.FastOpen {
+			clashNode["fast-open"] = hysteriaNode.FastOpen
+		}
 	case "hysteria2":
 		hy2Node := node.(*Hy2Proxy)
 		clashNode["server"] = hy2Node.Server
@@ -695,8 +798,8 @@ func ProxieToClash(node Proxy) map[string]any {
 		if hy2Node.SNI != "" {
 			clashNode["sni"] = hy2Node.SNI
 		}
-		if hy2Node.Insecure {
-			clashNode["skip-cert-verify"] = hy2Node.Insecure
+		if hy2Node.SkipCertVerify {
+			clashNode["skip-cert-verify"] = hy2Node.SkipCertVerify
 		}
 		if len(hy2Node.ALPN) > 0 {
 			clashNode["alpn"] = hy2Node.ALPN

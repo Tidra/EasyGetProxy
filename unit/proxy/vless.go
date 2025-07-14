@@ -12,29 +12,32 @@ import (
 
 // VlessProxy vless 代理结构体
 type VlessProxy struct {
-	Group             string   `json:"group,omitempty"`
-	Name              string   `json:"name,omitempty"`
-	OriginName        string   `json:"-,omitempty"` // 原始名称
-	Server            string   `json:"server,omitempty"`
-	Port              int      `json:"port,omitempty"`
-	UUID              string   `json:"uuid,omitempty"`
-	Flow              string   `json:"flow,omitempty"`
-	Network           string   `json:"network,omitempty"`
-	Security          string   `json:"security,omitempty"`
+	Group          string `json:"group,omitempty"`
+	Name           string `json:"name,omitempty"`
+	OriginName     string `json:"-,omitempty"` // 原始名称
+	Server         string `json:"server,omitempty"`
+	Port           int    `json:"port,omitempty"`
+	UDP            bool   `json:"udp,omitempty"`
+	UUID           string `json:"uuid,omitempty"`
+	Flow           string `json:"flow,omitempty"`
+	PacketEncoding string `json:"packet-encoding,omitempty"`
+
 	TLSSecure         bool     `json:"tls,omitempty"`
 	SNI               string   `json:"sni,omitempty"`
 	ALPN              []string `json:"alpn,omitempty"`
-	Host              string   `json:"host,omitempty"`
-	UDP               bool     `json:"udp,omitempty"`
-	SkipCertVerify    bool     `json:"skip-cert-verify,omitempty"`
-	Country           string   `json:"country,omitempty"`
-	Speed             float64  `json:"speed,omitempty"`
-	IsValidFlag       bool     `json:"is-valid,omitempty"`
-	ClientFingerprint string   `json:"client-fingerprint,omitempty"`
 	Fingerprint       string   `json:"fingerprint,omitempty"`
+	ClientFingerprint string   `json:"client-fingerprint,omitempty"`
+	SkipCertVerify    bool     `json:"skip-cert-verify,omitempty"`
+	Security          string   `json:"security,omitempty"`
+	Host              string   `json:"host,omitempty"`
 	XUDP              bool     `json:"xudp,omitempty"`
-	PacketEncoding    string   `json:"packet-encoding,omitempty"` // 用于兼容旧版本的字段
 	Encryption        string   `json:"encryption,omitempty"`
+
+	Network string `json:"network,omitempty"`
+
+	Smux struct {
+		Enable bool `json:"enable,omitempty"`
+	} `json:"smux,omitempty"`
 
 	RealityOpts struct {
 		PublicKey string `json:"public-key,omitempty"`
@@ -64,6 +67,10 @@ type VlessProxy struct {
 	GRPCOpts struct {
 		ServiceName string `json:"serviceName,omitempty"`
 	} `json:"grpc-opts,omitempty"`
+
+	Country     string  `json:"country,omitempty"`
+	Speed       float64 `json:"speed,omitempty"`
+	IsValidFlag bool    `json:"is-valid,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法，返回代理类型

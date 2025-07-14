@@ -10,27 +10,29 @@ import (
 
 // Hy2Proxy hysteria 2 代理结构体
 type Hy2Proxy struct {
-	Group        string   `json:"group,omitempty"`
-	Name         string   `json:"name,omitempty"`
-	OriginName   string   `json:"-,omitempty"` // 原始名称
-	Server       string   `json:"server,omitempty"`
-	Port         int      `json:"port,omitempty"`
-	Ports        string   `json:"ports,omitempty"` // 备用端口列表
-	Auth         string   `json:"auth,omitempty"`
-	Up           string   `json:"up,omitempty"`   // 上行速度
-	Down         string   `json:"down,omitempty"` // 下行速度
-	Obfs         string   `json:"obfs,omitempty"`
-	ObfsPassword string   `json:"obfs-password,omitempty"`
-	SNI          string   `json:"sni,omitempty"`
-	Insecure     bool     `json:"insecure,omitempty"`
-	PinSHA256    string   `json:"pinSHA256,omitempty"`
-	Fingerprint  string   `json:"fingerprint,omitempty"` // 客户端指纹
-	ALPN         []string `json:"alpn,omitempty"`        // ALPN 列表
-	Ca           string   `json:"ca,omitempty"`          // CA 证书
-	CaStr        string   `json:"ca-str,omitempty"`      // CA 证书字符串
-	Country      string   `json:"country,omitempty"`
-	Speed        float64  `json:"speed,omitempty"`
-	IsValidFlag  bool     `json:"is-valid,omitempty"`
+	Group        string `json:"group,omitempty"`
+	Name         string `json:"name,omitempty"`
+	OriginName   string `json:"-,omitempty"` // 原始名称
+	Server       string `json:"server,omitempty"`
+	Port         int    `json:"port,omitempty"`
+	Ports        string `json:"ports,omitempty"` // 备用端口列表
+	Auth         string `json:"auth,omitempty"`
+	Up           string `json:"up,omitempty"`   // 上行速度
+	Down         string `json:"down,omitempty"` // 下行速度
+	Obfs         string `json:"obfs,omitempty"`
+	ObfsPassword string `json:"obfs-password,omitempty"`
+
+	SNI            string   `json:"sni,omitempty"`
+	SkipCertVerify bool     `json:"skip-cert-verify,omitempty"`
+	Fingerprint    string   `json:"fingerprint,omitempty"` // 客户端指纹
+	ALPN           []string `json:"alpn,omitempty"`        // ALPN 列表
+	Ca             string   `json:"ca,omitempty"`          // CA 证书
+	CaStr          string   `json:"ca-str,omitempty"`      // CA 证书字符串
+	PinSHA256      string   `json:"pinSHA256,omitempty"`
+
+	Country     string  `json:"country,omitempty"`
+	Speed       float64 `json:"speed,omitempty"`
+	IsValidFlag bool    `json:"is-valid,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法，返回代理类型
@@ -118,7 +120,7 @@ func (p *Hy2Proxy) ToString() string {
 	addParam("sni", p.SNI)
 	addParam("pinSHA256", p.PinSHA256)
 
-	if p.Insecure {
+	if p.SkipCertVerify {
 		params = append(params, "insecure=1")
 	}
 
@@ -150,17 +152,17 @@ func explodeHy2(proxyStr string) (Proxy, error) {
 	}
 
 	p := &Hy2Proxy{
-		Group:        query.Get("group"),
-		Name:         u.Fragment,
-		OriginName:   u.Fragment,
-		Server:       u.Hostname(),
-		Port:         port,
-		Auth:         u.User.Username(),
-		Obfs:         query.Get("obfs"),
-		ObfsPassword: query.Get("obfs-password"),
-		SNI:          query.Get("sni"),
-		Insecure:     cast.ToBool(query.Get("insecure")),
-		PinSHA256:    query.Get("pinSHA256"),
+		Group:          query.Get("group"),
+		Name:           u.Fragment,
+		OriginName:     u.Fragment,
+		Server:         u.Hostname(),
+		Port:           port,
+		Auth:           u.User.Username(),
+		Obfs:           query.Get("obfs"),
+		ObfsPassword:   query.Get("obfs-password"),
+		SNI:            query.Get("sni"),
+		SkipCertVerify: cast.ToBool(query.Get("insecure")),
+		PinSHA256:      query.Get("pinSHA256"),
 	}
 
 	return p, nil

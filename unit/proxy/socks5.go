@@ -10,19 +10,22 @@ import (
 
 // Socks5Proxy socks5 代理结构体
 type Socks5Proxy struct {
-	Group          string  `json:"group,omitempty"`
-	Name           string  `json:"name,omitempty"`
-	OriginName     string  `json:"-,omitempty"` // 原始名称
-	Server         string  `json:"server,omitempty"`
-	Port           int     `json:"port,omitempty"`
-	Username       string  `json:"username,omitempty"`
-	Password       string  `json:"password,omitempty"`
-	UDP            bool    `json:"udp,omitempty"`
-	TCPFastOpen    bool    `json:"tfo,omitempty"`
-	SkipCertVerify bool    `json:"skipCertVerify,omitempty"`
-	Country        string  `json:"country,omitempty"`
-	Speed          float64 `json:"speed,omitempty"`
-	IsValidFlag    bool    `json:"isValidFlag,omitempty"`
+	Group          string `json:"group,omitempty"`
+	Name           string `json:"name,omitempty"`
+	OriginName     string `json:"-,omitempty"` // 原始名称
+	Server         string `json:"server,omitempty"`
+	Port           int    `json:"port,omitempty"`
+	Username       string `json:"username,omitempty"`
+	Password       string `json:"password,omitempty"`
+	TLSSecure      bool   `json:"tls,omitempty"`
+	Fingerprint    string `json:"fingerprint,omitempty"`
+	SkipCertVerify bool   `json:"skipCertVerify,omitempty"`
+	UDP            bool   `json:"udp,omitempty"`
+	IpVersion      string `json:"ip-version,omitempty"`
+
+	Country     string  `json:"country,omitempty"`
+	Speed       float64 `json:"speed,omitempty"`
+	IsValidFlag bool    `json:"isValidFlag,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法

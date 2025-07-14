@@ -12,25 +12,30 @@ import (
 
 // SSProxy ss 代理结构体
 type SSProxy struct {
-	Group         string `json:"group,omitempty"`
-	Name          string `json:"name,omitempty"`
-	OriginName    string `json:"-,omitempty"` // 原始名称
-	Server        string `json:"server,omitempty"`
-	Port          int    `json:"port,omitempty"`
-	Password      string `json:"password,omitempty"`
-	EncryptMethod string `json:"encryptMethod,omitempty"`
-	Plugin        struct {
+	Group             string `json:"group,omitempty"`
+	Name              string `json:"name,omitempty"`
+	OriginName        string `json:"-,omitempty"` // 原始名称
+	Server            string `json:"server,omitempty"`
+	Port              int    `json:"port,omitempty"`
+	Password          string `json:"password,omitempty"`
+	EncryptMethod     string `json:"encryptMethod,omitempty"`
+	UDP               bool   `json:"udp,omitempty"`
+	UdpOverTCP        bool   `json:"udp-over-tcp,omitempty"`
+	UdpOverTCPVersion int    `json:"udp-over-tcp-version,omitempty"`
+	IpVersion         string `json:"ip-version,omitempty"`
+	Plugin            struct {
 		Name   string                 `json:"name,omitempty"`   // 插件名称
 		Params map[string]interface{} `json:"params,omitempty"` // 参数键值对
 		Raw    string                 `json:"raw,omitempty"`    // 原始插件字符串
 	} `json:"plugin,omitempty"`
-	UDP               bool    `json:"udp,omitempty"`
-	UdpOverTCP        bool    `json:"udp-over-tcp,omitempty"`
-	UdpOverTCPVersion int     `json:"udp-over-tcp-version,omitempty"`
-	ClientFingerprint string  `json:"client-fingerprint,omitempty"`
-	Country           string  `json:"country,omitempty"`
-	Speed             float64 `json:"speed,omitempty"`
-	IsValidFlag       bool    `json:"isValidFlag,omitempty"`
+	Smux struct {
+		Enable bool `json:"enable,omitempty"`
+	} `json:"smux,omitempty"`
+	ClientFingerprint string `json:"client-fingerprint,omitempty"`
+
+	Country     string  `json:"country,omitempty"`
+	Speed       float64 `json:"speed,omitempty"`
+	IsValidFlag bool    `json:"isValidFlag,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法

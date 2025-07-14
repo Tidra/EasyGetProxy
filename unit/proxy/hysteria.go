@@ -15,18 +15,27 @@ type HysteriaProxy struct {
 	OriginName     string   `json:"-,omitempty"` // 原始名称
 	Server         string   `json:"server,omitempty"`
 	Port           int      `json:"port,omitempty"`
+	Ports          string   `json:"ports,omitempty"`
 	Auth           string   `json:"auth,omitempty"`
-	SNI            string   `json:"sni,omitempty"`
-	Up             string   `json:"upmbps,omitempty"`
-	Down           string   `json:"downmbps,omitempty"`
 	ALPN           []string `json:"alpn,omitempty"`
 	Obfs           string   `json:"obfs,omitempty"`
 	ObfsParam      string   `json:"obfsParam,omitempty"`
 	Protocol       string   `json:"protocol,omitempty"`
+	Up             string   `json:"upmbps,omitempty"`
+	Down           string   `json:"downmbps,omitempty"`
+	SNI            string   `json:"sni,omitempty"`
 	SkipCertVerify bool     `json:"skip-cert-verify,omitempty"`
-	Country        string   `json:"country,omitempty"`
-	Speed          float64  `json:"speed,omitempty"`
-	IsValidFlag    bool     `json:"is-valid,omitempty"`
+	RecvWindowConn int      `json:"recv-window-conn,omitempty"`
+	RecvWindow     int      `json:"recv-window,omitempty"`
+	Ca             string   `json:"ca,omitempty"`
+	CaStr          string   `json:"ca-str,omitempty"`
+	DisableMTU     bool     `json:"disable_mtu_discovery,omitempty"`
+	Fingerprint    string   `json:"fingerprint,omitempty"`
+	FastOpen       bool     `json:"fast-open,omitempty"`
+
+	Country     string  `json:"country,omitempty"`
+	Speed       float64 `json:"speed,omitempty"`
+	IsValidFlag bool    `json:"is-valid,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法，返回代理类型

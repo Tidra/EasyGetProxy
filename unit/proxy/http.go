@@ -9,20 +9,23 @@ import (
 
 // HTTPProxy http 代理结构体
 type HTTPProxy struct {
-	Group          string  `json:"group,omitempty"`
-	Name           string  `json:"name,omitempty"`
-	OriginName     string  `json:"-,omitempty"` // 原始名称
-	Server         string  `json:"server,omitempty"`
-	Port           int     `json:"port,omitempty"`
-	Username       string  `json:"username,omitempty"`
-	Password       string  `json:"password,omitempty"`
-	TLSSecure      bool    `json:"tlsSecure,omitempty"`
-	UDP            bool    `json:"udp,omitempty"`
-	TCPFastOpen    bool    `json:"tfo,omitempty"`
-	SkipCertVerify bool    `json:"skipCertVerify,omitempty"`
-	Country        string  `json:"country,omitempty"`
-	Speed          float64 `json:"speed,omitempty"`
-	IsValidFlag    bool    `json:"isValidFlag,omitempty"`
+	Group          string                 `json:"group,omitempty"`
+	Name           string                 `json:"name,omitempty"`
+	OriginName     string                 `json:"-,omitempty"` // 原始名称
+	Server         string                 `json:"server,omitempty"`
+	Port           int                    `json:"port,omitempty"`
+	Username       string                 `json:"username,omitempty"`
+	Password       string                 `json:"password,omitempty"`
+	TLSSecure      bool                   `json:"tls,omitempty"`
+	SkipCertVerify bool                   `json:"skip-cert-verify,omitempty"`
+	SNI            string                 `json:"sni,omitempty"`
+	Fingerprint    string                 `json:"fingerprint,omitempty"`
+	IpVersion      string                 `json:"ip-version,omitempty"`
+	Headers        map[string]interface{} `json:"headers,omitempty"`
+
+	Country     string  `json:"country,omitempty"`
+	Speed       float64 `json:"speed,omitempty"`
+	IsValidFlag bool    `json:"isValidFlag,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法

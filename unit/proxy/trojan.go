@@ -12,24 +12,26 @@ import (
 
 // TrojanProxy trojan 代理结构体
 type TrojanProxy struct {
-	Group             string   `json:"group,omitempty"`
-	Name              string   `json:"name,omitempty"`
-	OriginName        string   `json:"-,omitempty"` // 原始名称
-	Server            string   `json:"server,omitempty"`
-	Port              int      `json:"port,omitempty"`
-	Password          string   `json:"password,omitempty"`
-	Network           string   `json:"network,omitempty"`
+	Group      string `json:"group,omitempty"`
+	Name       string `json:"name,omitempty"`
+	OriginName string `json:"-,omitempty"` // 原始名称
+	Server     string `json:"server,omitempty"`
+	Port       int    `json:"port,omitempty"`
+	Password   string `json:"password,omitempty"`
+	UDP        bool   `json:"udp,omitempty"`
+
 	SNI               string   `json:"host,omitempty"`
-	TLSSecure         bool     `json:"tls,omitempty"`
-	UDP               bool     `json:"udp,omitempty"`
-	TCPFastOpen       bool     `json:"tfo,omitempty"`
-	SkipCertVerify    bool     `json:"skip-cert-verify,omitempty"`
 	ALPN              []string `json:"alpn,omitempty"`
 	ClientFingerprint string   `json:"client-fingerprint,omitempty"`
-	Fingerprint       string   `json:"fingerprint,omitempty"` // 客户端指纹
-	Country           string   `json:"country,omitempty"`
-	Speed             float64  `json:"speed,omitempty"`
-	IsValidFlag       bool     `json:"is-valid,omitempty"`
+	Fingerprint       string   `json:"fingerprint,omitempty"`
+	SkipCertVerify    bool     `json:"skip-cert-verify,omitempty"`
+	TCPFastOpen       bool     `json:"tfo,omitempty"`
+
+	Network string `json:"network,omitempty"`
+
+	Smux struct {
+		Enable bool `json:"enable,omitempty"`
+	} `json:"smux,omitempty"`
 
 	SSOpts struct {
 		Enabled  bool   `json:"enabled,omitempty"`
@@ -54,6 +56,10 @@ type TrojanProxy struct {
 	GRPCOpts struct {
 		ServiceName string `json:"serviceName,omitempty"`
 	} `json:"grpc-opts,omitempty"`
+
+	Country     string  `json:"country,omitempty"`
+	Speed       float64 `json:"speed,omitempty"`
+	IsValidFlag bool    `json:"is-valid,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法
