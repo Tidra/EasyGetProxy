@@ -63,7 +63,7 @@ func xmlFunction(c *Crawl, s Sub) func(x *colly.XMLElement) {
 	return func(x *colly.XMLElement) {
 		switch s.Type {
 		case "url":
-			url := x.Attr("href")
+			url := strings.TrimSpace(x.Attr("href"))
 			if url == "javascript:;" || url == "#" || url == "" {
 				return
 			}
