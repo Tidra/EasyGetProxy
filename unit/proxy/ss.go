@@ -12,21 +12,25 @@ import (
 
 // SSProxy ss 代理结构体
 type SSProxy struct {
-	Group          string  `json:"group,omitempty"`
-	Name           string  `json:"name,omitempty"`
-	Server         string  `json:"server,omitempty"`
-	Port           int     `json:"port,omitempty"`
-	Password       string  `json:"password,omitempty"`
-	EncryptMethod  string  `json:"encryptMethod,omitempty"`
-	Plugin         string  `json:"plugin,omitempty"`
-	PluginOption   string  `json:"pluginOption,omitempty"`
-	UDP            bool    `json:"udp,omitempty"`
-	TCPFastOpen    bool    `json:"tfo,omitempty"`
-	SkipCertVerify bool    `json:"skipCertVerify,omitempty"`
-	Country        string  `json:"country,omitempty"`
-	Speed          float64 `json:"speed,omitempty"`
-	IsValidFlag    bool    `json:"isValidFlag,omitempty"`
-	OriginName     string  `json:"-,omitempty"` // 原始名称
+	Group         string `json:"group,omitempty"`
+	Name          string `json:"name,omitempty"`
+	OriginName    string `json:"-,omitempty"` // 原始名称
+	Server        string `json:"server,omitempty"`
+	Port          int    `json:"port,omitempty"`
+	Password      string `json:"password,omitempty"`
+	EncryptMethod string `json:"encryptMethod,omitempty"`
+	Plugin        struct {
+		Name   string                 `json:"name,omitempty"`   // 插件名称
+		Params map[string]interface{} `json:"params,omitempty"` // 参数键值对
+		Raw    string                 `json:"raw,omitempty"`    // 原始插件字符串
+	} `json:"plugin,omitempty"`
+	UDP               bool    `json:"udp,omitempty"`
+	UdpOverTCP        bool    `json:"udp-over-tcp,omitempty"`
+	UdpOverTCPVersion int     `json:"udp-over-tcp-version,omitempty"`
+	ClientFingerprint string  `json:"client-fingerprint,omitempty"`
+	Country           string  `json:"country,omitempty"`
+	Speed             float64 `json:"speed,omitempty"`
+	IsValidFlag       bool    `json:"isValidFlag,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法
@@ -49,6 +53,9 @@ func (s *SSProxy) GetOriginName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
 func (s *SSProxy) SetName(name string) {
+	if s.OriginName == "" {
+		s.OriginName = s.Name // 保存原始名称
+	}
 	s.Name = name
 }
 
@@ -90,8 +97,8 @@ func (s *SSProxy) GetIdentifier() string {
 // ToString 实现 Proxy 接口的 ToString 方法，将 ss 代理转换为 ss 链接
 func (s *SSProxy) ToString() string {
 	proxyStr := "ss://" + tool.Base64EncodeString(s.EncryptMethod+":"+s.Password) + "@" + s.Server + ":" + cast.ToString(s.Port)
-	if s.Plugin != "" && s.PluginOption != "" {
-		proxyStr += "/?plugin=" + url.QueryEscape(s.Plugin+";"+s.PluginOption)
+	if s.Plugin.Raw != "" {
+		proxyStr += "/?plugin=" + s.Plugin.Raw
 	}
 	if s.Name != "" {
 		proxyStr += "#" + url.QueryEscape(s.Name)
@@ -103,7 +110,7 @@ func (s *SSProxy) ToString() string {
 func (s *SSProxy) ToStringWithParam(param string) string {
 	if param == "ssr" {
 		// 判断是否符合协议
-		if tool.Contains(SsrCiphers, s.EncryptMethod) && s.Plugin == "" {
+		if tool.Contains(SsrCiphers, s.EncryptMethod) && s.Plugin.Name == "" {
 			baseStr := fmt.Sprintf("%s:%d:origin:%s:plain:%s",
 				s.Server,
 				s.Port,
@@ -131,23 +138,10 @@ func (s *SSProxy) ToStringWithParam(param string) string {
 	return s.ToString()
 }
 
-// ssConstruct 构造 ss 代理
-func (s *SSProxy) ssConstruct(group, remarks, server, port, password, method, plugin string,
-	pluginopts string) {
-	s.Group = group
-	s.Name = remarks
-	s.OriginName = remarks // 保存原始名称
-	s.Server = server
-	s.Port = cast.ToInt(port)
-	s.Password = password
-	s.EncryptMethod = method
-	s.Plugin = plugin
-	s.PluginOption = pluginopts
-}
-
 // explodeSS 解析 ss 代理链接
 func explodeSS(ss string) (Proxy, error) {
-	var password, method, server, port, plugin, pluginOpts string
+	var password, method, server, port, pluginRaw string
+
 	u, err := url.Parse(ss)
 	if err != nil {
 		return nil, fmt.Errorf("解析 URL 失败: %w", err)
@@ -186,17 +180,42 @@ func explodeSS(ss string) (Proxy, error) {
 	}
 	server = u.Hostname()
 	port = u.Port()
-	plugins := tool.GetUrlArg(u.RawQuery, "plugin")
+	pluginRaw = tool.GetUrlArg(u.RawQuery, "plugin")
 
-	if pluginpos := strings.Index(plugins, ";"); pluginpos > 0 {
-		plugin = plugins[:pluginpos]
-		pluginOpts = plugins[pluginpos+1:]
+	plugin := ""
+	pluginOpts := make(map[string]interface{})
+	if parts := strings.Split(pluginRaw, ";"); len(parts) > 0 {
+		plugin = parts[0]
+		for _, kv := range parts[1:] {
+
+			pair := strings.SplitN(kv, "=", 2)
+			if len(pair) == 2 {
+				pluginOpts[pair[0]] = pair[1]
+			} else {
+				pluginOpts[pair[0]] = true
+			}
+		}
 	} else {
-		plugin = plugins
+		plugin = pluginRaw
 	}
 
 	// 构造节点
-	proxy := &SSProxy{}
-	proxy.ssConstruct("ss_group", remarks, server, port, password, method, plugin, pluginOpts)
+	proxy := &SSProxy{
+		Group:         "ss",
+		Name:          remarks,
+		Server:        server,
+		Port:          cast.ToInt(port),
+		Password:      password,
+		EncryptMethod: method,
+		Plugin: struct {
+			Name   string                 `json:"name,omitempty"`   // 插件名称
+			Params map[string]interface{} `json:"params,omitempty"` // 参数键值对
+			Raw    string                 `json:"raw,omitempty"`    // 原始插件字符串
+		}{
+			Name:   plugin,
+			Params: pluginOpts,
+			Raw:    pluginRaw,
+		},
+	}
 	return proxy, nil
 }

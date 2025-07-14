@@ -12,23 +12,48 @@ import (
 
 // TrojanProxy trojan 代理结构体
 type TrojanProxy struct {
-	Group            string  `json:"group,omitempty"`
-	Name             string  `json:"name,omitempty"`
-	Server           string  `json:"server,omitempty"`
-	Port             int     `json:"port,omitempty"`
-	Password         string  `json:"password,omitempty"`
-	TransferProtocol string  `json:"network,omitempty"`
-	Host             string  `json:"host,omitempty"`
-	Path             string  `json:"path,omitempty"`
-	TLSSecure        bool    `json:"tls,omitempty"`
-	UDP              bool    `json:"udp,omitempty"`
-	TCPFastOpen      bool    `json:"tfo,omitempty"`
-	SkipCertVerify   bool    `json:"skip-cert-verify,omitempty"`
-	TLS13            bool    `json:"tls13,omitempty"`
-	Country          string  `json:"country,omitempty"`
-	Speed            float64 `json:"speed,omitempty"`
-	IsValidFlag      bool    `json:"is-valid,omitempty"`
-	OriginName       string  `json:"-,omitempty"` // 原始名称
+	Group             string   `json:"group,omitempty"`
+	Name              string   `json:"name,omitempty"`
+	OriginName        string   `json:"-,omitempty"` // 原始名称
+	Server            string   `json:"server,omitempty"`
+	Port              int      `json:"port,omitempty"`
+	Password          string   `json:"password,omitempty"`
+	Network           string   `json:"network,omitempty"`
+	SNI               string   `json:"host,omitempty"`
+	TLSSecure         bool     `json:"tls,omitempty"`
+	UDP               bool     `json:"udp,omitempty"`
+	TCPFastOpen       bool     `json:"tfo,omitempty"`
+	SkipCertVerify    bool     `json:"skip-cert-verify,omitempty"`
+	ALPN              []string `json:"alpn,omitempty"`
+	ClientFingerprint string   `json:"client-fingerprint,omitempty"`
+	Fingerprint       string   `json:"fingerprint,omitempty"` // 客户端指纹
+	Country           string   `json:"country,omitempty"`
+	Speed             float64  `json:"speed,omitempty"`
+	IsValidFlag       bool     `json:"is-valid,omitempty"`
+
+	SSOpts struct {
+		Enabled  bool   `json:"enabled,omitempty"`
+		Method   string `json:"method,omitempty"`
+		Password string `json:"password,omitempty"`
+	} `json:"ss-opts,omitempty"`
+
+	RealityOpts struct {
+		PublicKey string `json:"public-key,omitempty"`
+		ShortID   string `json:"short-id,omitempty"`
+	} `json:"reality-opts,omitempty"`
+
+	WSOpts struct {
+		Path                     string                 `json:"path,omitempty"`
+		Headers                  map[string]interface{} `json:"headers,omitempty"`
+		MaxEarlyData             int                    `json:"max-early-data,omitempty"`               // 最大早期数据
+		EarlyDataHeaderName      string                 `json:"early-data-header-name,omitempty"`       // 早期数据头名称
+		V2rayHttpUpgrade         bool                   `json:"v2ray-http-upgrade,omitempty"`           // 是否使用 v2ray 的 HTTP 升级
+		V2rayHttpUpgradeFastOpen bool                   `json:"v2ray-http-upgrade-fast-open,omitempty"` // 是否使用 v2ray 的 HTTP 升级快速打开
+	} `json:"ws-opts,omitempty"`
+
+	GRPCOpts struct {
+		ServiceName string `json:"serviceName,omitempty"`
+	} `json:"grpc-opts,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法
@@ -43,6 +68,9 @@ func (t *TrojanProxy) GetName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
 func (t *TrojanProxy) SetName(name string) {
+	if t.OriginName == "" {
+		t.OriginName = t.Name // 保存原始名称
+	}
 	t.Name = name
 }
 
@@ -97,45 +125,20 @@ func (t *TrojanProxy) ToString() string {
 	} else {
 		proxyStr += "?allowInsecure=0"
 	}
-	if t.Host != "" {
-		proxyStr += "&sni=" + t.Host
+	if t.SNI != "" {
+		proxyStr += "&sni=" + t.SNI
 	}
-	if t.TransferProtocol == "ws" {
+	if t.Network == "ws" {
 		proxyStr += "&ws=1"
-		if t.Path != "" {
-			proxyStr += "&wspath=" + url.QueryEscape(t.Path)
+		if t.WSOpts.Path != "" {
+			proxyStr += "&wspath=" + url.QueryEscape(t.WSOpts.Path)
 		}
+	}
+	if len(t.ALPN) > 0 {
+		proxyStr += "&alpn=" + url.QueryEscape(strings.Join(t.ALPN, ","))
 	}
 	proxyStr += "#" + url.QueryEscape(t.Name)
 	return proxyStr
-}
-
-// trojanConstruct 构造 trojan 代理
-func (t *TrojanProxy) trojanConstruct(group, name, server, port, password, network, host,
-	path string, tlsSecure bool, udp, tfo, skipCertVerify *bool) {
-	t.Group = group
-	t.Name = name
-	t.OriginName = name // 保存原始名称
-	t.Server = server
-	t.Port = cast.ToInt(port)
-	t.Password = password
-	t.Host = host
-	t.TLSSecure = tlsSecure
-	if network == "" {
-		t.TransferProtocol = "tcp"
-	} else {
-		t.TransferProtocol = network
-	}
-	t.Path = path
-	if udp != nil {
-		t.UDP = *udp
-	}
-	if tfo != nil {
-		t.TCPFastOpen = *tfo
-	}
-	if skipCertVerify != nil {
-		t.SkipCertVerify = *skipCertVerify
-	}
 }
 
 // explodeTrojan 解析 trojan 代理链接
@@ -188,7 +191,33 @@ func explodeTrojan(trojan string) (Proxy, error) {
 	}
 
 	// 构造节点
-	proxy := &TrojanProxy{}
-	proxy.trojanConstruct("trojan_group", remark, server, port, psk, network, host, path, true, nil, &tfo, &scv)
+	proxy := &TrojanProxy{
+		Group:      "trojan_group",
+		Name:       remark,
+		OriginName: remark, // 保存原始名称
+		Server:     server,
+		Port:       cast.ToInt(port),
+		Password:   psk,
+		Network:    network,
+		SNI:        host,
+		WSOpts: struct {
+			Path                     string                 `json:"path,omitempty"`
+			Headers                  map[string]interface{} `json:"headers,omitempty"`
+			MaxEarlyData             int                    `json:"max-early-data,omitempty"`               // 最大早期数据
+			EarlyDataHeaderName      string                 `json:"early-data-header-name,omitempty"`       // 早期数据头名称
+			V2rayHttpUpgrade         bool                   `json:"v2ray-http-upgrade,omitempty"`           // 是否使用 v2ray 的 HTTP 升级
+			V2rayHttpUpgradeFastOpen bool                   `json:"v2ray-http-upgrade-fast-open,omitempty"` // 是否使用 v2ray 的 HTTP 升级快速打开
+		}{
+			Path: path,
+		},
+		TCPFastOpen:    tfo,
+		SkipCertVerify: scv,
+	}
+
+	alpn := tool.GetUrlArg(addition, "alpn")
+	if alpn != "" {
+		proxy.ALPN = strings.Split(alpn, ",")
+	}
+
 	return proxy, nil
 }

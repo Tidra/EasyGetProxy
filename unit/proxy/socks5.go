@@ -12,6 +12,7 @@ import (
 type Socks5Proxy struct {
 	Group          string  `json:"group,omitempty"`
 	Name           string  `json:"name,omitempty"`
+	OriginName     string  `json:"-,omitempty"` // 原始名称
 	Server         string  `json:"server,omitempty"`
 	Port           int     `json:"port,omitempty"`
 	Username       string  `json:"username,omitempty"`
@@ -22,7 +23,6 @@ type Socks5Proxy struct {
 	Country        string  `json:"country,omitempty"`
 	Speed          float64 `json:"speed,omitempty"`
 	IsValidFlag    bool    `json:"isValidFlag,omitempty"`
-	OriginName     string  `json:"-,omitempty"` // 原始名称
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法
@@ -37,6 +37,9 @@ func (s *Socks5Proxy) GetName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
 func (s *Socks5Proxy) SetName(name string) {
+	if s.OriginName == "" {
+		s.OriginName = s.Name // 保存原始名称
+	}
 	s.Name = name
 }
 
@@ -96,17 +99,6 @@ func (s *Socks5Proxy) ToString() string {
 	return proxyStr
 }
 
-// socks5Construct 构造 socks5 代理
-func (s *Socks5Proxy) socks5Construct(group, remarks, server, port, username, password string) {
-	s.Group = group
-	s.Name = remarks
-	s.OriginName = remarks // 保存原始名称
-	s.Server = server
-	s.Port = cast.ToInt(port)
-	s.Username = username
-	s.Password = password
-}
-
 // explodeSocks5 解析 socks5 代理链接
 func explodeSocks5(socks5URL string) (Proxy, error) {
 	u, err := url.Parse(socks5URL)
@@ -118,7 +110,6 @@ func explodeSocks5(socks5URL string) (Proxy, error) {
 		return nil, errors.New("不是有效的 socks5 链接")
 	}
 
-	group := "socks5_group"
 	remarks := u.Fragment
 	server := u.Hostname()
 	port := u.Port()
@@ -130,7 +121,14 @@ func explodeSocks5(socks5URL string) (Proxy, error) {
 	}
 
 	// 构造节点
-	proxy := &Socks5Proxy{}
-	proxy.socks5Construct(group, remarks, server, port, username, password)
+	proxy := &Socks5Proxy{
+		Group:      "socks5_group",
+		Name:       remarks,
+		OriginName: remarks, // 保存原始名称
+		Server:     server,
+		Port:       cast.ToInt(port),
+		Username:   username,
+		Password:   password,
+	}
 	return proxy, nil
 }

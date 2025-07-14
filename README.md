@@ -24,7 +24,7 @@
 
 ## 支持
 
-- 支持ss、ssr、vmess、trojan多种类型
+- 支持ss、ssr、vmess、trojan等多种类型
 - 订阅地址抓取解析
 - 公开互联网页面模糊抓取
 - 定时抓取自动更新
@@ -34,27 +34,29 @@
 
 ### 支持协议列表
 
-| 序号 | 协议类型 | 支持 |
-|:----:|:--------:|:---:|
-| 1 | http | √ |
-| 2 | socks5 | √ |
-| 3 | ss | √ |
-| 4 | ssr | √ |
-| 5 | vmess | √ |
-| 6 | trojan | √ |
-| 7 | vless | √ |
-| 8 | hysteria | √ |
-| 9 | hysteria2 | √ |
-| 10 | snell | √ |
+| 序号 | 协议类型 | <v1.0.0 支持 | v1.0.0+ 支持 |
+|:----:|:--------:|:----------:|:------------:| 
+| 1 | http | √ | √ | 
+| 2 | socks5 | √ | √ |
+| 3 | ss | √ | √ |
+| 4 | ssr | √ | √ |
+| 5 | vmess | √ | √ |
+| 6 | trojan | √ | √ |
+| 7 | vless | x | √ |
+| 8 | hysteria | x | √ |
+| 9 | hysteria2 | x | √ |
+| 10 | snell | x | √ | 
 
 ## 待办
 
-- [ ] 从数据库读取缓存信息
 - [x] 增加信息源获取方式
 - [x] 提供surge配置文件
 - [x] 更改网页页面
 - [x] snell、vless支持
 - [x] 提供ss、ssr、vmess、sip002、surge订阅
+- [ ] 从数据库读取缓存信息
+- [ ] 提供sing-box订阅支持
+
 
 ## 安装
 
@@ -184,7 +186,7 @@ localcheck:
 # ==== 测速 ==== #
 speedtest: 
   url:                      # default https://speed.cloudflare.com/__down?bytes=5242880
-  is-used: true             # default false. Warning: this will consume large network resources.
+  is-used:                  # default false. Warning: this will consume large network resources.
   interval:                 # default 720 (min)
   timeout:                  # default 10 (seconds).
   max-conn:                 # default 5. The number of speed test connections simultaneously

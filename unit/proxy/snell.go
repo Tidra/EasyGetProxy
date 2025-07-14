@@ -12,6 +12,7 @@ import (
 type SnellProxy struct {
 	Group          string  `json:"group,omitempty"`
 	Name           string  `json:"name,omitempty"`
+	OriginName     string  `json:"-,omitempty"` // 原始名称
 	Server         string  `json:"server,omitempty"`
 	Port           int     `json:"port,omitempty"`
 	PSK            string  `json:"psk,omitempty"`
@@ -23,7 +24,6 @@ type SnellProxy struct {
 	Country        string  `json:"country,omitempty"`
 	Speed          float64 `json:"speed,omitempty"`
 	IsValidFlag    bool    `json:"is-valid,omitempty"`
-	OriginName     string  `json:"-,omitempty"` // 原始名称
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法，返回代理类型
@@ -38,6 +38,9 @@ func (p *SnellProxy) GetName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
 func (p *SnellProxy) SetName(name string) {
+	if p.OriginName == "" {
+		p.OriginName = p.Name // 保存原始名称
+	}
 	p.Name = name
 }
 
@@ -130,21 +133,19 @@ func explodeSnell(proxyStr string) (Proxy, error) {
 		return nil, fmt.Errorf("端口转换失败: %w", err)
 	}
 
-	udp := cast.ToBool(query.Get("udp"))
-	scv := cast.ToBool(query.Get("insecure"))
-
-	p := &SnellProxy{}
-	p.Group = query.Get("group")
-	p.Name = u.Fragment
-	p.OriginName = u.Fragment
-	p.Server = u.Hostname()
-	p.Port = port
-	p.PSK = u.User.Username()
-	p.Version = cast.ToInt(query.Get("version"))
-	p.Obfs = query.Get("obfs")
-	p.ObfsParam = query.Get("obfs-param")
-	p.UDP = udp
-	p.SkipCertVerify = scv
+	p := &SnellProxy{
+		Group:          "snell_group",
+		Name:           u.Fragment,
+		OriginName:     u.Fragment, // 保存原始名称
+		Server:         u.Hostname(),
+		Port:           port,
+		PSK:            u.User.Username(),
+		Version:        cast.ToInt(query.Get("version")),
+		Obfs:           query.Get("obfs"),
+		ObfsParam:      query.Get("obfs-param"),
+		UDP:            cast.ToBool(query.Get("udp")),
+		SkipCertVerify: cast.ToBool(query.Get("insecure")),
+	}
 
 	return p, nil
 }

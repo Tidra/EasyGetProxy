@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -25,54 +26,132 @@ func GetUrlArg(args string, key string) string {
 	return values.Get(key)
 }
 
-func SafeAsString(m map[string]interface{}, keys ...string) string {
-	var current interface{} = m
-	for _, key := range keys {
-		if v, ok := current.(map[string]interface{}); ok {
-			if val, ok := v[key]; ok {
-				switch s := val.(type) {
-				case string:
-					return strings.TrimSpace(s)
-				case float64:
-					return fmt.Sprintf("%.0f", s)
-				case int:
-					return fmt.Sprintf("%d", s)
-				}
+// getNestedValue 根据提供的键序列在嵌套 map 中查找对应的值
+func getNestedValue(m map[string]any, keys ...string) any {
+	current := m
+	for i, key := range keys {
+		val, ok := current[key]
+		if !ok {
+			return nil
+		}
+		// 如果不是最后一个键，且值是 map 类型，则继续深入查找
+		if i < len(keys)-1 {
+			if nextMap, ok := val.(map[string]any); ok {
+				current = nextMap
+			} else {
+				return nil
 			}
+		} else {
+			// 最后一个键，返回对应的值
+			return val
 		}
 	}
+	return current
+}
 
+func SafeAsString(m map[string]interface{}, keys ...string) string {
+	var val = getNestedValue(m, keys...)
+	switch s := val.(type) {
+	case string:
+		return strings.TrimSpace(s)
+	case float64:
+		return fmt.Sprintf("%.0f", s)
+	case int:
+		return fmt.Sprintf("%d", s)
+	case []string:
+		return strings.Join(s, ",")
+		// default:
+		// 	// 如果不是字符串类型，尝试将其转换为字符串
+		// 	return fmt.Sprintf("%v", s)
+	}
 	return ""
 }
 
 func SafeAsBool(m map[string]interface{}, keys ...string) bool {
-	var current interface{} = m
-	for _, key := range keys {
-		if v, ok := current.(map[string]interface{}); ok {
-			if val, ok := v[key]; ok {
-				if boolVal, ok := val.(bool); ok {
-					return boolVal
-				}
-			}
+	var val = getNestedValue(m, keys...)
+	switch val := val.(type) {
+	case string:
+		if boolVal, err := strconv.ParseBool(val); err == nil {
+			return boolVal
 		}
+	case bool:
+		return val
+	case float64:
+		return val > 0
+	case int:
+		return val > 0
 	}
 
 	return false
 }
 
 func SafeAsInt(m map[string]interface{}, keys ...string) int {
-	var current interface{} = m
-	for _, key := range keys {
-		if v, ok := current.(map[string]interface{}); ok {
-			if val, ok := v[key]; ok {
-				if intVal, ok := val.(int); ok {
-					return intVal
-				}
-			}
+	var val = getNestedValue(m, keys...)
+	switch s := val.(type) {
+	case string:
+		if intVal, err := strconv.Atoi(s); err == nil {
+			return intVal
 		}
+	case float64:
+		return int(s)
+	case int:
+		return s
 	}
 
 	return 0
+}
+
+// 转换为字段
+func SafeAsMap(m map[string]interface{}, keys ...string) map[string]interface{} {
+	var val = getNestedValue(m, keys...)
+	if mapVal, ok := val.(map[string]interface{}); ok {
+		return mapVal
+	}
+	return nil
+}
+
+// 转换为字符串字典
+func SafeAsStringMap(m map[string]interface{}, keys ...string) map[string]string {
+	var val = getNestedValue(m, keys...)
+	if mapVal, ok := val.(map[string]interface{}); ok {
+		result := make(map[string]string)
+		for k, v := range mapVal {
+			switch v := v.(type) {
+			case string:
+				result[k] = strings.TrimSpace(v)
+			case float64:
+				result[k] = fmt.Sprintf("%.0f", v)
+			case int:
+				result[k] = fmt.Sprintf("%d", v)
+			default:
+				// 如果不是字符串类型，尝试将其转换为字符串
+				result[k] = fmt.Sprintf("%v", v)
+			}
+		}
+		return result
+	}
+
+	return nil
+}
+
+// 转换为字符串数组
+func SafeAsStringArray(m map[string]interface{}, keys ...string) []string {
+	var val = getNestedValue(m, keys...)
+	switch s := val.(type) {
+	case []string:
+		return s
+	case string:
+		return []string{s}
+	case []interface{}:
+		var arr []string
+		for _, i := range s {
+			if str, ok := i.(string); ok {
+				arr = append(arr, str)
+			}
+		}
+		return arr
+	}
+	return nil
 }
 
 func Contains(arr []string, key string) bool {

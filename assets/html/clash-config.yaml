@@ -199,7 +199,7 @@ proxy-providers:
       url: {{ .delaydheck_url }}
   others:
     type: http
-    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?{{ .proxy_after_value }}c=CN,HK,TW,US,CA,JP,SG,AU,CH,DE,GB,NL,FR,RU"
+    url: "{{ .scheme }}://{{ .domain }}/clash/proxies?{{ .proxy_after_value }}nc=CN,HK,TW,US,CA,JP,SG,AU,CH,DE,GB,NL,FR,RU"
     path: ./providers/provider-others.yaml
     health-check:
       enable: true

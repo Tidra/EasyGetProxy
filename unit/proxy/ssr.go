@@ -44,6 +44,9 @@ func (s *SSRProxy) GetName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
 func (s *SSRProxy) SetName(name string) {
+	if s.OriginName == "" {
+		s.OriginName = s.Name // 保存原始名称
+	}
 	s.Name = name
 }
 
@@ -140,28 +143,9 @@ func (s *SSRProxy) ToStringWithParam(param string) string {
 	}
 }
 
-// ssrConstruct 构造 ssr 代理
-func (s *SSRProxy) ssrConstruct(group, name, server, port, protocol, method,
-	obfs, password, obfsparam, protoparam string, udp *bool) {
-	s.Group = group
-	s.Name = name
-	s.OriginName = name // 保存原始名称
-	s.Server = server
-	s.Port = cast.ToInt(port)
-	s.Password = password
-	s.EncryptMethod = method
-	s.Protocol = protocol
-	s.ProtocolParam = protoparam
-	s.OBFS = obfs
-	s.OBFSParam = obfsparam
-	if udp != nil {
-		s.UDP = *udp
-	}
-}
-
 // explodeSSR 解析 ssr 代理链接
 func explodeSSR(ssr string) (Proxy, error) {
-	var remarks, group, server, port, method, password, protocol, protoparam, obfs, obfsparam string
+	var remarks, server, port, method, password, protocol, protoparam, obfs, obfsparam string
 	var udp bool
 
 	if !strings.HasPrefix(ssr, "ssr://") {
@@ -178,10 +162,6 @@ func explodeSSR(ssr string) (Proxy, error) {
 		paramStr = ssr[strings.Index(ssr, "/?")+2:]
 		ssr = ssr[:strings.Index(ssr, "/?")]
 
-		group, err = tool.Base64DecodeString(tool.GetUrlArg(paramStr, "group"))
-		if err != nil {
-			return nil, fmt.Errorf("解析 group 参数失败: %w", err)
-		}
 		remarks, err = tool.Base64DecodeString(tool.GetUrlArg(paramStr, "remarks"))
 		if err != nil {
 			return nil, fmt.Errorf("解析 remarks 参数失败: %w", err)
@@ -212,9 +192,6 @@ func explodeSSR(ssr string) (Proxy, error) {
 	if port == "0" {
 		return nil, errors.New("ssr 端口不能为 0")
 	}
-	if group == "" {
-		group = "ssr_group"
-	}
 	if remarks == "" {
 		remarks = server + ":" + port
 	}
@@ -229,7 +206,19 @@ func explodeSSR(ssr string) (Proxy, error) {
 	}
 
 	// 构造节点
-	proxy := &SSRProxy{}
-	proxy.ssrConstruct(group, remarks, server, port, protocol, method, obfs, password, obfsparam, protoparam, &udp)
+	proxy := &SSRProxy{
+		Group:         "ssr_group",
+		Name:          remarks,
+		OriginName:    remarks, // 保存原始名称
+		Server:        server,
+		Port:          cast.ToInt(port),
+		Password:      password,
+		EncryptMethod: method,
+		Protocol:      protocol,
+		ProtocolParam: protoparam,
+		OBFS:          obfs,
+		OBFSParam:     obfsparam,
+		UDP:           udp,
+	}
 	return proxy, nil
 }

@@ -2,8 +2,6 @@ package proxy
 
 import (
 	"encoding/json"
-	"errors"
-	"regexp"
 	"strings"
 
 	"github.com/Tidra/EasyGetProxy/unit/log"
@@ -13,17 +11,10 @@ import (
 
 func ExplodeClash(clash string) (ProxyList, error) {
 	proxyList := make(ProxyList, 0)
-	re := regexp.MustCompile(`((?m)^(?:Proxy|proxies):$\s(?:(?:^ +?.*$| *?-.*$|)\s?)+)`)
-	reResult := re.FindStringSubmatch(clash)
-	if len(reResult) < 1 {
-		return nil, errors.New("未找到有效的节点信息")
-	}
-	clash = re.FindStringSubmatch(clash)[1]
-
 	yamlnode := make(map[string]interface{})
 	jsond, err := yaml.YAMLToJSON([]byte(clash))
 	if err != nil {
-		return proxyList, err
+		return nil, err
 	}
 	json.Unmarshal(jsond, &yamlnode)
 
@@ -33,12 +24,9 @@ func ExplodeClash(clash string) (ProxyList, error) {
 	}
 
 	for _, v := range yamlnode[section].([]interface{}) {
-		var proxyType, remark, server, port, cipher, password string // common
-		var id, aid, net, path, host, edge, tls, sni string          // vmess
-		var plugin string                                            // ss
-		var protocol, protoparam, obfs, obfsparam string             // ssr
-		var user string                                              // socks
-		var udp, tfo, scv bool
+		var proxyType, remark, server string // common
+		var port int                         // common
+		var udp, scv bool                    // common
 		var singleProxy map[string]interface{}
 
 		singleProxy = v.(map[string]interface{})
@@ -46,8 +34,8 @@ func ExplodeClash(clash string) (ProxyList, error) {
 		proxyType = tool.SafeAsString(singleProxy, "type")
 		remark = tool.SafeAsString(singleProxy, "name")
 		server = tool.SafeAsString(singleProxy, "server")
-		port = tool.SafeAsString(singleProxy, "port")
-		if port == "" || port == "0" {
+		port = tool.SafeAsInt(singleProxy, "port")
+		if port == 0 {
 			continue
 		}
 		udp = tool.SafeAsBool(singleProxy, "udp")
@@ -55,119 +43,117 @@ func ExplodeClash(clash string) (ProxyList, error) {
 
 		var proxy Proxy
 		switch proxyType {
-		case "vmess":
-			id = tool.SafeAsString(singleProxy, "uuid")
-			aid = tool.SafeAsString(singleProxy, "alterId")
-			cipher = tool.SafeAsString(singleProxy, "cipher")
-			net = tool.SafeAsString(singleProxy, "network")
-			if net == "" {
-				net = "tcp"
-			}
-			sni = tool.SafeAsString(singleProxy, "servername")
-			switch net {
-			case "http":
-				path = tool.SafeAsString(singleProxy, "http-opts", "path", "0")
-				host = tool.SafeAsString(singleProxy, "http-opts", "headers", "Host")
-				edge = ""
-			case "ws":
-				if singleProxy["ws-opts"] != nil {
-					path = tool.SafeAsString(singleProxy, "ws-opts", "path")
-					host = tool.SafeAsString(singleProxy, "ws-opts", "headers", "Host")
-					if host == "" {
-						host = tool.SafeAsString(singleProxy, "ws-opts", "headers", "HOST")
-					}
-					edge = tool.SafeAsString(singleProxy, "ws-opts", "headers", "Edge")
-				} else {
-					path = tool.SafeAsString(singleProxy, "ws-path")
-					host = tool.SafeAsString(singleProxy, "ws-headers", "Host")
-					edge = tool.SafeAsString(singleProxy, "ws-headers", "Edge")
-				}
-			case "h2":
-				path = tool.SafeAsString(singleProxy, "h2-opts", "path")
-				host = tool.SafeAsString(singleProxy, "h2-opts", "host")
-			case "grpc":
-				path = tool.SafeAsString(singleProxy, "grpc-opts", "grpc-service-name")
-				host = tool.SafeAsString(singleProxy, "servername")
-			}
+		case "socks5":
+			socks5Proxy := &Socks5Proxy{}
+			socks5Proxy.Group = "socks_group"
+			socks5Proxy.Name = remark
+			socks5Proxy.Server = server
+			socks5Proxy.Port = port
+			socks5Proxy.Username = tool.SafeAsString(singleProxy, "username")
+			socks5Proxy.Password = tool.SafeAsString(singleProxy, "password")
 
-			if tool.SafeAsBool(singleProxy, "tls") {
-				tls = "tls"
-			} else {
-				tls = ""
-			}
+			proxy = socks5Proxy
 
-			vmessProxy := &Vmess{}
-			vmessProxy.vmessConstruct("vmess_group", remark, server, port, "", id, aid, net, cipher, path, host, edge, tls, sni, &udp, &tfo, &scv, nil)
-			proxy = vmessProxy
+		case "http":
+			httpProxy := &HTTPProxy{}
+			httpProxy.Group = "http_group"
+			httpProxy.Name = remark
+			httpProxy.Server = server
+			httpProxy.Port = port
+			httpProxy.Username = tool.SafeAsString(singleProxy, "username")
+			httpProxy.Password = tool.SafeAsString(singleProxy, "password")
+			httpProxy.TLSSecure = tool.SafeAsBool(singleProxy, "tls")
+
+			proxy = httpProxy
 
 		case "ss":
-			cipher = tool.SafeAsString(singleProxy, "cipher")
-			password = tool.SafeAsString(singleProxy, "password")
-			pluginOpts := ""
+			ssProxy := &SSProxy{}
+			ssProxy.Group = "ss_group"
+			ssProxy.Name = remark
+			ssProxy.Server = server
+			ssProxy.Port = tool.SafeAsInt(singleProxy, "port")
+			ssProxy.Password = tool.SafeAsString(singleProxy, "password")
 
-			if singleProxy["plugin"] != nil {
-				switch tool.SafeAsString(singleProxy, "plugin") {
-				case "obfs":
-					plugin = "obfs-local"
-					if singleProxy["plugin-opts"] != nil {
-						pluginOpts = "obfs=" + tool.SafeAsString(singleProxy, "plugin-opts", "mode")
-						if host := tool.SafeAsString(singleProxy, "plugin-opts", "host"); host != "" {
-							pluginOpts += ";obfs-host=" + host
-						}
-					}
-				case "v2ray-plugin":
-					plugin = "v2ray-plugin"
-					if singleProxy["plugin-opts"] != nil {
-						pluginOpts = "obfs=" + tool.SafeAsString(singleProxy, "plugin-opts", "mode")
-						if tool.SafeAsBool(singleProxy, "plugin-opts", "tls") {
-							pluginOpts += ";tls"
-						}
-						if host := tool.SafeAsString(singleProxy, "plugin-opts", "host"); host != "" {
-							pluginOpts += ";host=" + host
-						}
-						if path := tool.SafeAsString(singleProxy, "plugin-opts", "path"); path != "" {
-							pluginOpts += ";path=" + path
-						}
-						if tool.SafeAsBool(singleProxy, "plugin-opts", "mux") {
-							pluginOpts += ";mux=4"
-						}
-					}
-				}
-			} else if singleProxy["obfs"] != nil {
-				plugin = "obfs-local"
-				pluginOpts = "obfs=" + tool.SafeAsString(singleProxy, "plugin-opts", "mode")
-				if host := tool.SafeAsString(singleProxy, "plugin-opts", "host"); host != "" {
-					pluginOpts += ";obfs-host=" + host
-				}
-			}
-
+			cipher := tool.SafeAsString(singleProxy, "cipher")
 			// support for go-shadowsocks2
 			if cipher == "AEAD_CHACHA20_POLY1305" {
 				cipher = "chacha20-ietf-poly1305"
 			} else if strings.Contains(cipher, "AEAD") {
 				cipher = strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(cipher, "AEAD_", ""), "_", "-"))
 			}
+			ssProxy.EncryptMethod = cipher
 
-			ssProxy := &SSProxy{}
-			ssProxy.ssConstruct("ss_group", remark, server, port, password, cipher, plugin, pluginOpts)
+			if singleProxy["plugin"] != nil {
+				plugin := tool.SafeAsString(singleProxy, "plugin")
+				switch plugin {
+				case "obfs":
+					ssProxy.Plugin.Name = "obfs-local"
+					ssProxy.Plugin.Raw = "obfs-local"
+					ssProxy.Plugin.Params = tool.SafeAsMap(singleProxy, "plugin-opts")
+					for k, v := range ssProxy.Plugin.Params {
+						switch v := v.(type) {
+						case bool:
+							if v {
+								ssProxy.Plugin.Raw += ";" + k
+							}
+						default:
+							// 如果不是字符串类型，尝试将其转换为字符串
+							ssProxy.Plugin.Raw += ";" + k + "=" + tool.SafeAsString(ssProxy.Plugin.Params, k)
+						}
+					}
+				case "v2ray-plugin", "gost-plugin", "shadow-tls", "restls":
+					ssProxy.Plugin.Name = plugin
+					ssProxy.Plugin.Raw = plugin
+					ssProxy.Plugin.Params = tool.SafeAsMap(singleProxy, "plugin-opts")
+					for k, _ := range ssProxy.Plugin.Params {
+						switch v := v.(type) {
+						case bool:
+							if v {
+								ssProxy.Plugin.Raw += ";" + k
+							}
+						default:
+							// 如果不是字符串类型，尝试将其转换为字符串
+							ssProxy.Plugin.Raw += ";" + k + "=" + tool.SafeAsString(ssProxy.Plugin.Params, k)
+						}
+					}
+				}
+			} else if singleProxy["obfs"] != nil {
+				ssProxy.Plugin.Name = "obfs-local"
+				ssProxy.Plugin.Raw = "obfs-local"
+				ssProxy.Plugin.Params = tool.SafeAsMap(singleProxy, "obfs-opts")
+				for k, v := range ssProxy.Plugin.Params {
+					switch v := v.(type) {
+					case bool:
+						if v {
+							ssProxy.Plugin.Raw += ";" + k
+						}
+					default:
+						// 如果不是字符串类型，尝试将其转换为字符串
+						ssProxy.Plugin.Raw += ";" + k + "=" + tool.SafeAsString(ssProxy.Plugin.Params, k)
+					}
+				}
+			}
+
 			proxy = ssProxy
 
-		case "socks5":
-			user = tool.SafeAsString(singleProxy, "username")
-			password = tool.SafeAsString(singleProxy, "password")
-
-			socks5Proxy := &Socks5Proxy{}
-			socks5Proxy.socks5Construct("socks_group", remark, server, port, user, password)
-			proxy = socks5Proxy
-
 		case "ssr":
-			cipher = tool.SafeAsString(singleProxy, "cipher")
+			ssrProxy := &SSRProxy{}
+			ssrProxy.Group = "ssr_group"
+			ssrProxy.Name = remark
+			ssrProxy.Server = server
+			ssrProxy.Port = port
+			ssrProxy.UDP = udp
+			ssrProxy.Password = tool.SafeAsString(singleProxy, "password")
+			ssrProxy.Protocol = tool.SafeAsString(singleProxy, "protocol")
+			ssrProxy.OBFS = tool.SafeAsString(singleProxy, "obfs")
+
+			cipher := tool.SafeAsString(singleProxy, "cipher")
 			if cipher == "dummy" {
 				cipher = "none"
 			}
-			password = tool.SafeAsString(singleProxy, "password")
-			protocol = tool.SafeAsString(singleProxy, "protocol")
-			obfs = tool.SafeAsString(singleProxy, "obfs")
+			ssrProxy.EncryptMethod = cipher
+
+			var protoparam, obfsparam string
 			if singleProxy["protocol-param"] != nil {
 				protoparam = tool.SafeAsString(singleProxy, "protocol-param")
 			} else {
@@ -178,163 +164,228 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			} else {
 				obfsparam = tool.SafeAsString(singleProxy, "obfsparam")
 			}
+			ssrProxy.ProtocolParam = protoparam
+			ssrProxy.OBFSParam = obfsparam
 
-			ssrProxy := &SSRProxy{}
-			ssrProxy.ssrConstruct("ssr_group", remark, server, port, protocol, cipher, obfs, password, obfsparam, protoparam, &udp)
 			proxy = ssrProxy
 
-		case "http":
-			user = tool.SafeAsString(singleProxy, "username")
-			password = tool.SafeAsString(singleProxy, "password")
-			tls = tool.SafeAsString(singleProxy, "tls")
-
-			httpProxy := &HTTPProxy{}
-			httpProxy.httpConstruct("http_group", remark, server, port, user, password, tls == "true")
-			proxy = httpProxy
-
 		case "trojan":
-			password = tool.SafeAsString(singleProxy, "password")
-			host = tool.SafeAsString(singleProxy, "sni")
-			net = tool.SafeAsString(singleProxy, "network")
+			trojanProxy := &TrojanProxy{}
+			trojanProxy.Group = "trojan_group"
+			trojanProxy.Name = remark
+			trojanProxy.Server = server
+			trojanProxy.Port = port
+			trojanProxy.UDP = udp
+			trojanProxy.SkipCertVerify = scv
+
+			trojanProxy.Password = tool.SafeAsString(singleProxy, "password")
+			trojanProxy.SNI = tool.SafeAsString(singleProxy, "sni")
+			trojanProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
+			trojanProxy.ClientFingerprint = tool.SafeAsString(singleProxy, "client-fingerprint")
+			trojanProxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+
+			if singleProxy["ss-opts"] != nil {
+				trojanProxy.SSOpts.Enabled = tool.SafeAsBool(singleProxy, "ss-opts", "enabled")
+				trojanProxy.SSOpts.Method = tool.SafeAsString(singleProxy, "ss-opts", "method")
+				trojanProxy.SSOpts.Password = tool.SafeAsString(singleProxy, "ss-opts", "password")
+			}
+			if singleProxy["reality-opts"] != nil {
+				trojanProxy.RealityOpts.PublicKey = tool.SafeAsString(singleProxy, "reality-opts", "public-key")
+				trojanProxy.RealityOpts.ShortID = tool.SafeAsString(singleProxy, "reality-opts", "short-id")
+			}
+
+			net := tool.SafeAsString(singleProxy, "network")
 			switch net {
 			case "grpc":
-				path = tool.SafeAsString(singleProxy, "grpc-opts", "grpc-service-name")
+				trojanProxy.GRPCOpts.ServiceName = tool.SafeAsString(singleProxy, "grpc-opts", "grpc-service-name")
 			case "ws":
-				path = tool.SafeAsString(singleProxy, "ws-opts", "path")
+				trojanProxy.WSOpts.Path = tool.SafeAsString(singleProxy, "ws-opts", "path")
+				trojanProxy.WSOpts.Headers = tool.SafeAsMap(singleProxy, "ws-opts", "headers")
+				trojanProxy.WSOpts.MaxEarlyData = tool.SafeAsInt(singleProxy, "ws-opts", "max-early-data")
+				trojanProxy.WSOpts.EarlyDataHeaderName = tool.SafeAsString(singleProxy, "ws-opts", "earlyDataHeaderName")
+				trojanProxy.WSOpts.V2rayHttpUpgrade = tool.SafeAsBool(singleProxy, "ws-opts", "v2rayHttpUpgrade")
+				trojanProxy.WSOpts.V2rayHttpUpgradeFastOpen = tool.SafeAsBool(singleProxy, "ws-opts", "v2rayHttpUpgradeFastOpen")
 			default:
 				net = "tcp"
 			}
+			trojanProxy.Network = net
 
-			trojanProxy := &TrojanProxy{}
-			trojanProxy.trojanConstruct("trojan_group", remark, server, port, password, net, host, path, true, &udp, &tfo, &scv)
 			proxy = trojanProxy
-		case "vless":
-			id = tool.SafeAsString(singleProxy, "uuid")
-			net = tool.SafeAsString(singleProxy, "network")
+
+		case "vmess":
+			vmessProxy := &Vmess{}
+			vmessProxy.Group = "vmess_group"
+			vmessProxy.Name = remark
+			vmessProxy.Server = server
+			vmessProxy.Port = port
+			vmessProxy.SkipCertVerify = scv
+			vmessProxy.UDP = udp
+
+			vmessProxy.UUID = tool.SafeAsString(singleProxy, "uuid")
+			vmessProxy.AlterID = tool.SafeAsInt(singleProxy, "alterId")
+			vmessProxy.Cipher = tool.SafeAsString(singleProxy, "cipher")
+			vmessProxy.ServerName = tool.SafeAsString(singleProxy, "servername")
+			vmessProxy.PacketEncoding = tool.SafeAsString(singleProxy, "packet-encoding")
+			vmessProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
+			vmessProxy.ClientFingerprint = tool.SafeAsString(singleProxy, "client-fingerprint")
+			vmessProxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+
+			if singleProxy["reality-opts"] != nil {
+				vmessProxy.RealityOpts.PublicKey = tool.SafeAsString(singleProxy, "reality-opts", "public-key")
+				vmessProxy.RealityOpts.ShortID = tool.SafeAsString(singleProxy, "reality-opts", "short-id")
+			}
+
+			net := tool.SafeAsString(singleProxy, "network")
 			if net == "" {
 				net = "tcp"
 			}
-			sni = tool.SafeAsString(singleProxy, "servername")
-			flow := tool.SafeAsString(singleProxy, "flow")
-			security := tool.SafeAsString(singleProxy, "security")
-			alpn := tool.SafeAsString(singleProxy, "alpn")
-			clientFingerprint := tool.SafeAsString(singleProxy, "client-fingerprint")
+			var path, host string
+			switch net {
+			case "http":
+				vmessProxy.HttpOpts.Method = tool.SafeAsString(singleProxy, "http-opts", "method")
+				vmessProxy.HttpOpts.Path = tool.SafeAsStringArray(singleProxy, "http-opts", "path")
+				vmessProxy.HttpOpts.Headers = tool.SafeAsMap(singleProxy, "http-opts", "headers")
 
-			pk := ""
-			sid := ""
-			if singleProxy["reality-opts"] != nil {
-				security = "reality"
-				pk = tool.SafeAsString(singleProxy, "reality-opts", "public-key")
-				sid = tool.SafeAsString(singleProxy, "reality-opts", "short-id")
+				path = tool.SafeAsString(singleProxy, "http-opts", "path", "0")
+				host = tool.SafeAsString(vmessProxy.HttpOpts.Headers, "Host")
+			case "h2":
+				vmessProxy.H2Opts.Host = tool.SafeAsStringArray(singleProxy, "h2-opts", "host")
+				vmessProxy.H2Opts.Path = tool.SafeAsString(singleProxy, "h2-opts", "path")
+
+				path = vmessProxy.H2Opts.Path
+				host = vmessProxy.H2Opts.Host[0]
+			case "grpc":
+				vmessProxy.GRPCOpts.ServiceName = tool.SafeAsString(singleProxy, "grpc-opts", "grpc-service-name")
+				path = vmessProxy.GRPCOpts.ServiceName
+				host = vmessProxy.ServerName
+			case "ws":
+				if singleProxy["ws-opts"] != nil {
+					vmessProxy.WSOpts.Path = tool.SafeAsString(singleProxy, "ws-opts", "path")
+					vmessProxy.WSOpts.Headers = tool.SafeAsMap(singleProxy, "ws-opts", "headers")
+					vmessProxy.WSOpts.MaxEarlyData = tool.SafeAsInt(singleProxy, "ws-opts", "max-early-data")
+					vmessProxy.WSOpts.EarlyDataHeaderName = tool.SafeAsString(singleProxy, "ws-opts", "earlyDataHeaderName")
+					vmessProxy.WSOpts.V2rayHttpUpgrade = tool.SafeAsBool(singleProxy, "ws-opts", "v2rayHttpUpgrade")
+					vmessProxy.WSOpts.V2rayHttpUpgradeFastOpen = tool.SafeAsBool(singleProxy, "ws-opts", "v2rayHttpUpgradeFastOpen")
+
+					path = vmessProxy.WSOpts.Path
+					host = tool.SafeAsString(vmessProxy.WSOpts.Headers, "Host")
+					if host == "" {
+						host = tool.SafeAsString(vmessProxy.WSOpts.Headers, "HOST")
+					}
+				} else {
+					vmessProxy.WSOpts.Path = tool.SafeAsString(singleProxy, "ws-path")
+					vmessProxy.WSOpts.Headers = map[string]interface{}{
+						"Host": tool.SafeAsString(singleProxy, "ws-headers", "Host"),
+					}
+					path = vmessProxy.WSOpts.Path
+					host = vmessProxy.WSOpts.Headers["Host"].(string)
+				}
 			}
+			vmessProxy.Network = net
+			vmessProxy.Path = path
+			vmessProxy.Host = host
 
-			if tool.SafeAsBool(singleProxy, "tls") {
-				security = "tls"
-			}
+			vmessProxy.TLSSecure = tool.SafeAsBool(singleProxy, "tls")
 
+			proxy = vmessProxy
+
+		case "vless":
 			vlessProxy := &VlessProxy{}
 			vlessProxy.Group = "vless_group"
 			vlessProxy.Name = remark
 			vlessProxy.Server = server
-			vlessProxy.Port = tool.SafeAsInt(singleProxy, "port")
-			vlessProxy.UUID = id
-			vlessProxy.Flow = flow
-			vlessProxy.Transport = net
-			vlessProxy.Security = security
-			vlessProxy.SNI = sni
-			vlessProxy.ALPN = strings.Split(alpn, ",")
-			vlessProxy.Path = path
-			vlessProxy.Host = host
-			vlessProxy.UDP = udp
+			vlessProxy.Port = port
 			vlessProxy.SkipCertVerify = scv
-			vlessProxy.ClientFingerprint = clientFingerprint
-			if security == "reality" {
-				vlessProxy.RealityOpts.PublicKey = pk
-				vlessProxy.RealityOpts.ShortID = sid
+			vlessProxy.UDP = udp
+
+			vlessProxy.UUID = tool.SafeAsString(singleProxy, "uuid")
+			vlessProxy.SNI = tool.SafeAsString(singleProxy, "servername")
+			vlessProxy.Flow = tool.SafeAsString(singleProxy, "flow")
+			vlessProxy.Security = tool.SafeAsString(singleProxy, "security")
+			vlessProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
+			vlessProxy.ClientFingerprint = tool.SafeAsString(singleProxy, "client-fingerprint")
+			vlessProxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+
+			if vlessProxy.PacketEncoding = tool.SafeAsString(singleProxy, "packet-encoding"); vlessProxy.PacketEncoding == "xudp" {
+				vlessProxy.XUDP = true
 			}
 
-			switch net {
+			if singleProxy["reality-opts"] != nil {
+				vlessProxy.Security = "reality"
+				vlessProxy.RealityOpts.PublicKey = tool.SafeAsString(singleProxy, "reality-opts", "public-key")
+				vlessProxy.RealityOpts.ShortID = tool.SafeAsString(singleProxy, "reality-opts", "short-id")
+			}
+
+			if vlessProxy.TLSSecure = tool.SafeAsBool(singleProxy, "tls"); vlessProxy.TLSSecure {
+				vlessProxy.Security = "tls"
+			}
+
+			vlessProxy.Network = tool.SafeAsString(singleProxy, "network")
+			if vlessProxy.Network == "" {
+				vlessProxy.Network = "tcp"
+			}
+			switch vlessProxy.Network {
+			case "http":
+				vlessProxy.HttpOpts.Method = tool.SafeAsString(singleProxy, "http-opts", "method")
+				vlessProxy.HttpOpts.Path = tool.SafeAsStringArray(singleProxy, "http-opts", "path")
+				vlessProxy.HttpOpts.Headers = tool.SafeAsMap(singleProxy, "http-opts", "headers")
+			case "h2":
+				vlessProxy.H2Opts.Host = tool.SafeAsStringArray(singleProxy, "h2-opts", "host")
+				vlessProxy.H2Opts.Path = tool.SafeAsString(singleProxy, "h2-opts", "path")
 			case "ws":
-				// 尝试将 ws-opts 转换为 map[string]interface{}
-				if wsopts, ok := singleProxy["ws-opts"].(map[string]interface{}); ok {
-					// 获取 path 字段值
-					if path, ok := wsopts["path"].(string); ok {
-						vlessProxy.WSOpts.Path = path
-					}
-					// 尝试将 headers 转换为 map[string]interface{}
-					if headers, ok := wsopts["headers"].(map[string]interface{}); ok {
-						vlessProxy.WSOpts.Headers = make(map[string]string)
-						for k, v := range headers {
-							// 使用类型断言将值转换为 string
-							if str, ok := v.(string); ok {
-								vlessProxy.WSOpts.Headers[k] = str
-							}
-						}
-					}
-				}
+				vlessProxy.WSOpts.Path = tool.SafeAsString(singleProxy, "ws-opts", "path")
+				vlessProxy.WSOpts.Headers = tool.SafeAsMap(singleProxy, "ws-opts", "headers")
 			case "grpc":
 				vlessProxy.GRPCOpts.ServiceName = tool.SafeAsString(singleProxy, "grpc-opts", "grpc-service-name")
 			}
 
 			proxy = vlessProxy
+
 		case "hysteria":
-			// 优先获取 auth_str，若为空则获取 auth-str
-			auth := tool.SafeAsString(singleProxy, "auth_str")
-			if auth == "" {
-				auth = tool.SafeAsString(singleProxy, "auth-str")
-			}
-			up := tool.SafeAsString(singleProxy, "up")
-			down := tool.SafeAsString(singleProxy, "down")
-			sni := tool.SafeAsString(singleProxy, "sni")
-			alpn := tool.SafeAsString(singleProxy, "alpn")
-			protocol := tool.SafeAsString(singleProxy, "protocol")
-			if protocol == "" {
-				protocol = "udp"
-			}
-			skipCertVerify := tool.SafeAsBool(singleProxy, "skip-cert-verify")
-
-			// 处理 alpn 为字符串切片
-			var alpnSlice []string
-			if alpn != "" {
-				alpnSlice = strings.Split(alpn, ",")
-			}
-
 			hysteriaProxy := &HysteriaProxy{}
 			hysteriaProxy.Group = "hysteria_group"
 			hysteriaProxy.Name = remark
 			hysteriaProxy.Server = server
-			hysteriaProxy.Port = tool.SafeAsInt(singleProxy, "port")
-			hysteriaProxy.Auth = auth
-			hysteriaProxy.Up = up
-			hysteriaProxy.Down = down
-			hysteriaProxy.SNI = sni
-			hysteriaProxy.ALPN = alpnSlice
-			hysteriaProxy.UDP = protocol == "udp"
-			hysteriaProxy.SkipCertVerify = skipCertVerify
-			proxy = hysteriaProxy
-		case "hysteria2":
-			auth := tool.SafeAsString(singleProxy, "password")
-			obfs := tool.SafeAsString(singleProxy, "obfs")
-			obfsPassword := tool.SafeAsString(singleProxy, "obfs-password")
-			sni := tool.SafeAsString(singleProxy, "sni")
-			insecure := tool.SafeAsBool(singleProxy, "skip-cert-verify")
-			pinSHA256 := "" // 结构不匹配，置空
+			hysteriaProxy.Port = port
+			hysteriaProxy.SkipCertVerify = scv
 
+			// 优先获取 auth_str，若为空则获取 auth-str
+			auth := tool.SafeAsString(singleProxy, "auth-str")
+			if auth == "" {
+				auth = tool.SafeAsString(singleProxy, "auth_str")
+			}
+			hysteriaProxy.Auth = auth
+
+			hysteriaProxy.Up = tool.SafeAsString(singleProxy, "up")
+			hysteriaProxy.Down = tool.SafeAsString(singleProxy, "down")
+			hysteriaProxy.SNI = tool.SafeAsString(singleProxy, "sni")
+			hysteriaProxy.Protocol = tool.SafeAsString(singleProxy, "protocol")
+			hysteriaProxy.Obfs = tool.SafeAsString(singleProxy, "obfs")
+			hysteriaProxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
+
+			proxy = hysteriaProxy
+
+		case "hysteria2":
 			hy2Proxy := &Hy2Proxy{}
 			hy2Proxy.Group = "hy2_group"
 			hy2Proxy.Name = remark
 			hy2Proxy.Server = server
-			hy2Proxy.Port = tool.SafeAsInt(singleProxy, "port")
-			hy2Proxy.Auth = auth
-			hy2Proxy.Obfs = obfs
-			hy2Proxy.ObfsPassword = obfsPassword
-			hy2Proxy.SNI = sni
-			hy2Proxy.Insecure = insecure
-			hy2Proxy.PinSHA256 = pinSHA256
+			hy2Proxy.Port = port
+			hy2Proxy.Auth = tool.SafeAsString(singleProxy, "password")
+			hy2Proxy.Up = tool.SafeAsString(singleProxy, "up")
+			hy2Proxy.Down = tool.SafeAsString(singleProxy, "down")
+			hy2Proxy.Obfs = tool.SafeAsString(singleProxy, "obfs")
+			hy2Proxy.ObfsPassword = tool.SafeAsString(singleProxy, "obfs-password")
+			hy2Proxy.SNI = tool.SafeAsString(singleProxy, "sni")
+			hy2Proxy.Insecure = scv
+			hy2Proxy.Fingerprint = tool.SafeAsString(singleProxy, "fingerprint")
+			hy2Proxy.ALPN = tool.SafeAsStringArray(singleProxy, "alpn")
+			hy2Proxy.Ca = tool.SafeAsString(singleProxy, "ca")
+			hy2Proxy.CaStr = tool.SafeAsString(singleProxy, "ca-str")
+
 			proxy = hy2Proxy
+
 		case "snell":
-			psk := tool.SafeAsString(singleProxy, "psk")
-			version := tool.SafeAsInt(singleProxy, "version")
 			obfs := tool.SafeAsString(singleProxy, "obfs")
 			obfsParam := tool.SafeAsString(singleProxy, "obfs-param")
 
@@ -343,8 +394,8 @@ func ExplodeClash(clash string) (ProxyList, error) {
 			snellProxy.Name = remark
 			snellProxy.Server = server
 			snellProxy.Port = tool.SafeAsInt(singleProxy, "port")
-			snellProxy.PSK = psk
-			snellProxy.Version = version
+			snellProxy.PSK = tool.SafeAsString(singleProxy, "psk")
+			snellProxy.Version = tool.SafeAsInt(singleProxy, "version")
 			snellProxy.Obfs = obfs
 			snellProxy.ObfsParam = obfsParam
 			snellProxy.UDP = udp
@@ -367,6 +418,21 @@ func ProxieToClash(node Proxy) map[string]any {
 	// TODO: 判断空值是否输出
 	// https://github.com/tindy2013/subconverter/blob/master/src/generator/config/subexport.cpp#L227
 	switch node.GetType() {
+	case "socks5":
+		socks5Node := node.(*Socks5Proxy)
+		clashNode["server"] = socks5Node.Server
+		clashNode["port"] = socks5Node.Port
+		clashNode["username"] = socks5Node.Username
+		clashNode["password"] = socks5Node.Password
+		clashNode["skip-cert-verify"] = socks5Node.SkipCertVerify
+	case "http", "https":
+		httpNode := node.(*HTTPProxy)
+		clashNode["server"] = httpNode.Server
+		clashNode["port"] = httpNode.Port
+		clashNode["username"] = httpNode.Username
+		clashNode["password"] = httpNode.Password
+		clashNode["tls"] = httpNode.TLSSecure
+		clashNode["skip-cert-verify"] = httpNode.SkipCertVerify
 	case "ss":
 		// TODO: 判断协议是否符合
 		ssNode := node.(*SSProxy)
@@ -374,66 +440,21 @@ func ProxieToClash(node Proxy) map[string]any {
 		clashNode["port"] = ssNode.Port
 		clashNode["cipher"] = ssNode.EncryptMethod
 		clashNode["password"] = ssNode.Password
-		pluginString := strings.ReplaceAll(ssNode.PluginOption, ";", "&")
-		switch ssNode.Plugin {
+		switch ssNode.Plugin.Name {
 		case "simple-obfs", "obfs-local":
 			clashNode["plugin"] = "obfs"
 			pluginOpts := make(map[string]interface{})
-			pluginOpts["mode"] = tool.GetUrlArg(pluginString, "obfs")
-			pluginOpts["host"] = tool.GetUrlArg(pluginString, "obfs-host")
+			for k, v := range ssNode.Plugin.Params {
+				pluginOpts[k] = v
+			}
 			clashNode["plugin-opts"] = pluginOpts
-		case "v2ray-plugin":
-			clashNode["plugin"] = "v2ray-plugin"
+		default:
+			clashNode["plugin"] = ssNode.Plugin.Name
 			pluginOpts := make(map[string]interface{})
-			pluginOpts["mode"] = tool.GetUrlArg(pluginString, "mode")
-			pluginOpts["host"] = tool.GetUrlArg(pluginString, "host")
-			pluginOpts["path"] = tool.GetUrlArg(pluginString, "path")
-			pluginOpts["tls"] = strings.Contains(pluginString, "tls")
-			pluginOpts["mux"] = strings.Contains(pluginString, "mux")
-			if ssNode.SkipCertVerify {
-				pluginOpts["skip-cert-verify"] = ssNode.SkipCertVerify
+			for k, v := range ssNode.Plugin.Params {
+				pluginOpts[k] = v
 			}
 			clashNode["plugin-opts"] = pluginOpts
-		}
-	case "vmess":
-		vmessNode := node.(*Vmess)
-		clashNode["server"] = vmessNode.Server
-		clashNode["port"] = vmessNode.Port
-		clashNode["uuid"] = vmessNode.UUID
-		clashNode["alterId"] = vmessNode.AlterID
-		clashNode["cipher"] = vmessNode.EncryptMethod
-		clashNode["tls"] = vmessNode.TLSSecure
-		clashNode["udp"] = vmessNode.UDP
-		clashNode["skip-cert-verify"] = vmessNode.SkipCertVerify
-		clashNode["servername"] = vmessNode.ServerName
-		switch vmessNode.TransferProtocol {
-		case "ws":
-			clashNode["network"] = vmessNode.TransferProtocol
-			clashNode["ws-opts"] = map[string]interface{}{
-				"path": vmessNode.Path,
-				"headers": map[string]interface{}{
-					"Host": vmessNode.Host,
-					"Edge": vmessNode.Edge,
-				},
-			}
-		case "http":
-			clashNode["network"] = vmessNode.TransferProtocol
-			clashNode["http-opts"] = map[string]interface{}{
-				"method": "GET",
-				"path":   vmessNode.Path,
-				"Host":   vmessNode.Host,
-				"Edge":   vmessNode.Edge,
-			}
-		case "h2":
-			clashNode["network"] = vmessNode.TransferProtocol
-			clashNode["h2-opts"] = map[string]interface{}{
-				"path": vmessNode.Path,
-				"host": vmessNode.Host,
-			}
-		case "grpc":
-			clashNode["network"] = vmessNode.TransferProtocol
-			clashNode["servername"] = vmessNode.Host
-			clashNode["grpc-opts"] = map[string]interface{}{"grpc-service-name": vmessNode.Path}
 		}
 	case "ssr":
 		ssrNode := node.(*SSRProxy)
@@ -450,54 +471,142 @@ func ProxieToClash(node Proxy) map[string]any {
 		clashNode["obfs"] = ssrNode.OBFS
 		clashNode["protocol-param"] = ssrNode.ProtocolParam
 		clashNode["obfs-param"] = ssrNode.OBFSParam
-	case "socks5":
-		socks5Node := node.(*Socks5Proxy)
-		clashNode["server"] = socks5Node.Server
-		clashNode["port"] = socks5Node.Port
-		clashNode["username"] = socks5Node.Username
-		clashNode["password"] = socks5Node.Password
-		clashNode["skip-cert-verify"] = socks5Node.SkipCertVerify
-	case "http", "https":
-		httpNode := node.(*HTTPProxy)
-		clashNode["server"] = httpNode.Server
-		clashNode["port"] = httpNode.Port
-		clashNode["username"] = httpNode.Username
-		clashNode["password"] = httpNode.Password
-		clashNode["tls"] = httpNode.TLSSecure
-		clashNode["skip-cert-verify"] = httpNode.SkipCertVerify
 	case "trojan":
 		trojanNode := node.(*TrojanProxy)
 		clashNode["server"] = trojanNode.Server
 		clashNode["port"] = trojanNode.Port
 		clashNode["password"] = trojanNode.Password
-		clashNode["sni"] = trojanNode.Host
 		clashNode["udp"] = trojanNode.UDP
+		clashNode["sni"] = trojanNode.SNI
+		clashNode["client-fingerprint"] = trojanNode.ClientFingerprint
+		clashNode["fingerprint"] = trojanNode.Fingerprint
 		clashNode["skip-cert-verify"] = trojanNode.SkipCertVerify
-		switch trojanNode.TransferProtocol {
-		case "grpc":
-			clashNode["network"] = trojanNode.TransferProtocol
-			clashNode["grpc-opts"] = map[string]interface{}{"grpc-service-name": trojanNode.Path}
-		case "ws":
-			clashNode["network"] = trojanNode.TransferProtocol
-			clashNode["ws-opts"] = map[string]interface{}{
-				"path": trojanNode.Path,
-				"headers": map[string]interface{}{
-					"Host": trojanNode.Host,
-				},
+		if len(trojanNode.ALPN) > 0 {
+			clashNode["alpn"] = trojanNode.ALPN
+		}
+		if trojanNode.SSOpts.Method != "" {
+			r := map[string]interface{}{
+				"enabled": trojanNode.SSOpts.Enabled,
+				"method":  trojanNode.SSOpts.Method,
 			}
+			if trojanNode.SSOpts.Password != "" {
+				r["password"] = trojanNode.SSOpts.Password
+			}
+			clashNode["ss-opts"] = r
+		}
+		if trojanNode.RealityOpts.PublicKey != "" {
+			r := map[string]interface{}{
+				"public-key": trojanNode.RealityOpts.PublicKey,
+			}
+			if trojanNode.RealityOpts.ShortID != "" {
+				r["short-id"] = trojanNode.RealityOpts.ShortID
+			}
+			clashNode["reality-opts"] = r
+		}
+
+		clashNode["network"] = trojanNode.Network
+		switch trojanNode.Network {
+		case "grpc":
+			clashNode["grpc-opts"] = map[string]interface{}{"grpc-service-name": trojanNode.GRPCOpts.ServiceName}
+		case "ws":
+			ws := map[string]interface{}{
+				"path":    trojanNode.WSOpts.Path,
+				"headers": trojanNode.WSOpts.Headers,
+			}
+			if trojanNode.WSOpts.MaxEarlyData > 0 {
+				ws["max-early-data"] = trojanNode.WSOpts.MaxEarlyData
+			}
+			if trojanNode.WSOpts.EarlyDataHeaderName != "" {
+				ws["early-data-header-name"] = trojanNode.WSOpts.EarlyDataHeaderName
+			}
+			if trojanNode.WSOpts.V2rayHttpUpgrade {
+				ws["v2rayHttpUpgrade"] = trojanNode.WSOpts.V2rayHttpUpgrade
+			}
+			if trojanNode.WSOpts.V2rayHttpUpgradeFastOpen {
+				ws["v2rayHttpUpgradeFastOpen"] = trojanNode.WSOpts.V2rayHttpUpgradeFastOpen
+			}
+
+			clashNode["ws-opts"] = ws
+		}
+	case "vmess":
+		vmessNode := node.(*Vmess)
+		clashNode["server"] = vmessNode.Server
+		clashNode["port"] = vmessNode.Port
+		clashNode["uuid"] = vmessNode.UUID
+		clashNode["alterId"] = vmessNode.AlterID
+		clashNode["cipher"] = vmessNode.Cipher
+		clashNode["tls"] = vmessNode.TLSSecure
+		clashNode["udp"] = vmessNode.UDP
+		clashNode["skip-cert-verify"] = vmessNode.SkipCertVerify
+		clashNode["servername"] = vmessNode.ServerName
+		clashNode["client-fingerprint"] = vmessNode.ClientFingerprint
+		clashNode["fingerprint"] = vmessNode.Fingerprint
+		if len(vmessNode.ALPN) > 0 {
+			clashNode["alpn"] = vmessNode.ALPN
+		}
+		if vmessNode.RealityOpts.PublicKey != "" {
+			r := map[string]interface{}{
+				"public-key": vmessNode.RealityOpts.PublicKey,
+			}
+			if vmessNode.RealityOpts.ShortID != "" {
+				r["short-id"] = vmessNode.RealityOpts.ShortID
+			}
+			clashNode["reality-opts"] = r
+		}
+
+		if vmessNode.PacketEncoding != "" {
+			clashNode["packet-encoding"] = vmessNode.PacketEncoding
+		}
+
+		clashNode["network"] = vmessNode.Network
+		switch vmessNode.Network {
+		case "ws":
+			ws := map[string]interface{}{
+				"path":    vmessNode.WSOpts.Path,
+				"headers": vmessNode.WSOpts.Headers,
+			}
+			if vmessNode.WSOpts.MaxEarlyData > 0 {
+				ws["max-early-data"] = vmessNode.WSOpts.MaxEarlyData
+			}
+			if vmessNode.WSOpts.EarlyDataHeaderName != "" {
+				ws["early-data-header-name"] = vmessNode.WSOpts.EarlyDataHeaderName
+			}
+			if vmessNode.WSOpts.V2rayHttpUpgrade {
+				ws["v2rayHttpUpgrade"] = vmessNode.WSOpts.V2rayHttpUpgrade
+			}
+			if vmessNode.WSOpts.V2rayHttpUpgradeFastOpen {
+				ws["v2rayHttpUpgradeFastOpen"] = vmessNode.WSOpts.V2rayHttpUpgradeFastOpen
+			}
+
+			clashNode["ws-opts"] = ws
+		case "http":
+			clashNode["http-opts"] = map[string]interface{}{
+				"method":  vmessNode.HttpOpts.Method,
+				"path":    vmessNode.HttpOpts.Path,
+				"headers": vmessNode.HttpOpts.Headers,
+			}
+		case "h2":
+			clashNode["h2-opts"] = map[string]interface{}{
+				"path": vmessNode.H2Opts.Path,
+				"host": vmessNode.H2Opts.Host,
+			}
+		case "grpc":
+			clashNode["grpc-opts"] = map[string]interface{}{"grpc-service-name": vmessNode.Path}
 		}
 	case "vless":
 		vlessNode := node.(*VlessProxy)
 		clashNode["server"] = vlessNode.Server
 		clashNode["port"] = vlessNode.Port
-		clashNode["uuid"] = vlessNode.UUID
-		clashNode["tls"] = vlessNode.Security == "tls" || vlessNode.Security == "reality"
 		clashNode["udp"] = vlessNode.UDP
-		clashNode["skip-cert-verify"] = vlessNode.SkipCertVerify
+		clashNode["uuid"] = vlessNode.UUID
 		clashNode["flow"] = vlessNode.Flow
-		clashNode["network"] = vlessNode.Transport
+		clashNode["packet-encoding"] = vlessNode.PacketEncoding
+		clashNode["tls"] = vlessNode.TLSSecure
 		clashNode["servername"] = vlessNode.SNI
+		clashNode["fingerprint"] = vlessNode.Fingerprint
 		clashNode["client-fingerprint"] = vlessNode.ClientFingerprint
+		clashNode["skip-cert-verify"] = vlessNode.SkipCertVerify
+		clashNode["network"] = vlessNode.Network
 		if len(vlessNode.ALPN) > 0 {
 			clashNode["alpn"] = vlessNode.ALPN
 		}
@@ -511,15 +620,36 @@ func ProxieToClash(node Proxy) map[string]any {
 			clashNode["reality-opts"] = r
 		}
 
-		switch vlessNode.Transport {
+		switch vlessNode.Network {
+		case "http":
+			clashNode["http-opts"] = map[string]interface{}{
+				"method":  vlessNode.HttpOpts.Method,
+				"path":    vlessNode.HttpOpts.Path,
+				"headers": vlessNode.HttpOpts.Headers,
+			}
+		case "h2":
+			clashNode["h2-opts"] = map[string]interface{}{
+				"path": vlessNode.H2Opts.Path,
+				"host": vlessNode.H2Opts.Host,
+			}
 		case "ws":
 			ws := map[string]interface{}{
 				"path":    vlessNode.WSOpts.Path,
-				"headers": map[string]interface{}{},
+				"headers": vlessNode.WSOpts.Headers,
 			}
-			for k, v := range vlessNode.WSOpts.Headers {
-				ws["headers"].(map[string]interface{})[k] = v
+			if vlessNode.WSOpts.MaxEarlyData > 0 {
+				ws["max-early-data"] = vlessNode.WSOpts.MaxEarlyData
 			}
+			if vlessNode.WSOpts.EarlyDataHeaderName != "" {
+				ws["early-data-header-name"] = vlessNode.WSOpts.EarlyDataHeaderName
+			}
+			if vlessNode.WSOpts.V2rayHttpUpgrade {
+				ws["v2rayHttpUpgrade"] = vlessNode.WSOpts.V2rayHttpUpgrade
+			}
+			if vlessNode.WSOpts.V2rayHttpUpgradeFastOpen {
+				ws["v2rayHttpUpgradeFastOpen"] = vlessNode.WSOpts.V2rayHttpUpgradeFastOpen
+			}
+
 			clashNode["ws-opts"] = ws
 		case "grpc":
 			clashNode["grpc-opts"] = map[string]interface{}{
@@ -531,30 +661,31 @@ func ProxieToClash(node Proxy) map[string]any {
 		clashNode["server"] = hysteriaNode.Server
 		clashNode["port"] = hysteriaNode.Port
 		if hysteriaNode.Auth != "" {
-			clashNode["auth_str"] = hysteriaNode.Auth
+			clashNode["auth-str"] = hysteriaNode.Auth
 		}
 		clashNode["up"] = hysteriaNode.Up
 		clashNode["down"] = hysteriaNode.Down
 		clashNode["sni"] = hysteriaNode.SNI
+		if hysteriaNode.Obfs != "" {
+			clashNode["obfs"] = hysteriaNode.Obfs
+		}
 		if len(hysteriaNode.ALPN) > 0 {
 			clashNode["alpn"] = hysteriaNode.ALPN
 		}
 		// 根据 UDP 字段设置 protocol
-		if hysteriaNode.UDP {
-			clashNode["protocol"] = "udp"
+		if hysteriaNode.Protocol != "" {
+			clashNode["protocol"] = hysteriaNode.Protocol
 		}
 		clashNode["skip-cert-verify"] = hysteriaNode.SkipCertVerify
-		// 若 HysteriaProxy 结构体无对应字段，以下属性不添加到 clashNode
-		// clashNode["disable_mtu_discovery"] = hysteriaNode.DisableMTUDiscovery
-		// if hysteriaNode.Fingerprint != "" {
-		// 	clashNode["fingerprint"] = hysteriaNode.Fingerprint
-		// }
-		// clashNode["fast-open"] = hysteriaNode.FastOpen
+
 	case "hysteria2":
 		hy2Node := node.(*Hy2Proxy)
 		clashNode["server"] = hy2Node.Server
 		clashNode["port"] = hy2Node.Port
 		clashNode["password"] = hy2Node.Auth
+		clashNode["up"] = hy2Node.Up
+		clashNode["down"] = hy2Node.Down
+		clashNode["fingerprint"] = hy2Node.Fingerprint
 		if hy2Node.Obfs != "" {
 			clashNode["obfs"] = hy2Node.Obfs
 		}
@@ -566,6 +697,15 @@ func ProxieToClash(node Proxy) map[string]any {
 		}
 		if hy2Node.Insecure {
 			clashNode["skip-cert-verify"] = hy2Node.Insecure
+		}
+		if len(hy2Node.ALPN) > 0 {
+			clashNode["alpn"] = hy2Node.ALPN
+		}
+		if hy2Node.Ca != "" {
+			clashNode["ca"] = hy2Node.Ca
+		}
+		if hy2Node.CaStr != "" {
+			clashNode["ca-str"] = hy2Node.CaStr
 		}
 	case "snell":
 		snellNode := node.(*SnellProxy)

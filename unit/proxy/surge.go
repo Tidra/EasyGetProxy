@@ -3,6 +3,7 @@ package proxy
 import (
 	"strings"
 
+	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"github.com/spf13/cast"
 )
 
@@ -24,8 +25,8 @@ func ProxieToSurge(node Proxy) string {
 		} else {
 			proxyStr += "custom, " + ssNode.Server + ", " + cast.ToString(ssNode.Port) + ", " + ssNode.EncryptMethod + ", " + ssNode.Password + ", https://github.com/pobizhe/SSEncrypt/raw/master/SSEncrypt.module"
 		}
-		if ssNode.Plugin != "" && ssNode.PluginOption != "" && strings.Contains(ssNode.Plugin, "obfs") {
-			proxyStr += "," + strings.ReplaceAll(ssNode.PluginOption, ";", ",")
+		if ssNode.Plugin.Name != "" && ssNode.Plugin.Raw != "" && strings.Contains(ssNode.Plugin.Raw, "obfs") {
+			proxyStr += "," + strings.ReplaceAll(ssNode.Plugin.Raw, ";", ",")
 		}
 
 	case "ssr":
@@ -49,16 +50,13 @@ func ProxieToSurge(node Proxy) string {
 		if !ok {
 			return ""
 		}
-		if (surgeVersion < 4 && surgeVersion != -3) || (vmessNode.TransferProtocol != "tcp" && vmessNode.TransferProtocol != "ws") {
+		if (surgeVersion < 4 && surgeVersion != -3) || (vmessNode.Network != "tcp" && vmessNode.Network != "ws") {
 			return ""
 		}
 		proxyStr += "vmess, " + vmessNode.Server + ", " + cast.ToString(vmessNode.Port) + ", username=" + vmessNode.UUID
 
 		if vmessNode.TLSSecure {
 			proxyStr += ", tls=true"
-			if vmessNode.TLS13 {
-				proxyStr += ", tls13=true"
-			}
 		} else {
 			proxyStr += ", tls=false"
 		}
@@ -69,19 +67,16 @@ func ProxieToSurge(node Proxy) string {
 			proxyStr += ", vmess-aead=false"
 		}
 
-		if vmessNode.TransferProtocol == "ws" {
+		if vmessNode.Network == "ws" {
 			header := ""
-			if vmessNode.Host != "" {
-				proxyStr += ", ws=true, ws-path=" + vmessNode.Path + ", sni=" + vmessNode.Host
-				header += "Host:" + vmessNode.Host
-			} else {
-				proxyStr += ", ws=true, ws-path=" + vmessNode.Path + ", sni=" + vmessNode.Server
-			}
-			if vmessNode.Edge != "" {
-				if header != "" {
-					header += "|Edge:" + vmessNode.Edge
-				} else {
-					header += "Edge:" + vmessNode.Edge
+			proxyStr += ", ws=true, ws-path=" + vmessNode.Path + ", sni=" + vmessNode.ServerName
+			if vmessNode.WSOpts.Headers != nil {
+				for k, _ := range vmessNode.WSOpts.Headers {
+					header += k + ":" + tool.SafeAsString(vmessNode.WSOpts.Headers, k) + "|"
+
+				}
+				if len(header) > 0 {
+					header = header[:len(header)-1] // 去掉最后的分隔符
 				}
 			}
 			if header != "" {
@@ -152,8 +147,8 @@ func ProxieToSurge(node Proxy) string {
 		// if trojanNode.SnellVersion != 0 {
 		// 	proxyStr += ", version=" + cast.ToString(trojanNode.SnellVersion)
 		// }
-		if trojanNode.Host != "" {
-			proxyStr += ", sni=" + trojanNode.Host
+		if trojanNode.SNI != "" {
+			proxyStr += ", sni=" + trojanNode.SNI
 		}
 		if trojanNode.SkipCertVerify {
 			proxyStr += ", skip-cert-verify=true"

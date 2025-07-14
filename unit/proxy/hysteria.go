@@ -12,6 +12,7 @@ import (
 type HysteriaProxy struct {
 	Group          string   `json:"group,omitempty"`
 	Name           string   `json:"name,omitempty"`
+	OriginName     string   `json:"-,omitempty"` // 原始名称
 	Server         string   `json:"server,omitempty"`
 	Port           int      `json:"port,omitempty"`
 	Auth           string   `json:"auth,omitempty"`
@@ -21,47 +22,11 @@ type HysteriaProxy struct {
 	ALPN           []string `json:"alpn,omitempty"`
 	Obfs           string   `json:"obfs,omitempty"`
 	ObfsParam      string   `json:"obfsParam,omitempty"`
-	UDP            bool     `json:"udp,omitempty"`
-	TLS13          bool     `json:"tls13,omitempty"`
+	Protocol       string   `json:"protocol,omitempty"`
 	SkipCertVerify bool     `json:"skip-cert-verify,omitempty"`
 	Country        string   `json:"country,omitempty"`
 	Speed          float64  `json:"speed,omitempty"`
 	IsValidFlag    bool     `json:"is-valid,omitempty"`
-	OriginName     string   `json:"-,omitempty"` // 原始名称
-}
-
-// hysteriaConstruct 构造 hysteria 代理实例
-// 参数说明：
-// - group: 代理所属的组名
-// - name: 代理节点的名称
-// - server: 代理服务器地址
-// - port: 代理服务器端口
-// - auth: 认证信息
-// - obfs: 混淆协议名称
-// - obfsParam: 混淆协议参数
-// - udp: 是否启用 UDP 支持，使用指针类型，允许传入 nil 表示不设置
-// - scv: 是否跳过证书验证，使用指针类型，允许传入 nil 表示不设置
-// - tls13: 是否启用 TLS 1.3，使用指针类型，允许传入 nil 表示不设置
-func (p *HysteriaProxy) hysteriaConstruct(group, name, server string, port int,
-	auth, obfs, obfsParam string, udp, scv, tls13 *bool) {
-	p.Group = group
-	p.Name = name
-	p.OriginName = name
-	p.Server = server
-	p.Port = port
-	p.Auth = auth
-	p.Obfs = obfs
-	p.ObfsParam = obfsParam
-
-	if udp != nil {
-		p.UDP = *udp
-	}
-	if scv != nil {
-		p.SkipCertVerify = *scv
-	}
-	if tls13 != nil {
-		p.TLS13 = *tls13
-	}
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法，返回代理类型
@@ -76,6 +41,9 @@ func (p *HysteriaProxy) GetName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
 func (p *HysteriaProxy) SetName(name string) {
+	if p.OriginName == "" {
+		p.OriginName = p.Name // 保存原始名称
+	}
 	p.Name = name
 }
 
@@ -144,10 +112,8 @@ func (p *HysteriaProxy) ToString() string {
 
 	addParam("obfs", p.Obfs)
 	addParam("obfsParam", p.ObfsParam)
+	addParam("protocol", p.Protocol)
 
-	if p.UDP {
-		params = append(params, "protocol=udp")
-	}
 	if p.SkipCertVerify {
 		params = append(params, "insecure=1")
 	}
@@ -176,23 +142,17 @@ func explodeHysteria(proxyStr string) (Proxy, error) {
 		return nil, fmt.Errorf("端口转换失败: %w", err)
 	}
 
-	udp := query.Get("protocol") == "udp"
-	scv := cast.ToBool(query.Get("insecure"))
-	tls13 := true
-
-	p := &HysteriaProxy{}
-	p.hysteriaConstruct(
-		query.Get("group"),
-		u.Fragment,
-		u.Hostname(),
-		port,
-		query.Get("auth"),
-		query.Get("obfs"),
-		query.Get("obfsParam"),
-		&udp,
-		&scv,
-		&tls13,
-	)
+	p := &HysteriaProxy{
+		Group:          "hysteria_group",
+		Name:           u.Fragment,
+		OriginName:     u.Fragment, // 保存原始名称
+		Server:         u.Hostname(),
+		Port:           port,
+		Obfs:           query.Get("obfs"),
+		ObfsParam:      query.Get("obfsParam"),
+		Protocol:       query.Get("protocol"),
+		SkipCertVerify: cast.ToBool(query.Get("insecure")),
+	}
 
 	if peer := query.Get("peer"); peer != "" {
 		p.SNI = peer

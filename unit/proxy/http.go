@@ -11,6 +11,7 @@ import (
 type HTTPProxy struct {
 	Group          string  `json:"group,omitempty"`
 	Name           string  `json:"name,omitempty"`
+	OriginName     string  `json:"-,omitempty"` // 原始名称
 	Server         string  `json:"server,omitempty"`
 	Port           int     `json:"port,omitempty"`
 	Username       string  `json:"username,omitempty"`
@@ -22,7 +23,6 @@ type HTTPProxy struct {
 	Country        string  `json:"country,omitempty"`
 	Speed          float64 `json:"speed,omitempty"`
 	IsValidFlag    bool    `json:"isValidFlag,omitempty"`
-	OriginName     string  `json:"-,omitempty"` // 原始名称
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法
@@ -49,6 +49,9 @@ func (h *HTTPProxy) GetOriginName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法
 func (h *HTTPProxy) SetName(name string) {
+	if h.OriginName == "" {
+		h.OriginName = h.Name // 保存原始名称
+	}
 	h.Name = name
 }
 
@@ -104,19 +107,6 @@ func (h *HTTPProxy) ToString() string {
 	return proxyStr
 }
 
-// httpConstruct 构造 http 代理
-func (h *HTTPProxy) httpConstruct(group, remarks, server, port, username, password string,
-	tls bool) {
-	h.Group = group
-	h.Name = remarks
-	h.OriginName = remarks // 保存原始名称
-	h.Server = server
-	h.Port = cast.ToInt(port)
-	h.Username = username
-	h.Password = password
-	h.TLSSecure = tls
-}
-
 // explodeHTTP 解析 http 代理链接
 func explodeHTTP(httpURL string) (Proxy, error) {
 	u, err := url.Parse(httpURL)
@@ -124,7 +114,6 @@ func explodeHTTP(httpURL string) (Proxy, error) {
 		return nil, fmt.Errorf("解析 URL 失败: %w", err)
 	}
 
-	group := "http_group"
 	remarks := u.Fragment
 	server := u.Hostname()
 	port := u.Port()
@@ -137,7 +126,15 @@ func explodeHTTP(httpURL string) (Proxy, error) {
 	tls := u.Scheme == "https"
 
 	// 构造节点
-	proxy := &HTTPProxy{}
-	proxy.httpConstruct(group, remarks, server, port, username, password, tls)
+	proxy := &HTTPProxy{
+		Group:      "http_group",
+		Name:       remarks,
+		OriginName: remarks, // 保存原始名称
+		Server:     server,
+		Port:       cast.ToInt(port),
+		Username:   username,
+		Password:   password,
+		TLSSecure:  tls,
+	}
 	return proxy, nil
 }

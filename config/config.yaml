@@ -44,7 +44,7 @@ localcheck:
 # ==== 测速 ==== #
 speedtest: 
   url:                      # default https://speed.cloudflare.com/__down?bytes=5242880
-  is-used: true             # default false. Warning: this will consume large network resources.
+  is-used:                  # default false. Warning: this will consume large network resources.
   interval:                 # default 720 (min)
   timeout:                  # default 10 (seconds).
   max-conn:                 # default 5. The number of speed test connections simultaneously

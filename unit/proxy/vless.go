@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Tidra/EasyGetProxy/unit/tool"
 	"github.com/spf13/cast"
 )
 
@@ -13,15 +14,16 @@ import (
 type VlessProxy struct {
 	Group             string   `json:"group,omitempty"`
 	Name              string   `json:"name,omitempty"`
+	OriginName        string   `json:"-,omitempty"` // 原始名称
 	Server            string   `json:"server,omitempty"`
 	Port              int      `json:"port,omitempty"`
 	UUID              string   `json:"uuid,omitempty"`
 	Flow              string   `json:"flow,omitempty"`
-	Transport         string   `json:"transport,omitempty"`
+	Network           string   `json:"network,omitempty"`
 	Security          string   `json:"security,omitempty"`
+	TLSSecure         bool     `json:"tls,omitempty"`
 	SNI               string   `json:"sni,omitempty"`
 	ALPN              []string `json:"alpn,omitempty"`
-	Path              string   `json:"path,omitempty"`
 	Host              string   `json:"host,omitempty"`
 	UDP               bool     `json:"udp,omitempty"`
 	SkipCertVerify    bool     `json:"skip-cert-verify,omitempty"`
@@ -29,18 +31,34 @@ type VlessProxy struct {
 	Speed             float64  `json:"speed,omitempty"`
 	IsValidFlag       bool     `json:"is-valid,omitempty"`
 	ClientFingerprint string   `json:"client-fingerprint,omitempty"`
+	Fingerprint       string   `json:"fingerprint,omitempty"`
 	XUDP              bool     `json:"xudp,omitempty"`
+	PacketEncoding    string   `json:"packet-encoding,omitempty"` // 用于兼容旧版本的字段
 	Encryption        string   `json:"encryption,omitempty"`
-	OriginName        string   `json:"-,omitempty"` // 原始名称
 
 	RealityOpts struct {
 		PublicKey string `json:"public-key,omitempty"`
 		ShortID   string `json:"short-id,omitempty"`
 	} `json:"reality-opts,omitempty"`
 
+	HttpOpts struct {
+		Method  string                 `json:"method,omitempty"`
+		Path    []string               `json:"path,omitempty"`
+		Headers map[string]interface{} `json:"headers,omitempty"`
+	} `json:"http-opts,omitempty"`
+
+	H2Opts struct {
+		Host []string `json:"host,omitempty"`
+		Path string   `json:"path,omitempty"`
+	} `json:"h2-opts,omitempty"`
+
 	WSOpts struct {
-		Path    string            `json:"path,omitempty"`
-		Headers map[string]string `json:"headers,omitempty"`
+		Path                     string                 `json:"path,omitempty"`
+		Headers                  map[string]interface{} `json:"headers,omitempty"`
+		MaxEarlyData             int                    `json:"max-early-data,omitempty"`
+		EarlyDataHeaderName      string                 `json:"early-data-header-name,omitempty"`
+		V2rayHttpUpgrade         bool                   `json:"v2ray-http-upgrade,omitempty"`
+		V2rayHttpUpgradeFastOpen bool                   `json:"v2ray-http-upgrade-fast-open,omitempty"`
 	} `json:"ws-opts,omitempty"`
 
 	GRPCOpts struct {
@@ -60,6 +78,9 @@ func (p *VlessProxy) GetName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
 func (p *VlessProxy) SetName(name string) {
+	if p.OriginName == "" {
+		p.OriginName = p.Name // 保存原始名称
+	}
 	p.Name = name
 }
 
@@ -115,7 +136,7 @@ func (p *VlessProxy) ToString() string {
 	params.Set("security", p.Security)
 	params.Set("sni", p.SNI)
 	params.Set("flow", p.Flow)
-	params.Set("type", p.Transport)
+	params.Set("type", p.Network)
 	params.Set("fp", p.ClientFingerprint)
 	params.Set("pbk", p.RealityOpts.PublicKey)
 	params.Set("sid", p.RealityOpts.ShortID)
@@ -124,10 +145,8 @@ func (p *VlessProxy) ToString() string {
 
 	if p.WSOpts.Path != "" {
 		params.Set("path", p.WSOpts.Path)
-	} else if p.Path != "" {
-		params.Set("path", p.Path)
 	}
-	if host := p.WSOpts.Headers["Host"]; host != "" {
+	if host := tool.SafeAsString(p.WSOpts.Headers, "Host"); host != "" {
 		params.Set("host", host)
 	} else if p.Host != "" {
 		params.Set("host", p.Host)
@@ -180,7 +199,7 @@ func explodeVless(proxyStr string) (Proxy, error) {
 		Name:              fragment,
 		OriginName:        fragment, // 保存原始名称
 		Flow:              query.Get("flow"),
-		Transport:         query.Get("type"),
+		Network:           query.Get("type"),
 		Security:          query.Get("security"),
 		SNI:               query.Get("sni"),
 		ClientFingerprint: query.Get("fp"),
@@ -195,20 +214,44 @@ func explodeVless(proxyStr string) (Proxy, error) {
 			PublicKey: query.Get("pbk"),
 			ShortID:   query.Get("sid"),
 		},
-		WSOpts: struct {
-			Path    string            `json:"path,omitempty"`
-			Headers map[string]string `json:"headers,omitempty"`
-		}{
-			Path: query.Get("path"),
-			Headers: map[string]string{
-				"Host": query.Get("host"),
-			},
-		},
-		GRPCOpts: struct {
-			ServiceName string `json:"serviceName,omitempty"`
-		}{
-			ServiceName: query.Get("serviceName"),
-		},
+	}
+
+	switch p.Network {
+	case "ws":
+		p.WSOpts.Path = query.Get("path")
+		if host := query.Get("host"); host != "" {
+			p.WSOpts.Headers = map[string]interface{}{
+				"Host": host,
+			}
+		}
+		p.WSOpts.MaxEarlyData = cast.ToInt(query.Get("max-early-data"))
+		p.WSOpts.EarlyDataHeaderName = query.Get("early-data-header-name")
+		p.WSOpts.V2rayHttpUpgrade = cast.ToBool(query.Get("v2ray-http-upgrade"))
+		p.WSOpts.V2rayHttpUpgradeFastOpen = cast.ToBool(query.Get("v2ray-http-upgrade-fast-open"))
+	case "http":
+		p.HttpOpts.Method = query.Get("method")
+		p.HttpOpts.Path = strings.Split(query.Get("path"), ",")
+		if headers := query.Get("headers"); headers != "" {
+			p.HttpOpts.Headers = make(map[string]interface{})
+			for _, header := range strings.Split(headers, ",") {
+				parts := strings.SplitN(header, ":", 2)
+				if len(parts) == 2 {
+					key := strings.TrimSpace(parts[0])
+					value := strings.TrimSpace(parts[1])
+					p.HttpOpts.Headers[key] = value
+				}
+			}
+		}
+	case "grpc":
+		p.GRPCOpts.ServiceName = query.Get("serviceName")
+	}
+
+	if p.XUDP {
+		p.PacketEncoding = "xudp"
+	}
+
+	if p.Security == "tls" || p.Security == "reality" {
+		p.TLSSecure = true
 	}
 
 	if alpn := query.Get("alpn"); alpn != "" {

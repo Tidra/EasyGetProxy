@@ -10,20 +10,27 @@ import (
 
 // Hy2Proxy hysteria 2 代理结构体
 type Hy2Proxy struct {
-	Group        string  `json:"group,omitempty"`
-	Name         string  `json:"name,omitempty"`
-	Server       string  `json:"server,omitempty"`
-	Port         int     `json:"port,omitempty"`
-	Auth         string  `json:"auth,omitempty"`
-	Obfs         string  `json:"obfs,omitempty"`
-	ObfsPassword string  `json:"obfs-password,omitempty"`
-	SNI          string  `json:"sni,omitempty"`
-	Insecure     bool    `json:"insecure,omitempty"`
-	PinSHA256    string  `json:"pinSHA256,omitempty"`
-	Country      string  `json:"country,omitempty"`
-	Speed        float64 `json:"speed,omitempty"`
-	IsValidFlag  bool    `json:"is-valid,omitempty"`
-	OriginName   string  `json:"-,omitempty"` // 原始名称
+	Group        string   `json:"group,omitempty"`
+	Name         string   `json:"name,omitempty"`
+	OriginName   string   `json:"-,omitempty"` // 原始名称
+	Server       string   `json:"server,omitempty"`
+	Port         int      `json:"port,omitempty"`
+	Ports        string   `json:"ports,omitempty"` // 备用端口列表
+	Auth         string   `json:"auth,omitempty"`
+	Up           string   `json:"up,omitempty"`   // 上行速度
+	Down         string   `json:"down,omitempty"` // 下行速度
+	Obfs         string   `json:"obfs,omitempty"`
+	ObfsPassword string   `json:"obfs-password,omitempty"`
+	SNI          string   `json:"sni,omitempty"`
+	Insecure     bool     `json:"insecure,omitempty"`
+	PinSHA256    string   `json:"pinSHA256,omitempty"`
+	Fingerprint  string   `json:"fingerprint,omitempty"` // 客户端指纹
+	ALPN         []string `json:"alpn,omitempty"`        // ALPN 列表
+	Ca           string   `json:"ca,omitempty"`          // CA 证书
+	CaStr        string   `json:"ca-str,omitempty"`      // CA 证书字符串
+	Country      string   `json:"country,omitempty"`
+	Speed        float64  `json:"speed,omitempty"`
+	IsValidFlag  bool     `json:"is-valid,omitempty"`
 }
 
 // GetType 实现 Proxy 接口的 GetType 方法，返回代理类型
@@ -38,6 +45,9 @@ func (p *Hy2Proxy) GetName() string {
 
 // SetName 实现 Proxy 接口的 SetName 方法，设置代理节点名称
 func (p *Hy2Proxy) SetName(name string) {
+	if p.OriginName == "" {
+		p.OriginName = p.Name // 保存原始名称
+	}
 	p.Name = name
 }
 
@@ -139,8 +149,6 @@ func explodeHy2(proxyStr string) (Proxy, error) {
 		}
 	}
 
-	insecure := cast.ToBool(query.Get("insecure"))
-
 	p := &Hy2Proxy{
 		Group:        query.Get("group"),
 		Name:         u.Fragment,
@@ -151,7 +159,7 @@ func explodeHy2(proxyStr string) (Proxy, error) {
 		Obfs:         query.Get("obfs"),
 		ObfsPassword: query.Get("obfs-password"),
 		SNI:          query.Get("sni"),
-		Insecure:     insecure,
+		Insecure:     cast.ToBool(query.Get("insecure")),
 		PinSHA256:    query.Get("pinSHA256"),
 	}
 
