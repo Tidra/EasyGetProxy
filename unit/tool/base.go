@@ -107,7 +107,7 @@ func SafeAsMap(m map[string]interface{}, keys ...string) map[string]interface{} 
 	if mapVal, ok := val.(map[string]interface{}); ok {
 		return mapVal
 	}
-	return nil
+	return map[string]interface{}{}
 }
 
 // 转换为字符串字典
@@ -131,7 +131,7 @@ func SafeAsStringMap(m map[string]interface{}, keys ...string) map[string]string
 		return result
 	}
 
-	return nil
+	return map[string]string{}
 }
 
 // 转换为字符串数组
@@ -151,7 +151,7 @@ func SafeAsStringArray(m map[string]interface{}, keys ...string) []string {
 		}
 		return arr
 	}
-	return nil
+	return []string{}
 }
 
 func Contains(arr []string, key string) bool {
