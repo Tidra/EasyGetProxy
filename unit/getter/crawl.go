@@ -87,15 +87,19 @@ func xmlFunction(c *Crawl, s Sub) func(x *colly.XMLElement) {
 				}
 			}
 		case "clash":
-			innerHTML := x.Text
+			innerHTML := strings.TrimSpace(x.Text)
 			log.LogInfo("Crawl-sub type: %s, path: %s, value: %s", s.Type, s.Xpath, innerHTML)
-			// log.LogDebug("%v", c.results)
-			c.results = append(c.results, (&Clash{Url: innerHTML}).Get()...)
+			urls := strings.Split(innerHTML, "\n")
+			for _, url := range urls {
+				c.results = append(c.results, (&Clash{Url: url}).Get()...)
+			}
 		case "subscribe":
-			innerHTML := x.Text
+			innerHTML := strings.TrimSpace(x.Text)
 			log.LogInfo("Crawl-sub type: %s, path: %s, value: %s", s.Type, s.Xpath, innerHTML)
-			// log.LogDebug("%v", c.results)
-			c.results = append(c.results, (&Subscribe{Url: innerHTML}).Get()...)
+			urls := strings.Split(innerHTML, "\n")
+			for _, url := range urls {
+				c.results = append(c.results, (&Subscribe{Url: url}).Get()...)
+			}
 		case "fuzzy":
 			innerHTML := x.Text
 			log.LogInfo("Crawl-sub type: %s, path: %s, value: %s...", s.Type, s.Xpath, innerHTML[0:10])

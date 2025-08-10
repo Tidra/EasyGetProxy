@@ -17,12 +17,12 @@ func Test(t *testing.T) {
 
 	// lnk := "trojan-go://f@uck.me/?sni=microsoft.com&type=ws&path=%2Fgo&encryption=ss%3Baes-256-gcm%3Afuckgfw"
 	// vmess := "vmess://eyJ2IjoyLCJwcyI6ImdpdGh1Yi5jb20vcmF3IiwiYWRkIjoiMTAzLjg5LjEwLjExIiwicG9ydCI6NDQzLCJpZCI6ImQwZTI2NjQxLWJkNjEtNDIwYy1iOGNkLTk4Y2UzODJlODFiZSIsImFpZCI6MTIzLCJuZXQiOiJ3cyIsInR5cGUiOiJub25lIiwiaG9zdCI6ImdpdGh1Yi5jb20iLCJwYXRoIjoiL3JhdyIsInRscyI6InRscyJ9"
-	vmess := "vmess://eyJ2IjoiMiIsInBzIjoi8J+HuvCfh7hfVVNf576O5Zu9LT7wn4ep8J+Hql9ERV/lvrflm70iLCJhZGQiOiIxMDQuMjEuMjMwLjUxIiwicG9ydCI6ODAsImlkIjoiNzAyMjk4MmYtZGE0Yy00OGM5LWM2NjAtYjIzMTVhYmRjZjdlIiwiYWlkIjowLCJzY3kiOiJhdXRvIiwibmV0Ijoid3MiLCJob3N0IjoiYS5wcmFwdDUuaXIiLCJwYXRoIjoiLz9lZD0yMDQ4IiwidGxzIjoiIn0="
-	b, err := explodeVmess(vmess)
-	if err != nil {
-		log.LogError("err: %v", err)
-	}
-	log.LogInfo("Info %+v", b)
+	// vmess := "vmess://eyJ2IjoiMiIsInBzIjoi8J+HuvCfh7hfVVNf576O5Zu9LT7wn4ep8J+Hql9ERV/lvrflm70iLCJhZGQiOiIxMDQuMjEuMjMwLjUxIiwicG9ydCI6ODAsImlkIjoiNzAyMjk4MmYtZGE0Yy00OGM5LWM2NjAtYjIzMTVhYmRjZjdlIiwiYWlkIjowLCJzY3kiOiJhdXRvIiwibmV0Ijoid3MiLCJob3N0IjoiYS5wcmFwdDUuaXIiLCJwYXRoIjoiLz9lZD0yMDQ4IiwidGxzIjoiIn0="
+	// b, err := explodeVmess(vmess)
+	// if err != nil {
+	// 	log.LogError("err: %v", err)
+	// }
+	// log.LogInfo("Info %+v", b)
 
 	// 	soc := "vmess1://c7199cd9-964b-4321-9d33-842b6fcec068@qv2ray.net:64338?encryption=none&security=tls&sni=fastgit.org#VMessTCPTLSSNI"
 	// 	// soc = "vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/path?network=http&http.host=example.com%2Cexample1.com&tls=true&tls.allowinsecure=true#VMessTCPTLSSNI%2Cd"
@@ -46,12 +46,12 @@ func Test(t *testing.T) {
 	// 	}
 	// 	log.LogInfo("Info %+v", d)
 
-	// 	trojan := "trojan://mypassword@myserver.com:443?type=ws&security=tls&path=%2Fmypath&sni=myserver.com#MyServer"
-	// 	d, err = explodeTrojan(trojan)
-	// 	if err != nil {
-	// 		log.LogError("err: %v", err)
-	// 	}
-	// 	log.LogInfo("Info %+v", d)
+	trojan := "trojan://mypassword@myserver.com:443?type=ws&security=tls&path=%2Fmypath&sni=myserver.com#MyServer"
+	d, err := explodeTrojan(trojan)
+	if err != nil {
+		log.LogError("err: %v", err)
+	}
+	log.LogInfo("Info %+v", d)
 
 	// 	clash := `proxies:
 	// - {"name":"R[ss]-🇬🇧GB_01 | 4.76Mb","server":"jseyu.arvancode.eu.Org","type":"ss","port":443,"password":"Bog0ELmMM9DSxDdQ","cipher":"chacha20-ietf-poly1305"}

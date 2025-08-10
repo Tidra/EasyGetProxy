@@ -111,10 +111,10 @@ func Parse() error {
 	}
 
 	if Config.LocalCheck.Url == "" {
-		Config.LocalCheck.Url = "https://ip.011102.xyz"
+		Config.LocalCheck.Url = "https://ip-api.io/json"
 	}
 	if Config.LocalCheck.JsonPath == "" {
-		Config.LocalCheck.JsonPath = "IP.Country"
+		Config.LocalCheck.JsonPath = "countryCode"
 	}
 	if Config.LocalCheck.Timeout <= 0 {
 		Config.LocalCheck.Timeout = 5

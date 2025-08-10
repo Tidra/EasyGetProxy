@@ -54,32 +54,6 @@ func ParseProxy(proxy string) (Proxy, error) {
 	return nil, fmt.Errorf("无法识别代理连接, %s", proxy)
 }
 
-// commonConstruct 通用构造方法，用于初始化代理的基础信息
-// 注意：由于 Proxy 是接口类型，不能直接作为接收者，这里仅作示例，实际可能需要具体结构体实现
-// 这里注释掉原错误的方法，实际使用时需要在具体代理结构体中实现类似方法
-// func (proxy *Proxy) commonConstruct(proxyType, group, name, server string, port any,
-// 	udp, tfo, scv, tls13 *bool) {
-// 	proxy.Type = proxyType
-// 	proxy.Group = group
-// 	proxy.Name = name
-// 	proxy.Server = server
-// 	proxy.Port = cast.ToInt(port)
-// 	if udp != nil {
-// 		proxy.UDP = *udp
-// 	}
-// 	if scv != nil {
-// 		proxy.SkipCertVerify = *scv
-// 	}
-// 	if tls13 != nil {
-// 		proxy.TLS13 = *tls13
-// 	}
-// }
-
-// // IsEmpty 判断代理是否为空
-// func (p Proxy) IsEmpty() bool {
-// 	return p == nil || reflect.ValueOf(p).IsNil() || reflect.DeepEqual(p, reflect.Zero(reflect.TypeOf(p)).Interface())
-// }
-
 // UniqAppendProxy 向代理列表中唯一添加一个代理
 func (pl *ProxyList) UniqAppendProxy(newProxy Proxy) {
 	// 检查 pl 指向的 ProxyList 是否为 nil
@@ -243,7 +217,6 @@ func (pl ProxyList) Count() (int, int, int, int, int, int, int, int, int, int) {
 			trojanProxiesCount++
 		case "hysteria":
 			hysteriaProxiesCount++
-
 		case "hysteria2":
 			hysteria2ProxiesCount++
 		case "snell":
@@ -309,10 +282,10 @@ func TrojanToString(proxyList ProxyList) string {
 
 // TrojanToString 将代理列表中的 trojan 代理转换为 Base64 编码的字符串
 func V2rayToString(proxyList ProxyList) string {
-	var trojanStrings strings.Builder
+	var v2rayStrings strings.Builder
 	for _, node := range proxyList {
 		nodeStr := node.ToString()
-		trojanStrings.WriteString(nodeStr + "\n")
+		v2rayStrings.WriteString(nodeStr + "\n")
 	}
-	return tool.Base64EncodeString(trojanStrings.String())
+	return tool.Base64EncodeString(v2rayStrings.String())
 }

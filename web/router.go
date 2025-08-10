@@ -22,7 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "v0.1.2"
+const version = "v1.0.1"
 
 var router *gin.Engine
 var srv http.Server
@@ -90,7 +90,7 @@ func setupRouter() {
 	router.StaticFile("/static/index.css", "assets/static/index.css")
 	router.StaticFile("/static/darkstyles.css", "assets/static/darkstyles.css")
 	router.StaticFile("/static/lightstyles.css", "assets/static/lightstyles.css")
-	router.StaticFile("/static/metron-icon.css", "assets/static/metron-icon.css")
+	// router.StaticFile("/static/metron-icon.css", "assets/static/metron-icon.css")
 
 	router.GET("/", func(web *gin.Context) {
 		web.HTML(http.StatusOK, "assets/html/index.html", gin.H{
@@ -325,7 +325,6 @@ func setupRouter() {
 // getScheme 函数用于获取请求的协议方案，优先检查代理头信息
 func getScheme(web *gin.Context) string {
 	// 首先检查 X-Forwarded-Proto 请求头
-	log.LogInfo("Header: %s %s", web.Request.Header, web.Request.TLS)
 	if proto := web.Request.Header.Get("X-Forwarded-Proto"); proto == "https" {
 		return "https"
 	}
@@ -375,7 +374,7 @@ func AssetNames() []string {
 		"assets/static/index.css",
 		"assets/static/darkstyles.css",
 		"assets/static/lightstyles.css",
-		"assets/static/metron-icon.css",
+		// "assets/static/metron-icon.css",
 	}
 	return _bindata
 }

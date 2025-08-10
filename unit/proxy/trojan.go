@@ -198,26 +198,23 @@ func explodeTrojan(trojan string) (Proxy, error) {
 
 	// 构造节点
 	proxy := &TrojanProxy{
-		Group:      "trojan_group",
-		Name:       remark,
-		OriginName: remark, // 保存原始名称
-		Server:     server,
-		Port:       cast.ToInt(port),
-		Password:   psk,
-		Network:    network,
-		SNI:        host,
-		WSOpts: struct {
-			Path                     string                 `json:"path,omitempty"`
-			Headers                  map[string]interface{} `json:"headers,omitempty"`
-			MaxEarlyData             int                    `json:"max-early-data,omitempty"`               // 最大早期数据
-			EarlyDataHeaderName      string                 `json:"early-data-header-name,omitempty"`       // 早期数据头名称
-			V2rayHttpUpgrade         bool                   `json:"v2ray-http-upgrade,omitempty"`           // 是否使用 v2ray 的 HTTP 升级
-			V2rayHttpUpgradeFastOpen bool                   `json:"v2ray-http-upgrade-fast-open,omitempty"` // 是否使用 v2ray 的 HTTP 升级快速打开
-		}{
-			Path: path,
-		},
+		Group:          "trojan_group",
+		Name:           remark,
+		OriginName:     remark, // 保存原始名称
+		Server:         server,
+		Port:           cast.ToInt(port),
+		Password:       psk,
+		Network:        network,
+		SNI:            host,
 		TCPFastOpen:    tfo,
 		SkipCertVerify: scv,
+	}
+
+	if network == "ws" {
+		proxy.WSOpts.Path = path
+		proxy.WSOpts.Headers = map[string]interface{}{
+			"Host": host,
+		}
 	}
 
 	alpn := tool.GetUrlArg(addition, "alpn")
